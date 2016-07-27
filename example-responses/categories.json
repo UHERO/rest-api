@@ -1,0 +1,27 @@
+{
+    "categories": [
+        {
+            "id": 1,
+            "name": "Summary"
+        },
+        {
+            "id": 2,
+            "name": "Income"
+        },
+        {
+            "id": 3,
+            "name": "Major Economic Indicator Summary",
+            "parent": 1
+        },
+        {
+            "id": 4,
+            "name": "Summary of External Indicators",
+            "parent": 1
+        },
+        {
+            "id": 5,
+            "name": "Personal Income Summary",
+            "parent": 2
+        }
+    ]
+}

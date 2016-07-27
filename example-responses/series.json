@@ -1,0 +1,32 @@
+{
+    "series": [
+        {
+            "id": "E_NF@HI.A",
+            "title": "NonFarm Jobs",
+            "observationStart": "1958-01-01",
+            "observationEnd": "2015-01-01",
+            "frequency": "Annual",
+            "frequencyShort": "A",
+            "units": "Thousands of Jobs",
+            "unitsShort": "Thou. Jobs",
+            "seasonalAdjutment": "Not Seasonally Adjusted",
+            "seasonalAdjustmentShort": "NSA",
+            "source": "U.S. Dept. of Labor, Bureau of Labor Statistics (for Statewide, Honolulu County), Hawaii Workforce Informer, Hawaii Dept. of Labor and Industrial Relations (for other areas)",
+           "sourceLink": "http://data.bls.gov/cgi-bin/srgate" 
+        },
+        {
+            "id": "E_NF@HI.A",
+            "title": "NonFarm Jobs",
+            "observationStart": "1958-01-01",
+            "observationEnd": "2015-01-01",
+            "frequency": "Annual",
+            "frequencyShort": "A",
+            "units": "Thousands of Jobs",
+            "unitsShort": "Thou. Jobs",
+            "seasonalAdjutment": "Not Seasonally Adjusted",
+            "seasonalAdjustmentShort": "NSA",
+            "source": "U.S. Dept. of Labor, Bureau of Labor Statistics (for Statewide, Honolulu County), Hawaii Workforce Informer, Hawaii Dept. of Labor and Industrial Relations (for other areas)",
+           "sourceLink": "http://data.bls.gov/cgi-bin/srgate" 
+        }
+    ]
+}

@@ -1,0 +1,549 @@
+---
+swagger: "2.0"
+info:
+  description: "API for UHERO Data"
+  version: "0.1.0"
+  title: "UHERO Data API"
+host: "api.uhero.hawaii.edu"
+basePath: "/v1"
+schemes:
+- "http"
+produces:
+- "application/json"
+paths:
+  /category:
+    get:
+      tags:
+      - "Categories"
+      summary: "Available Categories"
+      description: "The category endpoint returns a list of available categories.\
+        \ If the\n  `id` is given only the matching category will be returned. If\
+        \ the \n  `search_text` is given only the categories matching the search terms\n\
+        \  will be shown\n"
+      operationId: "categoryGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Category ID"
+        required: false
+        type: "number"
+      - name: "search_text"
+        in: "query"
+        description: "Search Text"
+        required: false
+        type: "string"
+      - name: "top_level"
+        in: "query"
+        description: "Show only Top Level Categories"
+        required: false
+        type: "boolean"
+      responses:
+        200:
+          description: "An array of categories"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Category"
+          examples:
+            application/json:
+              categories:
+              - id: 1
+                name: "Summary"
+              - id: 2
+                name: "Income"
+              - id: 3
+                name: "Major Economic Indicator Summary"
+                parent: 1
+              - id: 4
+                name: "Summary of External Indicators"
+                parent: 1
+              - id: 5
+                name: "Personal Income Summary"
+                parent: 2
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Categories"
+  /category/children:
+    get:
+      tags:
+      - "Categories"
+      summary: "Children Categories"
+      description: "The categories whose parent matches the given category\n"
+      operationId: "categoryChildrenGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Parent Category ID"
+        required: true
+        type: "number"
+      responses:
+        200:
+          description: "An array of categories"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Category"
+          examples:
+            application/json:
+              categories:
+              - id: 3
+                name: "Major Economic Indicator Summary"
+                parent: 1
+              - id: 4
+                name: "Summary of External Indicators"
+                parent: 1
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Categories"
+  /category/series:
+    get:
+      tags:
+      - "Categories"
+      summary: "Series in this Category"
+      description: "A list of series in the given category\n"
+      operationId: "categorySeriesGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Category ID"
+        required: true
+        type: "number"
+      - name: "freq"
+        in: "query"
+        description: "Frequency"
+        required: false
+        type: "string"
+        default: "A"
+        enum:
+        - "A"
+        - "Q"
+        - "M"
+        - "W"
+        - "D"
+      - name: "geo"
+        in: "query"
+        description: "Geography (FIPS)"
+        required: false
+        type: "string"
+        default: "15000"
+      responses:
+        200:
+          description: "An array of series"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Series"
+          examples:
+            application/json:
+              series:
+              - id: "E_NF@HI.A"
+                title: "NonFarm Jobs"
+                observationStart: "1958-01-01"
+                observationEnd: "2015-01-01"
+                frequency: "Annual"
+                frequencyShort: "A"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Not Seasonally Adjusted"
+                seasonalAdjustmentShort: "NSA"
+                source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
+                sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+              - id: "E_NF@HI.M"
+                title: "NonFarm Jobs"
+                observationStart: "1958-01-01"
+                observationEnd: "2016-06-01"
+                frequency: "Monthly"
+                frequencyShort: "M"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Seasonally Adjusted"
+                seasonalAdjustmentShort: "SA"
+                source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
+                sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Categories"
+  /geo:
+    get:
+      tags:
+      - "Geography"
+      summary: "Available geographies"
+      description: "Geographies supported in this api. If `search_string` is given,\
+        \ this \n  returns the available FIPS codes.\n"
+      operationId: "geoGET"
+      parameters:
+      - name: "fips"
+        in: "query"
+        description: "Geography (FIPS)"
+        required: false
+        type: "string"
+      - name: "search_text"
+        in: "query"
+        description: "Search Text"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "An array of geographies"
+          schema:
+            $ref: "#/definitions/inline_response_200"
+          examples:
+            application/json:
+              geographies:
+              - fips: "15"
+                name: "State of Hawaii"
+                handle: "HI"
+              - fips: "JA"
+                name: "Japan"
+                handle: "JP"
+              - fips: "15001"
+                name: "Hawaii County"
+                handle: "HAW"
+              - fips: "15003"
+                name: "Honolulu"
+                handle: "HON"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Geography"
+  /series:
+    get:
+      tags:
+      - "Series"
+      summary: "Series"
+      description: "Metadata for all series if no `id` or `search_text` are provided.\n"
+      operationId: "seriesGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Category ID"
+        required: false
+        type: "number"
+      - name: "search_text"
+        in: "query"
+        description: "Search Text"
+        required: false
+        type: "string"
+      - name: "freq"
+        in: "query"
+        description: "Frequency"
+        required: false
+        type: "string"
+        enum:
+        - "A"
+        - "M"
+        - "Q"
+        - "W"
+        - "D"
+      - name: "geo"
+        in: "query"
+        description: "Geography (FIPS)"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "An array of series objects"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Series"
+          examples:
+            application/json:
+              series:
+              - id: "E_NF@HI.A"
+                title: "NonFarm Jobs"
+                observationStart: "1958-01-01"
+                observationEnd: "2015-01-01"
+                frequency: "Annual"
+                frequencyShort: "A"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Not Seasonally Adjusted"
+                seasonalAdjustmentShort: "NSA"
+                source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
+                sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+              - id: "E_NF@HI.M"
+                title: "NonFarm Jobs"
+                observationStart: "1958-01-01"
+                observationEnd: "2016-06-01"
+                frequency: "Monthly"
+                frequencyShort: "M"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Seasonally Adjusted"
+                seasonalAdjustmentShort: "SA"
+                source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
+                sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Series"
+  /series/categories:
+    get:
+      tags:
+      - "Series"
+      summary: "Series Categories"
+      description: "A list of categories containing the given series.\n"
+      operationId: "seriesCategoriesGET"
+      parameters: []
+      responses:
+        200:
+          description: "A list of categories"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Category"
+          examples:
+            application/json:
+              categories:
+              - id: 3
+                name: "Major Economic Indicator Summary"
+                parent: 1
+              - id: 4
+                name: "Summary of External Indicators"
+                parent: 1
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Series"
+  /series/observations:
+    get:
+      tags:
+      - "Series"
+      summary: "Series Observations"
+      description: "The observations for the given series ID\n"
+      operationId: "seriesObservationsGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        required: true
+        type: "number"
+      - name: "transforms"
+        in: "query"
+        required: false
+        type: "array"
+        items:
+          type: "string"
+          enum:
+          - "lvl"
+          - "pch"
+          - "pc1"
+          - "ytd"
+          - "chg"
+          - "ch1"
+        collectionFormat: "multi"
+      responses:
+        200:
+          description: "An array of observations"
+          schema:
+            $ref: "#/definitions/ObservationResult"
+          examples:
+            application/json:
+              observationStart: "2014-01-01"
+              observationEnd: "2015-01-01"
+              orderBy: "observationDate"
+              sortOrder: "desc"
+              transformationResults:
+              - transformation: "lvl"
+                observations:
+                - date: "2015-01-01"
+                  value: "636.867"
+                - date: "2014-01-01"
+                  value: "627.225"
+              - transformation: "pc1"
+                observations:
+                - date: "2015-01-01"
+                  value: "1.5"
+                - date: "2014-01-01"
+                  value: "1.4"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Series"
+  /transforms:
+    get:
+      tags:
+      - "Transformations"
+      summary: "Available transformations"
+      description: "Transformations supported by this api\n"
+      operationId: "transformsGET"
+      parameters: []
+      responses:
+        200:
+          description: "An array of transformations"
+          schema:
+            $ref: "#/definitions/inline_response_200_1"
+          examples:
+            application/json:
+              transformations:
+              - id: "lvl"
+                description: "Value in levels"
+                formula: "x(t)"
+              - id: "chg"
+                description: "Change since last value"
+                formula: "x(t) - x(t-1)"
+              - id: "pc1"
+                description: "Percent change since last year"
+                formula: "(x(t)/x(t-n) - 1) * 100, where n is the number of observations\
+                  \ in a year"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Transformations"
+securityDefinitions:
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+definitions:
+  Category:
+    type: "object"
+    properties:
+      id:
+        type: "number"
+        description: "Category ID"
+      name:
+        type: "string"
+        description: "Name of the category"
+      description:
+        type: "string"
+        description: "Description of the category (optional)"
+      parent_id:
+        type: "number"
+        description: "Category ID of the parent category (not returned if there is\
+          \ no parent)"
+  Observation:
+    type: "object"
+    properties:
+      date:
+        type: "string"
+        format: "date"
+        description: "Date of observation"
+      value:
+        type: "number"
+        description: "Value of observation"
+  TransformationResult:
+    type: "object"
+    properties:
+      transformation:
+        type: "string"
+        description: "Transformation Code"
+      observations:
+        type: "array"
+        items:
+          $ref: "#/definitions/Observation"
+  ObservationResult:
+    type: "object"
+    properties:
+      observationStart:
+        type: "string"
+        format: "date"
+      observationEnd:
+        type: "string"
+        format: "date"
+      orderBy:
+        type: "string"
+      sortOrder:
+        type: "string"
+      transformationResults:
+        type: "array"
+        items:
+          $ref: "#/definitions/TransformationResult"
+  Series:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Series ID"
+      title:
+        type: "string"
+        description: "Series Title"
+      observation_start:
+        type: "string"
+        format: "date"
+        description: "Date at the beginning of the series"
+      observation_end:
+        type: "string"
+        format: "date"
+        description: "Date at the end of the series"
+      frequency:
+        type: "string"
+        description: "Frequency"
+      frequency_short:
+        type: "string"
+        description: "Short Frequency Indicator"
+      units:
+        type: "string"
+        description: "Units of measurement"
+      units_short:
+        type: "string"
+        description: "Short units suitable for charts"
+      seasonalAdjustment:
+        type: "string"
+        description: "Whether the series is seasonally adjusted"
+      seasonalAdjustmentShort:
+        type: "string"
+        description: "Short version of seasonal adjustment string"
+      source:
+        type: "string"
+        description: "Long description of source"
+      sourceLink:
+        type: "string"
+        description: "URL for source"
+  Transformation:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+        description: "Transformation ID"
+      description:
+        type: "string"
+        description: "Transformation Description"
+      formula:
+        type: "string"
+        description: "Transformation Formula"
+  Geography:
+    type: "object"
+    properties:
+      fips:
+        type: "number"
+        description: "FIPS Code"
+      name:
+        type: "string"
+        description: "Geography Name"
+      handle:
+        type: "string"
+        description: "Short Geography Handle"
+  Error:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      message:
+        type: "string"
+      fields:
+        type: "string"
+  inline_response_200:
+    properties:
+      geographies:
+        type: "array"
+        items:
+          $ref: "#/definitions/Geography"
+  inline_response_200_1:
+    properties:
+      transformations:
+        type: "array"
+        items:
+          $ref: "#/definitions/Transformation"
