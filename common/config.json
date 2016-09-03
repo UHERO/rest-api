@@ -1,0 +1,7 @@
+{
+  "protocol": "unix",
+  "server": "/tmp/mysql.sock",
+  "databaseUser": "root",
+  "databasePassword": "",
+  "database": "uhero_db_dev"
+}
