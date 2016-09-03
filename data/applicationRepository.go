@@ -6,6 +6,7 @@ import (
 	"time"
 	"crypto/rand"
 	"github.com/uhero/rest-api/models"
+	"encoding/base64"
 )
 
 type ApplicationRepository struct {
@@ -13,11 +14,12 @@ type ApplicationRepository struct {
 }
 
 func (r *ApplicationRepository) Create(userName string, application *models.Application) error {
-	var err error
-	application.Key, err = rand.Read(make([]byte, 32))
+	rb := make([]byte, 32)
+	_, err := rand.Read(rb)
 	if err != nil {
 		panic(err)
 	}
+	application.Key = base64.URLEncoding.EncodeToString(rb)
 	stmt, err := r.DB.Prepare(`INSERT INTO api_applications(name, hostname, key, github_nickname, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?);`)
 	if err != nil {
