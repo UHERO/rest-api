@@ -11,9 +11,9 @@ import (
 	"net/http"
 	"os"
 	"github.com/markbates/goth/providers/github"
-	"github.com/shijuvar/go-web-book/chapter9/taskmanager/common"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/uhero/rest-api/common"
 )
 
 func callbackAuthHandler(res http.ResponseWriter, req *http.Request) {
