@@ -14,6 +14,8 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/uhero/rest-api/common"
+	"github.com/uhero/rest-api/data"
+	"github.com/uhero/rest-api/controllers"
 )
 
 func callbackAuthHandler(res http.ResponseWriter, req *http.Request) {
@@ -26,6 +28,7 @@ func callbackAuthHandler(res http.ResponseWriter, req *http.Request) {
 	// here is where I have the user logged in and should have access
 	// to the user.NickName user.UserID user.AccessToken
 	// Step 1: get List of user applications from the applications repository
+
 
 	//
 
@@ -48,6 +51,7 @@ func indexHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	common.InitConfig()
 	// Set up MySQL
 	connectionString := fmt.Sprintf(
 		"%s:%s@%s(%s)/%s?parseTime=true&loc=US%%2FHawaii",
@@ -67,6 +71,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	applicationRepository := &data.ApplicationRepository{DB: db}
 
 	// Register providers with Goth
 	goth.UseProviders(
@@ -76,7 +81,7 @@ func main() {
 
 	// Routing with Pat package
 	r := pat.New()
-	r.Get("/auth/{provider}/callback", callbackAuthHandler)
+	r.Get("/auth/{provider}/callback", controllers.Display(applicationRepository))
 	r.Get("/auth/{provider}", gothic.BeginAuthHandler)
 	r.Get("/", indexHandler)
 

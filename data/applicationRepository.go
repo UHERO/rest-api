@@ -20,7 +20,7 @@ func (r *ApplicationRepository) Create(userName string, application *models.Appl
 		panic(err)
 	}
 	application.Key = base64.URLEncoding.EncodeToString(rb)
-	stmt, err := r.DB.Prepare(`INSERT INTO api_applications(name, hostname, key, github_nickname, created_at, updated_at)
+	stmt, err := r.DB.Prepare(`INSERT INTO api_applications(name, hostname, 'key', github_nickname, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		panic(err)
@@ -48,7 +48,7 @@ func (r *ApplicationRepository) Update(userName string, application *models.Appl
 	stmt, err := r.DB.Prepare(`UPDATE api_applications SET
 	name = ?,
 	hostname = ?,
-	key = ?,
+	'key' = ?,
 	updated_at = ?,
 	WHERE id = ? and github_nickname = ? LIMIT 1;`)
 	if err != nil {
@@ -86,7 +86,7 @@ func (r *ApplicationRepository) Delete(userName string, id int64) (numRows int64
 
 func (r *ApplicationRepository) GetAll(userName string) (applications []models.Application, err error) {
 	rows, err := r.DB.Query(`SELECT
-	id, name, hostname, key
+	id, name, hostname, 'key'
 	FROM api_applications WHERE github_nickname = ?;`, userName)
 	if err != nil {
 		panic(err)
@@ -109,7 +109,7 @@ func (r *ApplicationRepository) GetAll(userName string) (applications []models.A
 
 func (r *ApplicationRepository) GetById(userName string, id int64) (application models.Application, err error) {
 	err = r.DB.QueryRow(`SELECT
-	id, name, hostname, key
+	id, name, hostname, 'key'
 	FROM api_applications
 	WHERE id = ? AND github_nickname = ?;`, id, userName).Scan(
 		&application.Id,

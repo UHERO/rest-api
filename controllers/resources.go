@@ -1,6 +1,9 @@
 package controllers
 
-import "github.com/uhero/rest-api/models"
+import (
+	"github.com/uhero/rest-api/models"
+	"github.com/markbates/goth"
+)
 
 type (
 	// for GET - /applications
@@ -12,5 +15,11 @@ type (
 	// for GET - /applications/id
 	ApplicationResource struct {
 		Data models.Application `json:"data"`
+	}
+
+	// for main display
+	UserResource struct {
+		User goth.User
+		Applications []models.Application
 	}
 )

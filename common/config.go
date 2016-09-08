@@ -17,7 +17,7 @@ type configuration struct {
 // AppConfig holds the configuration values from config.json
 var AppConfig configuration
 
-func initConfig() {
+func InitConfig() {
 	file, err := os.Open("common/config.json")
 	defer file.Close()
 	if err != nil {
