@@ -13,9 +13,9 @@ type ApplicationRepository struct {
 	DB *sql.DB
 }
 
-func (r *ApplicationRepository) Create(userName string, application *models.Application) error {
+func (r *ApplicationRepository) Create(userName string, application *models.Application) (numRows int64, err error) {
 	rb := make([]byte, 32)
-	_, err := rand.Read(rb)
+	_, err = rand.Read(rb)
 	if err != nil {
 		panic(err)
 	}
@@ -37,10 +37,14 @@ func (r *ApplicationRepository) Create(userName string, application *models.Appl
 		panic(err)
 	}
 	application.Id, err = res.LastInsertId()
-	return err
+	if err != nil {
+		panic(err)
+	}
+	numRows, err = res.RowsAffected()
+	return
 }
 
-func (r *ApplicationRepository) Update(userName string, application *models.Application) error {
+func (r *ApplicationRepository) Update(userName string, application *models.Application) (numRows int64, err error) {
 	stmt, err := r.DB.Prepare(`UPDATE api_applications SET
 	name = ?,
 	hostname = ?,
@@ -61,12 +65,12 @@ func (r *ApplicationRepository) Update(userName string, application *models.Appl
 	if err != nil {
 		panic(err)
 	}
-	numRows, err := res.RowsAffected()
+	numRows, err = res.RowsAffected()
 	log.Printf("%d Rows updated", numRows)
-	return err
+	return
 }
 
-func (r *ApplicationRepository) Delete(userName string, id int64) error {
+func (r *ApplicationRepository) Delete(userName string, id int64) (numRows int64, err error) {
 	stmt, err := r.DB.Prepare(`DELETE FROM api_applications WHERE id = ? and github_nickname = ?;`)
 	if err != nil {
 		panic(err)
@@ -75,13 +79,12 @@ func (r *ApplicationRepository) Delete(userName string, id int64) error {
 	if err != nil {
 		panic(err)
 	}
-	numRows, err := res.RowsAffected()
+	numRows, err = res.RowsAffected()
 	log.Printf("%d Rows deleted", numRows)
-	return err
+	return
 }
 
-func (r *ApplicationRepository) GetAll(userName string) []models.Application {
-	var applications []models.Application
+func (r *ApplicationRepository) GetAll(userName string) (applications []models.Application, err error) {
 	rows, err := r.DB.Query(`SELECT
 	id, name, hostname, key
 	FROM api_applications WHERE github_nickname = ?;`, userName)
@@ -101,7 +104,7 @@ func (r *ApplicationRepository) GetAll(userName string) []models.Application {
 		}
 		applications = append(applications, application)
 	}
-	return applications
+	return
 }
 
 func (r *ApplicationRepository) GetById(userName string, id int64) (application models.Application, err error) {
