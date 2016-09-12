@@ -104,10 +104,10 @@ func TestGetAllApplications(t *testing.T) {
 		Hostname: "example2.com",
 		Key:      "blahblah",
 	}
-	applicationsResult := sqlmock.NewRows([]string{"id", "name", "hostname", "key"}).
+	applicationsResult := sqlmock.NewRows([]string{"id", "name", "hostname", "api_key"}).
 		AddRow(application1.Id, application1.Name, application1.Hostname, application1.Key).
 		AddRow(application2.Id, application2.Name, application2.Hostname, application2.Key)
-	mock.ExpectQuery("SELECT id, name, hostname, key FROM api_applications WHERE github_nickname").
+	mock.ExpectQuery("SELECT id, name, hostname, api_key FROM api_applications WHERE github_nickname").
 		WillReturnRows(applicationsResult)
 
 	applicationRepository := ApplicationRepository{DB: db}
@@ -136,9 +136,9 @@ func TestGetById(t *testing.T) {
 		Hostname: "example.com",
 		Key:      "blah",
 	}
-	mockResult := sqlmock.NewRows([]string{"id", "name", "hostname", "key"}).
+	mockResult := sqlmock.NewRows([]string{"id", "name", "hostname", "api_key"}).
 		AddRow(application.Id, application.Name, application.Hostname, application.Key)
-	mock.ExpectQuery("SELECT id, name, hostname, key FROM api_applications").WillReturnRows(mockResult)
+	mock.ExpectQuery("SELECT id, name, hostname, api_key FROM api_applications").WillReturnRows(mockResult)
 
 	applicationRepository := ApplicationRepository{DB: db}
 	applicationResult, err := applicationRepository.GetById(userName, application.Id)

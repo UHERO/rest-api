@@ -30,6 +30,10 @@ export SESSION_SECRET=`openssl rand -base64 32`
 ```
 
 ## Config
-`common/config.json` allows you to change the dabase connection string.
+`common/config.json` allows you to change the database connection string.
 
-
+## Key files to put in the `key` folder
+```
+openssl genrsa -out app.rsa 1024
+openssl rsa -in app.rsa -pubout > app.rsa.pub
+```

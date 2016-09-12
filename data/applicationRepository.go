@@ -17,53 +17,59 @@ func (r *ApplicationRepository) Create(userName string, application *models.Appl
 	rb := make([]byte, 32)
 	_, err = rand.Read(rb)
 	if err != nil {
-		panic(err)
+		return
 	}
-	application.Key = base64.URLEncoding.EncodeToString(rb)
-	stmt, err := r.DB.Prepare(`INSERT INTO api_applications(name, hostname, 'key', github_nickname, created_at, updated_at)
+	application.APIKey = base64.URLEncoding.EncodeToString(rb)
+	stmt, err := r.DB.Prepare(`INSERT INTO api_applications(name, hostname, api_key, github_nickname, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?);`)
 	if err != nil {
-		panic(err)
+		return
 	}
 	res, err := stmt.Exec(
 		application.Name,
 		application.Hostname,
-		application.Key,
+		application.APIKey,
 		userName,
 		time.Now(),
 		time.Now(),
 	)
 	if err != nil {
-		panic(err)
+		return
 	}
 	application.Id, err = res.LastInsertId()
 	if err != nil {
-		panic(err)
+		return
 	}
 	numRows, err = res.RowsAffected()
 	return
 }
 
-func (r *ApplicationRepository) Update(userName string, application *models.Application) (numRows int64, err error) {
+func (r *ApplicationRepository) Update(username string, application *models.Application) (numRows int64, err error) {
 	stmt, err := r.DB.Prepare(`UPDATE api_applications SET
-	name = ?,
-	hostname = ?,
-	'key' = ?,
-	updated_at = ?,
+	name = COALESCE(?, name),
+	hostname = COALESCE(?, hostname),
+	updated_at = ?
 	WHERE id = ? and github_nickname = ? LIMIT 1;`)
 	if err != nil {
-		panic(err)
+		return
 	}
+	log.Printf(
+		"name = %s\nhostname = %s\napi_key = %s\nid = %d\nusername = %s\n",
+		application.Name,
+		application.Hostname,
+		application.APIKey,
+		application.Id,
+		username,
+	)
 	res, err := stmt.Exec(
 		application.Name,
 		application.Hostname,
-		application.Key,
 		time.Now(),
 		application.Id,
-		userName,
+		username,
 	)
 	if err != nil {
-		panic(err)
+		return
 	}
 	numRows, err = res.RowsAffected()
 	log.Printf("%d Rows updated", numRows)
@@ -73,11 +79,11 @@ func (r *ApplicationRepository) Update(userName string, application *models.Appl
 func (r *ApplicationRepository) Delete(userName string, id int64) (numRows int64, err error) {
 	stmt, err := r.DB.Prepare(`DELETE FROM api_applications WHERE id = ? and github_nickname = ?;`)
 	if err != nil {
-		panic(err)
+		return
 	}
 	res, err := stmt.Exec(id, userName)
 	if err != nil {
-		panic(err)
+		return
 	}
 	numRows, err = res.RowsAffected()
 	log.Printf("%d Rows deleted", numRows)
@@ -86,10 +92,10 @@ func (r *ApplicationRepository) Delete(userName string, id int64) (numRows int64
 
 func (r *ApplicationRepository) GetAll(userName string) (applications []models.Application, err error) {
 	rows, err := r.DB.Query(`SELECT
-	id, name, hostname, 'key'
+	id, name, hostname, api_key
 	FROM api_applications WHERE github_nickname = ?;`, userName)
 	if err != nil {
-		panic(err)
+		return
 	}
 	for rows.Next() {
 		application := models.Application{}
@@ -97,10 +103,10 @@ func (r *ApplicationRepository) GetAll(userName string) (applications []models.A
 			&application.Id,
 			&application.Name,
 			&application.Hostname,
-			&application.Key,
+			&application.APIKey,
 		)
 		if err != nil {
-			panic(err)
+			return
 		}
 		applications = append(applications, application)
 	}
@@ -109,13 +115,13 @@ func (r *ApplicationRepository) GetAll(userName string) (applications []models.A
 
 func (r *ApplicationRepository) GetById(userName string, id int64) (application models.Application, err error) {
 	err = r.DB.QueryRow(`SELECT
-	id, name, hostname, 'key'
+	id, name, hostname, api_key
 	FROM api_applications
 	WHERE id = ? AND github_nickname = ?;`, id, userName).Scan(
 		&application.Id,
 		&application.Name,
 		&application.Hostname,
-		&application.Key,
+		&application.APIKey,
 	)
 	return
 }

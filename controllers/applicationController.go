@@ -6,9 +6,118 @@ import (
 	"github.com/markbates/goth/gothic"
 	"fmt"
 	"html/template"
+	"log"
+	"github.com/uhero/rest-api/common"
+	"encoding/json"
+	"errors"
+	"github.com/gorilla/mux"
+	"strconv"
 )
 
-func Display(applicationRepository *data.ApplicationRepository) func(w http.ResponseWriter, r *http.Request) {
+func Create(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var dataResource ApplicationResource
+		// Decode the incoming Task json
+		err := json.NewDecoder(r.Body).Decode(&dataResource)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"Invalid Application Data",
+				500,
+			)
+			return
+		}
+		application := &dataResource.Data
+		appClaims, ok := common.FromContext(r.Context())
+		if ok != true {
+			panic(errors.New("cannot get value from context"))
+		}
+		log.Printf("username: %s", appClaims.Username)
+		_, err = applicationRepository.Create(appClaims.Username, application)
+		if err != nil {
+			panic(err)
+		}
+		j, err := json.Marshal(ApplicationResource{Data: *application})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		w.Write(j)
+
+	}
+}
+
+func Update(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var dataResource ApplicationResource
+		// Decode the incoming Task json
+		err := json.NewDecoder(r.Body).Decode(&dataResource)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"Invalid Application Data",
+				500,
+			)
+			return
+		}
+		vars := mux.Vars(r)
+		id, err := strconv.ParseInt(vars["id"], 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		application := &dataResource.Data
+		application.Id = id
+
+		appClaims, ok := common.FromContext(r.Context())
+		if ok != true {
+			panic(errors.New("cannot get value from context"))
+		}
+		log.Printf("username: %s", appClaims.Username)
+
+		_, err = applicationRepository.Update(appClaims.Username, application)
+		if err != nil {
+			panic(err)
+		}
+
+		j, err := json.Marshal(ApplicationResource{Data: *application})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
+	}
+}
+
+func IndexHandler(res http.ResponseWriter, req *http.Request) {
+	log.Println("Index Requested")
+	t, err := template.New("index").Parse(indexTemplate)
+	if err != nil {
+		fmt.Fprintln(res, err)
+		return
+	}
+	err = t.Execute(res, nil)
+	if err != nil {
+		fmt.Fprintln(res, err)
+	}
+}
+
+func AuthCallback(applicationRepository *data.ApplicationRepository) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
@@ -20,16 +129,27 @@ func Display(applicationRepository *data.ApplicationRepository) func(w http.Resp
 		if err != nil {
 			panic(err)
 		}
-		userResource := UserResource{User: user, Applications: applications}
+
+		token, err := common.GenerateJWT(user.NickName, "user")
+		if err != nil {
+			panic(err)
+		}
+
+		userResource := UserResource{User: user, Applications: applications, Token: token}
 		t, _ := template.New("userinfo").Parse(applicationTemplate)
 		t.Execute(w, userResource)
 	}
 }
 
+// View Templates
+var indexTemplate = `
+<p><a href="/auth?provider=github">Log in with GitHub</a></p>
+`
+
 var applicationTemplate = `
 <h1>Applications for {{.User.NickName}} ({{.User.UserID}})</h1>
 {{range .Applications}}
-<h2>{{.Name}}</h2>
+<h2>{{.Name}} ({{.Id}})</h2>
 <dl class="dl-horizontal">
 	<dt>Hostname</dt>
 	<dd>{{.Hostname}}</dd>
@@ -39,5 +159,7 @@ var applicationTemplate = `
 {{else}}
 No Applications
 {{end}}
+<p>Token:</p>
+<p>{{.Token}}</p>
 <button>Add Application</button>
 `

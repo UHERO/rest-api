@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"github.com/uhero/rest-api/models"
 	"github.com/markbates/goth"
+	"github.com/uhero/rest-api/models"
 )
 
 type (
@@ -19,7 +19,8 @@ type (
 
 	// for main display
 	UserResource struct {
-		User goth.User
+		User         goth.User
 		Applications []models.Application
+		Token        string
 	}
 )
