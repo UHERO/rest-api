@@ -9,6 +9,14 @@ import (
 	"encoding/base64"
 )
 
+type Creator interface {
+	Create(string, *models.Application) (int64, error)
+}
+
+type Updater interface {
+	Update(string, *models.Application) (int64, error)
+}
+
 type ApplicationRepository struct {
 	DB *sql.DB
 }

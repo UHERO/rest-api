@@ -31,7 +31,7 @@ func TestCreateApplication(t *testing.T) {
 	if application.Id != 1 {
 		t.Fail()
 	}
-	if len(application.Key) != 44 {
+	if len(application.APIKey) != 44 {
 		t.Fail()
 	}
 }
@@ -50,7 +50,7 @@ func TestUpdateApplication(t *testing.T) {
 		Id:       1,
 		Name:     "cool app",
 		Hostname: "example.com",
-		Key:      "blah",
+		APIKey:      "blah",
 	}
 
 	applicationRepository := ApplicationRepository{DB: db}
@@ -74,7 +74,7 @@ func TestDeleteApplication(t *testing.T) {
 		Id:       1,
 		Name:     "cool app",
 		Hostname: "example.com",
-		Key:      "blah",
+		APIKey:      "blah",
 	}
 
 	applicationRepository := ApplicationRepository{DB: db}
@@ -96,17 +96,17 @@ func TestGetAllApplications(t *testing.T) {
 		Id:       1,
 		Name:     "cool app",
 		Hostname: "example.com",
-		Key:      "blah",
+		APIKey:      "blah",
 	}
 	application2 := models.Application{
 		Id:       2,
 		Name:     "other cool app",
 		Hostname: "example2.com",
-		Key:      "blahblah",
+		APIKey:      "blahblah",
 	}
 	applicationsResult := sqlmock.NewRows([]string{"id", "name", "hostname", "api_key"}).
-		AddRow(application1.Id, application1.Name, application1.Hostname, application1.Key).
-		AddRow(application2.Id, application2.Name, application2.Hostname, application2.Key)
+		AddRow(application1.Id, application1.Name, application1.Hostname, application1.APIKey).
+		AddRow(application2.Id, application2.Name, application2.Hostname, application2.APIKey)
 	mock.ExpectQuery("SELECT id, name, hostname, api_key FROM api_applications WHERE github_nickname").
 		WillReturnRows(applicationsResult)
 
@@ -134,10 +134,10 @@ func TestGetById(t *testing.T) {
 		Id:       1,
 		Name:     "cool app",
 		Hostname: "example.com",
-		Key:      "blah",
+		APIKey:      "blah",
 	}
 	mockResult := sqlmock.NewRows([]string{"id", "name", "hostname", "api_key"}).
-		AddRow(application.Id, application.Name, application.Hostname, application.Key)
+		AddRow(application.Id, application.Name, application.Hostname, application.APIKey)
 	mock.ExpectQuery("SELECT id, name, hostname, api_key FROM api_applications").WillReturnRows(mockResult)
 
 	applicationRepository := ApplicationRepository{DB: db}

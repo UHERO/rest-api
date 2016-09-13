@@ -23,8 +23,10 @@ func SetApplicationRoutes(router *mux.Router, applicationRepository *data.Applic
 	router.HandleFunc("/", controllers.IndexHandler).Methods("GET")
 
 	applicationRouter := mux.NewRouter()
-	applicationRouter.HandleFunc("/applications", controllers.Create(applicationRepository)).Methods("POST")
-	applicationRouter.HandleFunc("/applications/{id}", controllers.Update(applicationRepository)).Methods("PUT", "POST")
+	applicationRouter.HandleFunc("/applications", controllers.CreateApplication(applicationRepository)).Methods("POST")
+	applicationRouter.HandleFunc("/applications", controllers.ReadApplications(applicationRepository)).Methods("GET")
+	applicationRouter.HandleFunc("/applications/{id}", controllers.UpdateApplication(applicationRepository)).Methods("PUT", "POST")
+	applicationRouter.HandleFunc("/applications/{id}", controllers.DeleteApplication(applicationRepository)).Methods("DELETE")
 	router.PathPrefix("/applications").Handler(negroni.New(
 		negroni.HandlerFunc(common.Authorize),
 		negroni.Wrap(applicationRouter),

@@ -14,7 +14,7 @@ import (
 	"strconv"
 )
 
-func Create(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request) {
+func CreateApplication(creator data.Creator) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dataResource ApplicationResource
 		// Decode the incoming Task json
@@ -34,7 +34,7 @@ func Create(applicationRepository *data.ApplicationRepository) func(http.Respons
 			panic(errors.New("cannot get value from context"))
 		}
 		log.Printf("username: %s", appClaims.Username)
-		_, err = applicationRepository.Create(appClaims.Username, application)
+		_, err = creator.Create(appClaims.Username, application)
 		if err != nil {
 			panic(err)
 		}
@@ -51,14 +51,13 @@ func Create(applicationRepository *data.ApplicationRepository) func(http.Respons
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		w.Write(j)
-
 	}
 }
 
-func Update(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request) {
+func UpdateApplication(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dataResource ApplicationResource
-		// Decode the incoming Task json
+		// Decode the incoming application json
 		err := json.NewDecoder(r.Body).Decode(&dataResource)
 		if err != nil {
 			common.DisplayAppError(
@@ -104,16 +103,64 @@ func Update(applicationRepository *data.ApplicationRepository) func(http.Respons
 	}
 }
 
-func IndexHandler(res http.ResponseWriter, req *http.Request) {
+func ReadApplications(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		appClaims, ok := common.FromContext(r.Context())
+		if ok != true {
+			panic(errors.New("cannot get value from context"))
+		}
+		applications, err := applicationRepository.GetAll(appClaims.Username)
+		if err != nil {
+			panic(err)
+		}
+		j, err := json.Marshal(ApplicationsResource{Data: applications})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
+
+	}
+}
+
+func DeleteApplication(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.ParseInt(vars["id"], 10, 64)
+		if err != nil {
+			panic(err)
+		}
+
+		appClaims, ok := common.FromContext(r.Context())
+		if ok != true {
+			panic(errors.New("cannot get value from context"))
+		}
+		_, err = applicationRepository.Delete(appClaims.Username, id)
+		if err != nil {
+			panic(err)
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Index Requested")
 	t, err := template.New("index").Parse(indexTemplate)
 	if err != nil {
-		fmt.Fprintln(res, err)
+		fmt.Fprintln(w, err)
 		return
 	}
-	err = t.Execute(res, nil)
+	err = t.Execute(w, nil)
 	if err != nil {
-		fmt.Fprintln(res, err)
+		fmt.Fprintln(w, err)
 	}
 }
 
