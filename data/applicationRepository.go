@@ -9,12 +9,11 @@ import (
 	"encoding/base64"
 )
 
-type Creator interface {
+type Repository interface {
 	Create(string, *models.Application) (int64, error)
-}
-
-type Updater interface {
 	Update(string, *models.Application) (int64, error)
+	Delete(string, int64) (int64, error)
+	GetAll(string) ([]models.Application, error)
 }
 
 type ApplicationRepository struct {
