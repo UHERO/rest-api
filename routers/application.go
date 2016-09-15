@@ -1,15 +1,16 @@
 package routers
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/uhero/rest-api/data"
-	"github.com/uhero/rest-api/controllers"
-	"github.com/markbates/goth"
-	"os"
-	"github.com/markbates/goth/providers/github"
-	"github.com/markbates/goth/gothic"
 	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/gothic"
+	"github.com/markbates/goth/providers/github"
 	"github.com/uhero/rest-api/common"
+	"github.com/uhero/rest-api/controllers"
+	"github.com/uhero/rest-api/data"
+	"os"
+	"net/http"
 )
 
 func SetApplicationRoutes(router *mux.Router, applicationRepository *data.ApplicationRepository) *mux.Router {
@@ -18,7 +19,7 @@ func SetApplicationRoutes(router *mux.Router, applicationRepository *data.Applic
 		os.Getenv("GITHUB_SECRET"),
 		"http://localhost:8080/auth/callback?provider=github",
 	))
-	router.HandleFunc("/auth/callback", controllers.AuthCallback(applicationRepository)).Methods("GET")
+	router.HandleFunc("/auth/callback", controllers.AuthCallback).Methods("GET")
 	router.HandleFunc("/auth", gothic.BeginAuthHandler).Methods("GET")
 	router.HandleFunc("/", controllers.IndexHandler).Methods("GET")
 
@@ -30,6 +31,10 @@ func SetApplicationRoutes(router *mux.Router, applicationRepository *data.Applic
 	router.PathPrefix("/applications").Handler(negroni.New(
 		negroni.HandlerFunc(common.Authorize),
 		negroni.Wrap(applicationRouter),
+	))
+	router.Handle("/developer", negroni.New(
+		negroni.HandlerFunc(common.IsAuthenticated),
+		negroni.Wrap(http.HandlerFunc(controllers.DeveloperHandler(applicationRepository))),
 	))
 	return router
 }

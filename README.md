@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/UHERO/rest-api.svg?branch=master)](https://travis-ci.org/UHERO/rest-api)
 # rest-api
 REST API for UHERO Time Series
 

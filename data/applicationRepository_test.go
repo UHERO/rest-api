@@ -50,7 +50,7 @@ func TestUpdateApplication(t *testing.T) {
 		Id:       1,
 		Name:     "cool app",
 		Hostname: "example.com",
-		APIKey:      "blah",
+		APIKey:   "blah",
 	}
 
 	applicationRepository := ApplicationRepository{DB: db}
@@ -74,7 +74,7 @@ func TestDeleteApplication(t *testing.T) {
 		Id:       1,
 		Name:     "cool app",
 		Hostname: "example.com",
-		APIKey:      "blah",
+		APIKey:   "blah",
 	}
 
 	applicationRepository := ApplicationRepository{DB: db}
@@ -96,13 +96,13 @@ func TestGetAllApplications(t *testing.T) {
 		Id:       1,
 		Name:     "cool app",
 		Hostname: "example.com",
-		APIKey:      "blah",
+		APIKey:   "blah",
 	}
 	application2 := models.Application{
 		Id:       2,
 		Name:     "other cool app",
 		Hostname: "example2.com",
-		APIKey:      "blahblah",
+		APIKey:   "blahblah",
 	}
 	applicationsResult := sqlmock.NewRows([]string{"id", "name", "hostname", "api_key"}).
 		AddRow(application1.Id, application1.Name, application1.Hostname, application1.APIKey).
@@ -134,7 +134,7 @@ func TestGetById(t *testing.T) {
 		Id:       1,
 		Name:     "cool app",
 		Hostname: "example.com",
-		APIKey:      "blah",
+		APIKey:   "blah",
 	}
 	mockResult := sqlmock.NewRows([]string{"id", "name", "hostname", "api_key"}).
 		AddRow(application.Id, application.Name, application.Hostname, application.APIKey)

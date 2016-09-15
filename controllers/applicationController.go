@@ -1,16 +1,13 @@
 package controllers
 
 import (
-	"github.com/uhero/rest-api/data"
-	"net/http"
-	"github.com/markbates/goth/gothic"
-	"fmt"
-	"html/template"
-	"log"
-	"github.com/uhero/rest-api/common"
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/uhero/rest-api/common"
+	"github.com/uhero/rest-api/data"
+	"log"
+	"net/http"
 	"strconv"
 )
 
@@ -149,63 +146,3 @@ func DeleteApplication(applicationRepository data.Repository) func(http.Response
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
-
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Index Requested")
-	t, err := template.New("index").Parse(indexTemplate)
-	if err != nil {
-		fmt.Fprintln(w, err)
-		return
-	}
-	err = t.Execute(w, nil)
-	if err != nil {
-		fmt.Fprintln(w, err)
-	}
-}
-
-func AuthCallback(applicationRepository data.Repository) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := gothic.CompleteUserAuth(w, r)
-		if err != nil {
-			fmt.Fprintln(w, err)
-			return
-		}
-
-		applications, err := applicationRepository.GetAll(user.NickName)
-		if err != nil {
-			panic(err)
-		}
-
-		token, err := common.GenerateJWT(user.NickName, "user")
-		if err != nil {
-			panic(err)
-		}
-
-		userResource := UserResource{User: user, Applications: applications, Token: token}
-		t, _ := template.New("userinfo").Parse(applicationTemplate)
-		t.Execute(w, userResource)
-	}
-}
-
-// View Templates
-var indexTemplate = `
-<p><a href="/auth?provider=github">Log in with GitHub</a></p>
-`
-
-var applicationTemplate = `
-<h1>Applications for {{.User.NickName}} ({{.User.UserID}})</h1>
-{{range .Applications}}
-<h2>{{.Name}} ({{.Id}})</h2>
-<dl class="dl-horizontal">
-	<dt>Hostname</dt>
-	<dd>{{.Hostname}}</dd>
-	<dt>API Key</dt>
-	<dd>{{.APIKey}}</dd>
-</dl>
-{{else}}
-No Applications
-{{end}}
-<p>Token:</p>
-<p>{{.Token}}</p>
-<button>Add Application</button>
-`

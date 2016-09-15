@@ -1,16 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-	"os"
 	"database/sql"
+	"fmt"
+	"github.com/codegangsta/negroni"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/uhero/rest-api/common"
 	"github.com/uhero/rest-api/data"
-	"github.com/codegangsta/negroni"
 	"github.com/uhero/rest-api/routers"
+	"log"
+	"net/http"
+	"os"
 )
 
 func main() {

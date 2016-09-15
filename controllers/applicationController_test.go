@@ -1,20 +1,20 @@
 package controllers
 
 import (
-	"testing"
-	"github.com/uhero/rest-api/models"
-	"net/http"
-	"encoding/json"
-	"net/http/httptest"
 	"bytes"
 	"context"
+	"encoding/json"
 	"github.com/uhero/rest-api/common"
 	"github.com/uhero/rest-api/data"
+	"github.com/uhero/rest-api/models"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
+	"testing"
 )
 
 var (
-	applicationResult = models.Application{Id: 1, Name: "foo", Hostname: "bar.com"}
+	applicationResult  = models.Application{Id: 1, Name: "foo", Hostname: "bar.com"}
 	applicationsResult = []models.Application{
 		applicationResult,
 		{Id: 2, Name: "bar", Hostname: "foo.com"},
@@ -44,10 +44,10 @@ type resultInterface interface {
 }
 
 type applicationTest struct {
-	Function func(data.Repository) func(http.ResponseWriter, *http.Request)
-	RequestMethod string
-	RequestURL string
-	StatusCode int
+	Function       func(data.Repository) func(http.ResponseWriter, *http.Request)
+	RequestMethod  string
+	RequestURL     string
+	StatusCode     int
 	ExpectedResult resultInterface
 }
 
@@ -69,7 +69,7 @@ var applicationTests = []applicationTest{
 }
 
 func TestApplicationController(t *testing.T) {
-	mockResource := ApplicationResource{ Data: applicationResult}
+	mockResource := ApplicationResource{Data: applicationResult}
 
 	j, err := json.Marshal(mockResource)
 	if err != nil {

@@ -2,20 +2,21 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
+	"github.com/gorilla/sessions"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
-	"fmt"
 )
 
 // AppClaims provides custom claim for JWT
 type AppClaims struct {
-	Id       int64  `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	Id          int64  `json:"id"`
+	Username    string `json:"username"`
+	AccessToken string `json:"accessToken"`
 	jwt.StandardClaims
 }
 
@@ -42,6 +43,9 @@ var (
 	verifyKey, signKey []byte
 )
 
+// Store is used for
+var store *sessions.CookieStore
+
 // Read the key files before starting http handlers
 func initKeys() {
 	var err error
@@ -56,15 +60,16 @@ func initKeys() {
 		log.Fatalf("[initKeys]: %s\n", err)
 		panic(err)
 	}
+	store = sessions.NewCookieStore([]byte(verifyKey))
 	log.Println("initKeys completed.")
 }
 
 // Generate JWT token
-func GenerateJWT(userName, role string) (string, error) {
+func GenerateJWT(username, accessToken string) (string, error) {
 	// create a signer for rsa 256
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, AppClaims{
-		Username: userName,
-		Role:     role,
+		Username:    username,
+		AccessToken: accessToken,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 20).Unix(),
 		},
@@ -88,6 +93,95 @@ func Authorize(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	})
 	log.Printf("token: %s", token)
 
+	if err != nil {
+		switch err.(type) {
+		case *jwt.ValidationError: // JWT validation error
+			vErr := err.(*jwt.ValidationError)
+
+			switch vErr.Errors {
+			case jwt.ValidationErrorExpired: // JWT expired
+				DisplayAppError(
+					w,
+					err,
+					"Access Token is expired, get a new Token",
+					401,
+				)
+				return
+
+			default:
+				DisplayAppError(
+					w,
+					err,
+					"Error while parsing the Access Token!",
+					500,
+				)
+				return
+			}
+		default:
+			DisplayAppError(
+				w,
+				err,
+				"Error while parsing Access Token!",
+				500,
+			)
+			return
+		}
+	}
+	if token.Valid {
+		ctx := NewContext(context.Background(), token.Claims.(*AppClaims))
+		rCtx := r.WithContext(ctx)
+		next(w, rCtx)
+	} else {
+		DisplayAppError(
+			w,
+			err,
+			"Invalid Access Token",
+			401,
+		)
+	}
+}
+
+func StoreJWT(w http.ResponseWriter, r *http.Request, token string) {
+	// Get a session. We're ignoring the error resulted from decoding an
+	// existing session: Get() always returns a session, even if empty.
+	session, err := store.Get(r, "uhero-data-developer")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set session value.
+	session.Values["access_token"] = token
+	// Save it before we write to the response/return from the handler.
+	session.Save(r, w)
+}
+
+func GetJWTFromStore(w http.ResponseWriter, r *http.Request) (token string) {
+	// Get a session. We're ignoring the error resulted from decoding an
+	// existing session: Get() always returns a session, even if empty.
+	session, err := store.Get(r, "uhero-data-developer")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	val := session.Values["access_token"]
+	token, ok := val.(string)
+	if !ok {
+		http.Error(w, "No Session Token", http.StatusInternalServerError)
+		return ""
+	}
+	return
+}
+
+func IsAuthenticated(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	token, err := jwt.ParseWithClaims(GetJWTFromStore(w, r), &AppClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		// Verify the token with public key, which is the counter part of private key
+		return signKey, nil
+	})
+	log.Printf("token: %s", token)
 	if err != nil {
 		switch err.(type) {
 		case *jwt.ValidationError: // JWT validation error

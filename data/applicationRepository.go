@@ -1,12 +1,12 @@
 package data
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
+	"github.com/uhero/rest-api/models"
 	"log"
 	"time"
-	"crypto/rand"
-	"github.com/uhero/rest-api/models"
-	"encoding/base64"
 )
 
 type Repository interface {

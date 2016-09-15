@@ -1,8 +1,8 @@
 package common
 
 import (
-	"testing"
 	"context"
+	"testing"
 )
 
 func TestFromContext(t *testing.T) {
