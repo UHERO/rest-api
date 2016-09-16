@@ -10,7 +10,6 @@ import (
 	"github.com/uhero/rest-api/controllers"
 	"github.com/uhero/rest-api/data"
 	"os"
-	"net/http"
 )
 
 func SetApplicationRoutes(router *mux.Router, applicationRepository *data.ApplicationRepository) *mux.Router {
@@ -29,12 +28,12 @@ func SetApplicationRoutes(router *mux.Router, applicationRepository *data.Applic
 	applicationRouter.HandleFunc("/applications/{id}", controllers.UpdateApplication(applicationRepository)).Methods("PUT", "POST")
 	applicationRouter.HandleFunc("/applications/{id}", controllers.DeleteApplication(applicationRepository)).Methods("DELETE")
 	router.PathPrefix("/applications").Handler(negroni.New(
-		negroni.HandlerFunc(common.Authorize),
+		negroni.HandlerFunc(common.IsAuthenticated),
 		negroni.Wrap(applicationRouter),
 	))
-	router.Handle("/developer", negroni.New(
-		negroni.HandlerFunc(common.IsAuthenticated),
-		negroni.Wrap(http.HandlerFunc(controllers.DeveloperHandler(applicationRepository))),
-	))
+	//router.Handle("/developer", negroni.New(
+	//	negroni.HandlerFunc(common.IsAuthenticated),
+	//	negroni.Wrap(http.HandlerFunc(controllers.DeveloperHandler(applicationRepository))),
+	//))
 	return router
 }

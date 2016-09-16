@@ -3,14 +3,16 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
-	"github.com/gorilla/mux"
-	"github.com/uhero/rest-api/common"
-	"github.com/uhero/rest-api/data"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/uhero/rest-api/common"
+	"github.com/uhero/rest-api/data"
 )
 
+// CreateApplication returns a handler that will create applications
 func CreateApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dataResource ApplicationResource
@@ -51,6 +53,7 @@ func CreateApplication(applicationRepository data.Repository) func(http.Response
 	}
 }
 
+// UpdateApplication will return a handler for updating an application
 func UpdateApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dataResource ApplicationResource
@@ -100,6 +103,7 @@ func UpdateApplication(applicationRepository data.Repository) func(http.Response
 	}
 }
 
+// ReadApplications returns a handler that returns all of the user's applications
 func ReadApplications(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		appClaims, ok := common.FromContext(r.Context())
@@ -126,6 +130,7 @@ func ReadApplications(applicationRepository data.Repository) func(http.ResponseW
 	}
 }
 
+// DeleteApplication returns a handler that deletes an application
 func DeleteApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

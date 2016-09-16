@@ -32,7 +32,7 @@ func main() {
 
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		log.Fatal("Start MySQL Server!")
 	}
 
 	applicationRepository := &data.ApplicationRepository{DB: db}

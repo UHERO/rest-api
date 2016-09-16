@@ -2,16 +2,15 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/markbates/goth/gothic"
-	"github.com/uhero/rest-api/common"
-	"github.com/uhero/rest-api/data"
 	"html/template"
 	"log"
 	"net/http"
-	"errors"
+
+	"github.com/markbates/goth/gothic"
+	"github.com/uhero/rest-api/common"
 )
 
-// Landing page
+// IndexHandler produces the landing page
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Index Requested")
 	t, err := template.New("index").Parse(indexTemplate)
@@ -25,28 +24,36 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Authenticated Developer Landing Page
-func DeveloperHandler(applicationRepository data.Repository) func (w http.ResponseWriter, r *http.Request) {
-	return func (w http.ResponseWriter, r *http.Request) {
+// DeveloperHandler produces the authenticated developer landing page
+//func DeveloperHandler(applicationRepository data.Repository) func(w http.ResponseWriter, r *http.Request) {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//
+//		appClaims, ok := common.FromContext(r.Context())
+//		if ok != true {
+//			panic(errors.New("cannot get value from context"))
+//		}
+//
+//		log.Printf("username: %s", appClaims.Username)
+//		filename := "./static/build/bundled/index.html"
+//		developerIndex, err := os.Open(filename)
+//		if err != nil {
+//			panic(err)
+//		}
+//		http.ServeContent(w, r, filename, time.Now(), developerIndex)
+//
+//		//applications, err := applicationRepository.GetAll(appClaims.Username)
+//		//if err != nil {
+//		//	panic(err)
+//		//}
+//		//
+//		//userResource := UserResource{User: appClaims.Username, Applications: applications}
+//		//t, _ := template.New("userinfo").Parse(applicationTemplate)
+//		//t.Execute(w, userResource)
+//
+//	}
+//}
 
-		appClaims, ok := common.FromContext(r.Context())
-		if ok != true {
-			panic(errors.New("cannot get value from context"))
-		}
-		log.Printf("username: %s", appClaims.Username)
-		applications, err := applicationRepository.GetAll(appClaims.Username)
-		if err != nil {
-			panic(err)
-		}
-
-		userResource := UserResource{User: appClaims.Username, Applications: applications}
-		t, _ := template.New("userinfo").Parse(applicationTemplate)
-		t.Execute(w, userResource)
-
-	}
-}
-
-// Callback used by GitHub
+// AuthCallback is the callback used by GitHub
 func AuthCallback(w http.ResponseWriter, r *http.Request) {
 	userProfile, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
@@ -60,7 +67,7 @@ func AuthCallback(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	http.Redirect(w, r, "/developer", http.StatusMovedPermanently)
+	http.Redirect(w, r, "/", http.StatusMovedPermanently)
 }
 
 // View Templates
