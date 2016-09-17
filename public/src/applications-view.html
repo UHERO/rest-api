@@ -1,0 +1,37 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="applications-view">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <template is="dom-repeat" items="[[ajaxResponse.data]]">
+      <div class="horizontal">
+        <paper-card class="card" heading="[[item.name]] ([[item.id]])">
+          <div class="card-content">
+            <dl class="dl-horizontal">
+              <dt>Hostname</dt>
+              <dd>[[item.hostname]]</dd>
+              <dt>API Key</dt>
+              <dd>[[item.apiKey]]</dd>
+            </dl>
+          </div>
+          <div class="card-actions">
+            <paper-button>Edit</paper-button>
+          </div>
+        </paper-card>
+      </div>
+    </template>
+
+  <script>
+    Polymer({
+      is: 'applications-view'
+    });
+  </script>
+</dom-module>

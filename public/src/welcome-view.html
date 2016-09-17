@@ -1,0 +1,27 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="welcome-view">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <div class="card">
+      <h1>UHERO REST API</h1>
+      <p>UHERO has a collection of over 13,000 economic time series collected from various agencies covering Hawaii and related regions.</p>
+      <p>This REST API is a tool to help developers build data visualizations, dashboards, and other applications leveraging data used and collected by UHERO.</p>
+      <p>To register for an API key to build an app with UHERO data, <a href="/auth?provider=github" alt="Login with GitHub">login with GitHub</a>.</p>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'welcome-view'
+    });
+  </script>
+</dom-module>

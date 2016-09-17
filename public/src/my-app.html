@@ -68,9 +68,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <!-- Drawer content -->
       <app-drawer>
         <app-toolbar>Menu</app-toolbar>
-        <a href="/auth?provider=github" tabindex="-1">
-          <paper-button>Login</paper-button>
-        </a>
+        <template is="dom-if" if="[[_loggedOut]]">
+          <a href="/auth?provider=github" tabindex="-1">
+            <paper-button>Login</paper-button>
+          </a>
+        </template>
       </app-drawer>
 
       <!-- Main content -->
@@ -87,9 +89,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 auto
                 url="/applications"
                 handle-as="json"
-                last-response="{{ajaxResponse}}"
+                on-response="handleResponse"
+                on-error="handleError"
                 debounce-duration="300"></iron-ajax>
-        <template is="dom-repeat" items="[[ajaxResponse.data]]">
+        <template is="dom-repeat" items="[[_applications]]">
           <div class="horizontal">
             <paper-card heading="[[item.name]] ([[item.id]])">
               <div class="card-content">
@@ -113,7 +116,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <script>
     Polymer({
-      is: 'my-app'
+      is: 'my-app',
+      properties: {
+        _applications: {
+          type: Array,
+          reflectToAttribute: true
+        },
+        _loggedOut: {
+          type: Boolean,
+          reflectToAttribute: true,
+          value: true
+        }
+      },
+      handleResponse: function(e, response) {
+        if (response.xhr.status == 200) {
+          console.log("assigning applications", response.xhr.response.data);
+          // set view to applications
+          this._applications = response.xhr.response.data;
+          this._loggedOut = false;
+        }
+        console.log("response arguments", arguments);
+      },
+      handleError: function() {
+        // set view to welcome
+        this._applications = [];
+        this._loggedOut = true;
+        console.log("error arguments", arguments)
+      }
     });
   </script>
 </dom-module>
