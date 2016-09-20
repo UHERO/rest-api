@@ -38,3 +38,17 @@ export SESSION_SECRET=`openssl rand -base64 32`
 openssl genrsa -out app.rsa 1024
 openssl rsa -in app.rsa -pubout > app.rsa.pub
 ```
+
+## Testing the UI
+
+The API developer portal requires polymer to build the assets in the `public` folder.
+
+Assuming you already have npm and bower installed, to install the Polymer CLI run the following command:
+```
+npm install -g polymer-cli
+```
+
+You can then run the following command from the root of the project to build the UI, build the server, and start the server:
+```
+cd public && polymer build && cd .. && go run main.go
+```
