@@ -1,0 +1,109 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="api-app.html">
+
+<dom-module id="string-test">
+    <template>
+        <style>
+            :host {
+                display: block;
+                padding: 10px 20px;
+            }
+
+            paper-card {
+                display: block;
+            }
+
+            api-app {
+                padding-bottom: 20px;
+            }
+
+        </style>
+
+        <template is="dom-repeat" items="[[applications]]">
+            <api-app app-name="[[item.name]]" app-host="[[item.hostname]]"
+                     api-key="[[item.apiKey]]" app-id="[[item.id]]"></api-app>
+        </template>
+
+        <paper-card class="card">
+            <div class="card-content">
+                <paper-input label="Name" value="{{_newAppName}}"></paper-input>
+                <paper-input label="Hostname" value="{{_newAppHostname}}"></paper-input>
+                <paper-button id="addButton" on-tap="_addApplication" raised>Request API Key</paper-button>
+                <paper-progress id="addProgress" indeterminate hidden></paper-progress>
+            </div>
+        </paper-card>
+
+        <iron-ajax id="addAjax" url="/applications" content-type="application/json" handle-as="json"
+                   on-response="_handleAdd" on-error="_handleAddError" method="POST"></iron-ajax>
+
+        <iron-ajax id="getAjax" url="/applications" content-type="application/json" handle-as="json"
+                   on-response="_handleGet" on-error="_handleGetError" method="GET"></iron-ajax>
+
+        <iron-ajax id="deleteAjax" content-type="applications/json" handle-as="json"
+                   on-response="_handleDelete" on-error="_handleDeleteError" method="DELETE"></iron-ajax>
+
+    </template>
+
+    <script>
+        Polymer({
+            is: 'string-test',
+            properties: {
+                applications: {
+                    type: String,
+                    reflectToAttribute: true
+                },
+                _newAppName: {
+                    type: String
+                },
+                _newAppHostname: {
+                    type: String
+                }
+            },
+            listeners: {
+                'delete-app': '_handleDeleteEvent'
+            },
+            _addApplication: function() {
+                // should show loading and disable the request button until ready
+                this.$.addButton.disabled = true;
+                this.$.addProgress.hidden = false;
+                this.$.addAjax.body = {data: {name: this._newAppName, hostname: this._newAppHostname}};
+                this.$.addAjax.generateRequest();
+                console.log(this._newAppName, this._newAppHostname)
+            },
+            _handleAdd: function() {
+                // should clear out the new fields
+                // update applications list.
+                this.$.addButton.disabled = false;
+                this.$.addProgress.hidden = true;
+                this._newAppName = "";
+                this._newAppHostname = "";
+                this.$.getAjax.generateRequest();
+                console.log("response arguments", arguments);
+            },
+            _handleAddError: function() {
+                // should show an error
+                this.$.addButton.disabled = false;
+                this.$.addProgress.hidden = true;
+                console.log("error arguments", arguments);
+            },
+            _handleGet: function(e, response) {
+                this.applications = response.xhr.response.data;
+            },
+            _handleDeleteEvent: function(e, message) {
+                if (!isNaN(message.appId)) {
+                    this.$.deleteAjax.url = "/applications/" + message.appId;
+                    this.$.deleteAjax.generateRequest();
+                }
+                console.log("delete app event", arguments);
+            },
+            _handleDelete: function() {
+                this.$.getAjax.generateRequest();
+                console.log("delete app response", arguments);
+            },
+            _handleDeleteError: function() {
+                console.log("delete app error response", arguments);
+            }
+        });
+    </script>
+</dom-module>

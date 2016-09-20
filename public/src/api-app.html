@@ -1,0 +1,54 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+<dom-module id="api-app">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+            paper-card {
+                display:block;
+            }
+        </style>
+
+
+        <paper-card class="card">
+            <div class="card-content">
+                <paper-input label="Name" value="{{appName}}"></paper-input>
+                <paper-input label="Hostname" value="{{appHost}}"></paper-input>
+                <paper-input label="API Key" value="{{apiKey}}" readonly></paper-input>
+            </div>
+            <div class="card-actions">
+                <paper-button raised on-tap="onDelete">Delete</paper-button>
+            </div>
+        </paper-card>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'api-app',
+            properties: {
+                appId: {
+                    type: Number
+                },
+                appName: {
+                    type: String,
+                    reflectToAttribute: true
+                },
+                appHost: {
+                    type: String,
+                    reflectToAttribute: true
+                },
+                apiKey: {
+                    type: String
+                }
+            },
+            onDelete: function() {
+                this.fire('delete-app', {appId: this.appId})
+            }
+        });
+    </script>
+</dom-module>

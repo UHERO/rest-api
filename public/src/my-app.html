@@ -21,6 +21,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="welcome-view.html">
+<link rel="import" href="apps-view.html">
+<link rel="import" href="string-test.html">
 <link rel="import" href="my-icons.html">
 
 <dom-module id="my-app">
@@ -85,6 +88,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </app-toolbar>
         </app-header>
 
+
         <iron-ajax
                 auto
                 url="/applications"
@@ -92,24 +96,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 on-response="handleResponse"
                 on-error="handleError"
                 debounce-duration="300"></iron-ajax>
-        <template is="dom-repeat" items="[[_applications]]">
-          <div class="horizontal">
-            <paper-card heading="[[item.name]] ([[item.id]])">
-              <div class="card-content">
 
-              </div>
-              <div class="card-actions">
-                <dl class="dl-horizontal">
-                  <dt>Hostname</dt>
-                  <dd>[[item.hostname]]</dd>
-                  <dt>API Key</dt>
-                  <dd>[[item.apiKey]]</dd>
-                </dl>
-                <paper-button>Edit</paper-button>
-              </div>
-            </paper-card>
-          </div>
-        </template>
+        <iron-pages
+            selected="[[_view]]"
+            attr-for-selected="name"
+            fallback-selection="applications"
+            role="main">
+          <!--<apps-view-->
+            <!--name="applications"-->
+            <!--applications="[[_applications]]"-->
+            <!--test-string="This should work?!?">-->
+          <!--</apps-view>-->
+          <welcome-view name="welcome"></welcome-view>
+          <string-test name="applications" applications="[[_applications]]"></string-test>
+        </iron-pages>
       </app-header-layout>
     </app-drawer-layout>
   </template>
@@ -120,20 +120,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       properties: {
         _applications: {
           type: Array,
-          reflectToAttribute: true
         },
         _loggedOut: {
           type: Boolean,
-          reflectToAttribute: true,
           value: true
+        },
+        _view: {
+          type: String,
+          value: 'applications'
         }
       },
       handleResponse: function(e, response) {
         if (response.xhr.status == 200) {
-          console.log("assigning applications", response.xhr.response.data);
           // set view to applications
           this._applications = response.xhr.response.data;
           this._loggedOut = false;
+          this._view = "applications";
         }
         console.log("response arguments", arguments);
       },
@@ -141,6 +143,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         // set view to welcome
         this._applications = [];
         this._loggedOut = true;
+        this._view = "welcome";
         console.log("error arguments", arguments)
       }
     });

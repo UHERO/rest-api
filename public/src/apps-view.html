@@ -1,7 +1,9 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="shared-styles.html">
 
-<dom-module id="applications-view">
+<dom-module id="apps-view">
   <template>
     <style include="shared-styles">
       :host {
@@ -11,7 +13,9 @@
       }
     </style>
 
-    <template is="dom-repeat" items="[[ajaxResponse.data]]">
+    <div>
+    <h2>[[testString]]</h2>
+    <template is="dom-repeat" items="[[applications]]">
       <div class="horizontal">
         <paper-card class="card" heading="[[item.name]] ([[item.id]])">
           <div class="card-content">
@@ -28,10 +32,15 @@
         </paper-card>
       </div>
     </template>
+    </div>
 
   <script>
     Polymer({
-      is: 'applications-view'
+      is: 'apps-view',
+      properties: {
+        applications: Array,
+        testString: String
+      }
     });
   </script>
 </dom-module>
