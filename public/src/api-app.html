@@ -80,15 +80,9 @@
                 this.$.saveButton.style.visibility = "hidden";
             },
             keyClick: function() {
-                console.log("keyClick: arguments", arguments);
-                console.log("keyClick apiKey", this.apiKey);
-                console.log(this.$.apiKey);
-                console.log(this.$.apiKey.$);
-                console.log(this.$.apiKey.$.input);
                 var apiKeyInput = this.$.apiKey.$.input;
                 apiKeyInput.select();
                 apiKeyInput.setSelectionRange(0, this.apiKey.length);
-//                element.setSelectionRange(0, this.apiKey.length);
             }
         });
     </script>
