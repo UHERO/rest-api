@@ -20,7 +20,7 @@
             <div class="card-content">
                 <paper-input label="Name" value="{{appName}}"></paper-input>
                 <paper-input label="Hostname" value="{{appHost}}"></paper-input>
-                <paper-input label="API Key" value="{{apiKey}}" readonly></paper-input>
+                <paper-input id="apiKey" label="API Key" value="{{apiKey}}" readonly on-tap="keyClick"></paper-input>
             </div>
             <div class="card-actions horizontal layout">
                 <paper-button raised on-tap="onDelete">Delete</paper-button>
@@ -78,6 +78,17 @@
                 this.original.appHost = this.appHost;
                 this.fire('save-app', {appId: this.appId, appName: this.appName, appHost: this.appHost});
                 this.$.saveButton.style.visibility = "hidden";
+            },
+            keyClick: function() {
+                console.log("keyClick: arguments", arguments);
+                console.log("keyClick apiKey", this.apiKey);
+                console.log(this.$.apiKey);
+                console.log(this.$.apiKey.$);
+                console.log(this.$.apiKey.$.input);
+                var apiKeyInput = this.$.apiKey.$.input;
+                apiKeyInput.select();
+                apiKeyInput.setSelectionRange(0, this.apiKey.length);
+//                element.setSelectionRange(0, this.apiKey.length);
             }
         });
     </script>
