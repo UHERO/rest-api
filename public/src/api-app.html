@@ -2,10 +2,11 @@
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 
 <dom-module id="api-app">
     <template>
-        <style>
+        <style include="iron-flex iron-flex-alignment">
             :host {
                 display: block;
             }
@@ -21,8 +22,10 @@
                 <paper-input label="Hostname" value="{{appHost}}"></paper-input>
                 <paper-input label="API Key" value="{{apiKey}}" readonly></paper-input>
             </div>
-            <div class="card-actions">
+            <div class="card-actions horizontal layout">
                 <paper-button raised on-tap="onDelete">Delete</paper-button>
+                <div class="flex">&nbsp;</div>
+                <paper-button id="saveButton" raised on-tap="onSave" style="visibility: hidden;">Save Changes</paper-button>
             </div>
         </paper-card>
     </template>
@@ -36,18 +39,45 @@
                 },
                 appName: {
                     type: String,
-                    reflectToAttribute: true
+                    reflectToAttribute: true,
+                    observer: '_nameChanged'
                 },
                 appHost: {
                     type: String,
-                    reflectToAttribute: true
+                    reflectToAttribute: true,
+                    observer: '_nameChanged'
                 },
                 apiKey: {
                     type: String
+                },
+                original: {
+                    type: Object,
+                    value: function() { return {}; }
                 }
+            },
+            attached: function() {
+                this.original.appName = this.appName;
+                this.original.appHost = this.appHost;
+                this.$.saveButton.style.visibility = "hidden";
+            },
+            _nameChanged: function() {
+                console.log('name change called:', arguments);
+                console.log('appName', this.original.appName, this.appName);
+                console.log('appHost', this.original.appHost, this.appHost);
+                if (this.original.appName == this.appName && this.original.appHost == this.appHost) {
+                    this.$.saveButton.style.visibility = "hidden";
+                    return;
+                }
+                this.$.saveButton.style.visibility = "visible";
             },
             onDelete: function() {
                 this.fire('delete-app', {appId: this.appId})
+            },
+            onSave: function() {
+                this.original.appName = this.appName;
+                this.original.appHost = this.appHost;
+                this.fire('save-app', {appId: this.appId, appName: this.appName, appHost: this.appHost});
+                this.$.saveButton.style.visibility = "hidden";
             }
         });
     </script>

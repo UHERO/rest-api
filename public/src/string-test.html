@@ -43,6 +43,8 @@
         <iron-ajax id="deleteAjax" content-type="applications/json" handle-as="json"
                    on-response="_handleDelete" on-error="_handleDeleteError" method="DELETE"></iron-ajax>
 
+        <iron-ajax id="saveAjax" content-type="applications/json" handle-as="json"
+                   on-response="_handleSave" on-error="_handleSaveError" method="POST"></iron-ajax>
     </template>
 
     <script>
@@ -61,13 +63,14 @@
                 }
             },
             listeners: {
-                'delete-app': '_handleDeleteEvent'
+                'delete-app': '_handleDeleteEvent',
+                'save-app': '_handleSaveEvent'
             },
             _addApplication: function() {
                 // should show loading and disable the request button until ready
                 this.$.addButton.disabled = true;
                 this.$.addProgress.hidden = false;
-                this.$.addAjax.body = {data: {name: this._newAppName, hostname: this._newAppHostname}};
+                this.$.addAjax.body = JSON.stringify({data: {name: this._newAppName, hostname: this._newAppHostname}});
                 this.$.addAjax.generateRequest();
                 console.log(this._newAppName, this._newAppHostname)
             },
@@ -103,6 +106,26 @@
             },
             _handleDeleteError: function() {
                 console.log("delete app error response", arguments);
+            },
+            _handleSaveEvent: function(e, message) {
+                this.$.saveAjax.body = JSON.stringify({
+                    data: {
+                        id: message.appId,
+                        name: message.appName,
+                        hostname: message.appHost
+                    }
+                });
+                console.log(this.$.saveAjax.body);
+                this.$.saveAjax.url = "/applications/" + message.appId;
+                this.$.saveAjax.generateRequest();
+            },
+            _handleSave: function() {
+                // should display toast signaling successful save
+                console.log("save response", arguments);
+            },
+            _handleSaveError: function() {
+                // should display error and prompt to save again
+                console.log("save error response", arguments);
             }
         });
     </script>
