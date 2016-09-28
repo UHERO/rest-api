@@ -52,7 +52,7 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 
 func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
 	rows, err := r.DB.Query(`SELECT
-	id, name FROM categories WHERE parent_id IS NULL;`)
+	id, name FROM categories WHERE ancestry IS NULL;`)
 	if err != nil {
 		return
 	}

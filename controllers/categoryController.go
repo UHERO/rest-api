@@ -9,13 +9,11 @@ import (
 	"github.com/gorilla/mux"
 	"errors"
 	"strconv"
-	"log"
 )
 
 
 func GetCategory(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Print("GetCategory Controller")
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {
 			common.DisplayAppError(
@@ -65,8 +63,35 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 
 func GetCategories(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Print("GetCategories Controller")
 		categories, err := categoryRepository.GetAllCategories()
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		j, err := json.Marshal(CategoriesResource{Data: categories})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error processing JSON has occurred",
+				500,
+			)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
+	}
+}
+
+func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		categories, err := categoryRepository.GetCategoryRoots()
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -94,7 +119,6 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 
 func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Print("GetCategoriesByName Controller")
 		searchText, ok := mux.Vars(r)["searchText"]
 		if !ok {
 			common.DisplayAppError(
