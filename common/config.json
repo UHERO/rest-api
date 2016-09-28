@@ -1,6 +1,6 @@
 {
-  "protocol": "unix",
-  "server": "/tmp/mysql.sock",
+  "protocol": "tcp",
+  "server": "localhost:3306",
   "databaseUser": "root",
   "databasePassword": "",
   "database": "uhero_db_dev"

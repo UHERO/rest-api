@@ -10,7 +10,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/uhero/rest-api/common"
 	"github.com/uhero/rest-api/data"
+	"strings"
 )
+
+const authPrefix = "Bearer "
 
 // CreateApplication returns a handler that will create applications
 func CreateApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
@@ -33,7 +36,7 @@ func CreateApplication(applicationRepository data.Repository) func(http.Response
 			panic(errors.New("cannot get value from context"))
 		}
 		log.Printf("username: %s", appClaims.Username)
-		_, err = applicationRepository.Create(appClaims.Username, application)
+		_, err = applicationRepository.CreateApplication(appClaims.Username, application)
 		if err != nil {
 			panic(err)
 		}
@@ -52,6 +55,43 @@ func CreateApplication(applicationRepository data.Repository) func(http.Response
 		w.Write(j)
 	}
 }
+
+func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		authString := r.Header.Get("Authorization")
+		if !strings.HasPrefix(authString, authPrefix) {
+			common.DisplayAppError(
+				w,
+				errors.New("No Bearer Token"),
+				"No Bearer Token!",
+				401,
+			)
+			return
+		}
+		applications, err := applicationRepository.GetApplicationsByApiKey(strings.TrimPrefix(authString, authPrefix))
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"Error Veryfying API Key!",
+				500,
+			)
+			return
+		}
+		if len(applications) == 0 {
+			common.DisplayAppError(
+				w,
+				err,
+				"Invalid API Key!",
+				401,
+			)
+			return
+		}
+		log.Print("Off to the next handler")
+		next(w, r)
+	}
+}
+
 
 // UpdateApplication will return a handler for updating an application
 func UpdateApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
@@ -82,7 +122,7 @@ func UpdateApplication(applicationRepository data.Repository) func(http.Response
 		}
 		log.Printf("username: %s", appClaims.Username)
 
-		_, err = applicationRepository.Update(appClaims.Username, application)
+		_, err = applicationRepository.UpdateApplication(appClaims.Username, application)
 		if err != nil {
 			panic(err)
 		}
@@ -110,7 +150,7 @@ func ReadApplications(applicationRepository data.Repository) func(http.ResponseW
 		if ok != true {
 			panic(errors.New("cannot get value from context"))
 		}
-		applications, err := applicationRepository.GetAll(appClaims.Username)
+		applications, err := applicationRepository.GetAllApplications(appClaims.Username)
 		if err != nil {
 			panic(err)
 		}
@@ -143,7 +183,7 @@ func DeleteApplication(applicationRepository data.Repository) func(http.Response
 		if ok != true {
 			panic(errors.New("cannot get value from context"))
 		}
-		_, err = applicationRepository.Delete(appClaims.Username, id)
+		_, err = applicationRepository.DeleteApplication(appClaims.Username, id)
 		if err != nil {
 			panic(err)
 		}

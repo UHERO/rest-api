@@ -24,19 +24,19 @@ var (
 type repoMock struct {
 }
 
-func (repoMock) Create(username string, application *models.Application) (int64, error) {
+func (repoMock) CreateApplication(username string, application *models.Application) (int64, error) {
 	return 1, nil
 }
 
-func (repoMock) Update(username string, application *models.Application) (int64, error) {
+func (repoMock) UpdateApplication(username string, application *models.Application) (int64, error) {
 	return 1, nil
 }
 
-func (repoMock) Delete(username string, id int64) (int64, error) {
+func (repoMock) DeleteApplication(username string, id int64) (int64, error) {
 	return 1, nil
 }
 
-func (repoMock) GetAll(username string) ([]models.Application, error) {
+func (repoMock) GetAllApplications(username string) ([]models.Application, error) {
 	return applicationsResult, nil
 }
 
