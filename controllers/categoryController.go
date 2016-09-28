@@ -9,11 +9,13 @@ import (
 	"github.com/gorilla/mux"
 	"errors"
 	"strconv"
+	"log"
 )
 
 
 func GetCategory(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Print("GetCategory Controller")
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {
 			common.DisplayAppError(
@@ -63,6 +65,7 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 
 func GetCategories(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Print("GetCategories Controller")
 		categories, err := categoryRepository.GetAllCategories()
 		if err != nil {
 			common.DisplayAppError(
@@ -91,6 +94,7 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 
 func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Print("GetCategoriesByName Controller")
 		searchText, ok := mux.Vars(r)["searchText"]
 		if !ok {
 			common.DisplayAppError(
