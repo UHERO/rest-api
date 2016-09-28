@@ -88,3 +88,41 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 		w.Write(j)
 	}
 }
+
+func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		searchText, ok := mux.Vars(r)["searchText"]
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get searchText from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+		categories, err := categoryRepository.GetCategoriesByName(searchText)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		j, err := json.Marshal(CategoriesResource{Data: categories})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error processing JSON has occurred",
+				500,
+			)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
+	}
+}

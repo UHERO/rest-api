@@ -89,22 +89,27 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 }
 
 func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT
-	id, name, parent_id FROM categories WHERE name LIKE '%?%';`, name)
+	fuzzyString := "%" + name + "%"
+	rows, err := r.DB.Query("SELECT id, name, ancestry FROM categories WHERE LOWER(name) LIKE ?;", fuzzyString)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
-		category := models.Category{}
+		category := models.CategoryWithAncestry{}
 		err = rows.Scan(
 			&category.Id,
 			&category.Name,
-			&category.ParentId,
+			&category.Ancestry,
 		)
 		if err != nil {
 			return
 		}
-		categories = append(categories, category)
+		parentId := getParentId(category.Ancestry)
+		categories = append(categories, models.Category{
+			Id: category.Id,
+			Name: category.Name,
+			ParentId: parentId,
+		})
 	}
 	return
 }
