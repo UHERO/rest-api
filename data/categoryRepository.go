@@ -70,16 +70,22 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 	return
 }
 
-func (r *CategoryRepository) GetCategoryById(id int64) (category models.Category, err error) {
-	err = r.DB.QueryRow(`SELECT
-	id, name, parent_id
+func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
+	var category models.CategoryWithAncestry
+	err := r.DB.QueryRow(`SELECT
+	id, name, ancestry
 	FROM categories
 	WHERE id = ?;`, id).Scan(
 		&category.Id,
 		&category.Name,
-		&category.ParentId,
+		&category.Ancestry,
 	)
-	return
+	parentId := getParentId(category.Ancestry)
+	return models.Category{
+		Id: category.Id,
+		Name: category.Name,
+		ParentId: parentId,
+	}, err
 }
 
 func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
