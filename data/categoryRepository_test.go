@@ -3,8 +3,8 @@ package data
 import (
 	"github.com/uhero/rest-api/models"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"reflect"
 	"testing"
+	"database/sql"
 )
 
 func TestGetAllCategories(t *testing.T) {
@@ -14,31 +14,31 @@ func TestGetAllCategories(t *testing.T) {
 	}
 	defer db.Close()
 
-	category1 := models.Category{
+	category1 := models.CategoryWithAncestry{
 		Id:       1,
 		Name:     "Summary",
-		ParentId: 0,
+		Ancestry: sql.NullString{Valid: false},
 	}
-	category2 := models.Category{
+	category2 := models.CategoryWithAncestry{
 		Id:       2,
 		Name:     "Income",
-		ParentId: 1,
+		Ancestry: sql.NullString{Valid: true, String: "1"},
 	}
-	categoryResult := sqlmock.NewRows([]string{"id", "name", "parentId"}).
-		AddRow(category1.Id, category1.Name, category1.ParentId).
-		AddRow(category2.Id, category2.Name, category2.ParentId)
-	mock.ExpectQuery("SELECT id, name, parent_id FROM categories").
+	categoryResult := sqlmock.NewRows([]string{"id", "name", "ancestry"}).
+		AddRow(category1.Id, category1.Name, nil).
+		AddRow(category2.Id, category2.Name, category2.Ancestry.String)
+	mock.ExpectQuery("SELECT id, name, ancestry FROM categories").
 		WillReturnRows(categoryResult)
 
 	categoryRepository := CategoryRepository{DB: db}
 	
-	categories, err := categoryRepository.GetAll()
+	categories, err := categoryRepository.GetAllCategories()
 	if err != nil {
 		t.Fail()
 	}
 	if len(categories) != 2 ||
-		!reflect.DeepEqual(categories[0], category1) ||
-		!reflect.DeepEqual(categories[1], category2) {
+		categories[0].Name != category1.Name ||
+		categories[1].Id != category2.Id {
 		t.Fail()
 	}
 }
