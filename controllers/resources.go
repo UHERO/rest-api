@@ -34,4 +34,9 @@ type (
 	CategoriesResource struct {
 		Data []models.Category `json:"data"`
 	}
+
+	// Get - /category/series
+	SeriesListResource struct {
+		Data []models.DataPortalSeries `json:"data"`
+	}
 )

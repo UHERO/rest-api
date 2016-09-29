@@ -3,8 +3,8 @@ package data
 import (
 	"database/sql"
 	"github.com/uhero/rest-api/models"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 type CategoryRepository struct {
@@ -30,8 +30,8 @@ func (r *CategoryRepository) GetAllCategories() (categories []models.Category, e
 
 		parentId := getParentId(category.Ancestry)
 		categories = append(categories, models.Category{
-			Id: category.Id,
-			Name: category.Name,
+			Id:       category.Id,
+			Name:     category.Name,
 			ParentId: parentId,
 		})
 	}
@@ -46,7 +46,7 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 	if len(parents) == 0 {
 		return
 	}
-	parentId, _ = strconv.ParseInt(parents[len(parents) - 1], 10, 64)
+	parentId, _ = strconv.ParseInt(parents[len(parents)-1], 10, 64)
 	return
 }
 
@@ -82,8 +82,8 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	)
 	parentId := getParentId(category.Ancestry)
 	return models.Category{
-		Id: category.Id,
-		Name: category.Name,
+		Id:       category.Id,
+		Name:     category.Name,
 		ParentId: parentId,
 	}, err
 }
@@ -106,8 +106,8 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 		}
 		parentId := getParentId(category.Ancestry)
 		categories = append(categories, models.Category{
-			Id: category.Id,
-			Name: category.Name,
+			Id:       category.Id,
+			Name:     category.Name,
 			ParentId: parentId,
 		})
 	}

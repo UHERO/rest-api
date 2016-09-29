@@ -92,7 +92,6 @@ func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.Re
 	}
 }
 
-
 // UpdateApplication will return a handler for updating an application
 func UpdateApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

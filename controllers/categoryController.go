@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"errors"
+	"github.com/gorilla/mux"
 	"github.com/uhero/rest-api/common"
 	"github.com/uhero/rest-api/data"
-	"github.com/gorilla/mux"
-	"errors"
 	"strconv"
 )
-
 
 func GetCategory(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

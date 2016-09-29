@@ -1,10 +1,10 @@
 package data
 
 import (
+	"database/sql"
 	"github.com/uhero/rest-api/models"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"testing"
-	"database/sql"
 )
 
 func TestGetAllCategories(t *testing.T) {
@@ -31,7 +31,7 @@ func TestGetAllCategories(t *testing.T) {
 		WillReturnRows(categoryResult)
 
 	categoryRepository := CategoryRepository{DB: db}
-	
+
 	categories, err := categoryRepository.GetAllCategories()
 	if err != nil {
 		t.Fail()
@@ -42,4 +42,3 @@ func TestGetAllCategories(t *testing.T) {
 		t.Fail()
 	}
 }
-
