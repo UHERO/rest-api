@@ -14,9 +14,14 @@ func InitRoutes(
 ) *mux.Router {
 	router := mux.NewRouter().StrictSlash(false)
 	router = SetApplicationRoutes(router, applicationRepository)
+
+	apiRouter := mux.NewRouter().StrictSlash(false)
+	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository)
+	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository)
+
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
-		negroni.Wrap(SetCategoryRoutes(categoryRepository, seriesRepository)),
+		negroni.Wrap(apiRouter),
 	))
 	return router
 }

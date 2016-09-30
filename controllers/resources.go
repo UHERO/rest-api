@@ -39,4 +39,12 @@ type (
 	SeriesListResource struct {
 		Data []models.DataPortalSeries `json:"data"`
 	}
+
+	SeriesResource struct {
+		Data models.DataPortalSeries `json:"data"`
+	}
+
+	ObservationList struct {
+		Data models.SeriesObservations `json:"data"`
+	}
 )

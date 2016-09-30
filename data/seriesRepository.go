@@ -33,9 +33,9 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 		if err != nil {
 			return
 		}
-		dataPortalSeries := models.DataPortalSeries{Id: series.Name}
+		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
 		if series.DataPortalName.Valid {
-			dataPortalSeries.Name = series.DataPortalName.String
+			dataPortalSeries.Title = series.DataPortalName.String
 		}
 		if series.Description.Valid {
 			dataPortalSeries.Description = series.Description.String
@@ -54,5 +54,66 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 		}
 		seriesList = append(seriesList, dataPortalSeries)
 	}
+	return
+}
+
+func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
+	row := r.DB.QueryRow(`SELECT id, name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
+	FROM series WHERE id = ?`, seriesId)
+	series := models.Series{}
+	err = row.Scan(
+		&series.Id,
+		&series.Name,
+		&series.Description,
+		&series.Frequency,
+		&series.SeasonallyAdjusted,
+		&series.UnitsLabel,
+		&series.UnitsLabelShort,
+		&series.DataPortalName,
+	)
+	if err != nil {
+		return
+	}
+	dataPortalSeries = models.DataPortalSeries{Id: series.Id, Name: series.Name}
+	if series.DataPortalName.Valid {
+		dataPortalSeries.Title = series.DataPortalName.String
+	}
+	if series.Description.Valid {
+		dataPortalSeries.Description = series.Description.String
+	}
+	if series.Frequency.Valid {
+		dataPortalSeries.Frequency = series.Frequency.String
+	}
+	if series.SeasonallyAdjusted.Valid {
+		dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
+	}
+	if series.UnitsLabel.Valid {
+		dataPortalSeries.UnitsLabel = series.UnitsLabel.String
+	}
+	if series.UnitsLabelShort.Valid {
+		dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+	}
+	return
+}
+
+func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
+	rows, err := r.DB.Query(`SELECT date, value FROM data_points WHERE series_id = ?;`, seriesId)
+	if err != nil {
+		return
+	}
+	var observations []models.Observation
+	for rows.Next() {
+		observation := models.Observation{}
+		err = rows.Scan(
+			&observation.Date,
+			&observation.Value,
+		)
+		if err != nil {
+			return
+		}
+		observations = append(observations, observation)
+	}
+	seriesObservations.TransformationResults = []models.TransformationResult{{Observations: observations}}
 	return
 }
