@@ -10,17 +10,17 @@ import (
 )
 
 type Repository interface {
-	Create(string, *models.Application) (int64, error)
-	Update(string, *models.Application) (int64, error)
-	Delete(string, int64) (int64, error)
-	GetAll(string) ([]models.Application, error)
+	CreateApplication(string, *models.Application) (int64, error)
+	UpdateApplication(string, *models.Application) (int64, error)
+	DeleteApplication(string, int64) (int64, error)
+	GetAllApplications(string) ([]models.Application, error)
 }
 
 type ApplicationRepository struct {
 	DB *sql.DB
 }
 
-func (r *ApplicationRepository) Create(userName string, application *models.Application) (numRows int64, err error) {
+func (r *ApplicationRepository) CreateApplication(username string, application *models.Application) (numRows int64, err error) {
 	rb := make([]byte, 32)
 	_, err = rand.Read(rb)
 	if err != nil {
@@ -36,7 +36,7 @@ func (r *ApplicationRepository) Create(userName string, application *models.Appl
 		application.Name,
 		application.Hostname,
 		application.APIKey,
-		userName,
+		username,
 		time.Now(),
 		time.Now(),
 	)
@@ -51,7 +51,7 @@ func (r *ApplicationRepository) Create(userName string, application *models.Appl
 	return
 }
 
-func (r *ApplicationRepository) Update(username string, application *models.Application) (numRows int64, err error) {
+func (r *ApplicationRepository) UpdateApplication(username string, application *models.Application) (numRows int64, err error) {
 	stmt, err := r.DB.Prepare(`UPDATE api_applications SET
 	name = COALESCE(?, name),
 	hostname = COALESCE(?, hostname),
@@ -83,12 +83,12 @@ func (r *ApplicationRepository) Update(username string, application *models.Appl
 	return
 }
 
-func (r *ApplicationRepository) Delete(userName string, id int64) (numRows int64, err error) {
+func (r *ApplicationRepository) DeleteApplication(username string, id int64) (numRows int64, err error) {
 	stmt, err := r.DB.Prepare(`DELETE FROM api_applications WHERE id = ? and github_nickname = ?;`)
 	if err != nil {
 		return
 	}
-	res, err := stmt.Exec(id, userName)
+	res, err := stmt.Exec(id, username)
 	if err != nil {
 		return
 	}
@@ -97,10 +97,10 @@ func (r *ApplicationRepository) Delete(userName string, id int64) (numRows int64
 	return
 }
 
-func (r *ApplicationRepository) GetAll(userName string) (applications []models.Application, err error) {
+func (r *ApplicationRepository) GetAllApplications(username string) (applications []models.Application, err error) {
 	rows, err := r.DB.Query(`SELECT
 	id, name, hostname, api_key
-	FROM api_applications WHERE github_nickname = ?;`, userName)
+	FROM api_applications WHERE github_nickname = ?;`, username)
 	if err != nil {
 		return
 	}
@@ -120,11 +120,34 @@ func (r *ApplicationRepository) GetAll(userName string) (applications []models.A
 	return
 }
 
-func (r *ApplicationRepository) GetById(userName string, id int64) (application models.Application, err error) {
+func (r *ApplicationRepository) GetApplicationsByApiKey(apiKey string) (applications []models.Application, err error) {
+	rows, err := r.DB.Query(`SELECT
+	id, name, hostname, api_key
+	FROM api_applications WHERE api_key = ?;`, apiKey)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		application := models.Application{}
+		err = rows.Scan(
+			&application.Id,
+			&application.Name,
+			&application.Hostname,
+			&application.APIKey,
+		)
+		if err != nil {
+			return
+		}
+		applications = append(applications, application)
+	}
+	return
+}
+
+func (r *ApplicationRepository) GetApplicationById(username string, id int64) (application models.Application, err error) {
 	err = r.DB.QueryRow(`SELECT
 	id, name, hostname, api_key
 	FROM api_applications
-	WHERE id = ? AND github_nickname = ?;`, id, userName).Scan(
+	WHERE id = ? AND github_nickname = ?;`, id, username).Scan(
 		&application.Id,
 		&application.Name,
 		&application.Hostname,

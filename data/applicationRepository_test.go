@@ -16,14 +16,14 @@ func TestCreateApplication(t *testing.T) {
 
 	mock.ExpectPrepare("INSERT INTO api_applications").ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
 
-	userName := "testUser"
+	username := "testUser"
 	application := models.Application{
 		Name:     "cool app",
 		Hostname: "example.com",
 	}
 
 	applicationRepository := ApplicationRepository{DB: db}
-	numRows, err := applicationRepository.Create(userName, &application)
+	numRows, err := applicationRepository.CreateApplication(username, &application)
 
 	if numRows != 1 {
 		t.Fail()
@@ -45,7 +45,7 @@ func TestUpdateApplication(t *testing.T) {
 
 	mock.ExpectPrepare("UPDATE api_applications").ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
 
-	userName := "testUser"
+	username := "testUser"
 	application := models.Application{
 		Id:       1,
 		Name:     "cool app",
@@ -54,7 +54,7 @@ func TestUpdateApplication(t *testing.T) {
 	}
 
 	applicationRepository := ApplicationRepository{DB: db}
-	numRows, err := applicationRepository.Update(userName, &application)
+	numRows, err := applicationRepository.UpdateApplication(username, &application)
 	if err != nil || numRows != 1 {
 		t.Fail()
 	}
@@ -69,7 +69,7 @@ func TestDeleteApplication(t *testing.T) {
 
 	mock.ExpectPrepare("DELETE FROM api_applications").ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
 
-	userName := "testUser"
+	username := "testUser"
 	application := models.Application{
 		Id:       1,
 		Name:     "cool app",
@@ -78,7 +78,7 @@ func TestDeleteApplication(t *testing.T) {
 	}
 
 	applicationRepository := ApplicationRepository{DB: db}
-	numRows, err := applicationRepository.Delete(userName, application.Id)
+	numRows, err := applicationRepository.DeleteApplication(username, application.Id)
 	if err != nil || numRows != 1 {
 		t.Fail()
 	}
@@ -91,7 +91,7 @@ func TestGetAllApplications(t *testing.T) {
 	}
 	defer db.Close()
 
-	userName := "testUser"
+	username := "testUser"
 	application1 := models.Application{
 		Id:       1,
 		Name:     "cool app",
@@ -111,7 +111,7 @@ func TestGetAllApplications(t *testing.T) {
 		WillReturnRows(applicationsResult)
 
 	applicationRepository := ApplicationRepository{DB: db}
-	applications, err := applicationRepository.GetAll(userName)
+	applications, err := applicationRepository.GetAllApplications(username)
 	if err != nil {
 		t.Fail()
 	}
@@ -129,7 +129,7 @@ func TestGetById(t *testing.T) {
 	}
 	defer db.Close()
 
-	userName := "testUser"
+	username := "testUser"
 	application := models.Application{
 		Id:       1,
 		Name:     "cool app",
@@ -141,7 +141,7 @@ func TestGetById(t *testing.T) {
 	mock.ExpectQuery("SELECT id, name, hostname, api_key FROM api_applications").WillReturnRows(mockResult)
 
 	applicationRepository := ApplicationRepository{DB: db}
-	applicationResult, err := applicationRepository.GetById(userName, application.Id)
+	applicationResult, err := applicationRepository.GetApplicationById(username, application.Id)
 	if err != nil {
 		t.Fail()
 	}
