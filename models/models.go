@@ -3,6 +3,8 @@ package models
 import (
 	"database/sql"
 	"time"
+	"encoding/json"
+	"fmt"
 )
 
 type Application struct {
@@ -47,6 +49,11 @@ type DataPortalSeries struct {
 }
 
 type Observation struct {
+	Date time.Time
+	Value sql.NullFloat64
+}
+
+type DataPortalObservation struct {
 	Date time.Time `json:"date"`
 	Value float64 `json:"value"`
 }
@@ -61,6 +68,34 @@ type SeriesObservations struct {
 
 type TransformationResult struct {
 	Transformation string `json:"transformation"`
-	Observations []Observation `json:"observations"`
+	Observations []DataPortalObservation `json:"observations"`
 
+}
+
+func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Date string `json:"date"`
+		Value string `json:"value"`
+	}{
+		Date: formatDate(o.Date),
+		Value: fmt.Sprintf("%.4f", o.Value),
+	})
+}
+
+// solid idea from stack overflow: http://choly.ca/post/go-json-marshalling/
+func (so SeriesObservations) MarshalJSON() ([]byte, error) {
+	type Alias SeriesObservations
+	return json.Marshal(&struct {
+		ObservationStart string `json:"observationStart"`
+		ObservationEnd string `json:"observationEnd"`
+		Alias
+	}{
+		ObservationStart: formatDate(so.ObservationStart),
+		ObservationEnd: formatDate(so.ObservationEnd),
+		Alias: (Alias)(so),
+	})
+}
+
+func formatDate(date time.Time) string {
+	return fmt.Sprintf("%d-%02d-%02d", date.Year(), date.Month(), date.Day())
 }

@@ -35,15 +35,17 @@ type (
 		Data []models.Category `json:"data"`
 	}
 
-	// Get - /category/series
+	// GET - /category/series
 	SeriesListResource struct {
 		Data []models.DataPortalSeries `json:"data"`
 	}
 
+	// GET - /series
 	SeriesResource struct {
 		Data models.DataPortalSeries `json:"data"`
 	}
 
+	// GET - /series/observations
 	ObservationList struct {
 		Data models.SeriesObservations `json:"data"`
 	}
