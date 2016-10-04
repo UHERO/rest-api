@@ -2,9 +2,9 @@ package models
 
 import (
 	"database/sql"
-	"time"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 type Application struct {
@@ -26,6 +26,12 @@ type CategoryWithAncestry struct {
 	Ancestry sql.NullString
 }
 
+type Geography struct {
+	FIPS   string `json:"fips"`
+	Name   string `json:"name"`
+	Handle string `json:"handle"`
+}
+
 type Series struct {
 	Id                 int64
 	Name               string
@@ -38,7 +44,7 @@ type Series struct {
 }
 
 type DataPortalSeries struct {
-	Id                 int64 `json:"id"`
+	Id                 int64  `json:"id"`
 	Name               string `json:"name"`
 	Title              string `json:"title,omitempty"`
 	Description        string `json:"description,omitempty"`
@@ -49,35 +55,34 @@ type DataPortalSeries struct {
 }
 
 type Observation struct {
-	Date time.Time
+	Date  time.Time
 	Value sql.NullFloat64
 }
 
 type DataPortalObservation struct {
-	Date time.Time `json:"date"`
-	Value float64 `json:"value"`
+	Date  time.Time `json:"date"`
+	Value float64   `json:"value"`
 }
 
 type SeriesObservations struct {
-	ObservationStart time.Time `json:"observationStart"`
-	ObservationEnd time.Time `json:"observationEnd"`
-	OrderBy string `json:"orderBy"`
-	SortOrder string `json:"sortOrder"`
+	ObservationStart      time.Time              `json:"observationStart"`
+	ObservationEnd        time.Time              `json:"observationEnd"`
+	OrderBy               string                 `json:"orderBy"`
+	SortOrder             string                 `json:"sortOrder"`
 	TransformationResults []TransformationResult `json:"transformationResults"`
 }
 
 type TransformationResult struct {
-	Transformation string `json:"transformation"`
-	Observations []DataPortalObservation `json:"observations"`
-
+	Transformation string                  `json:"transformation"`
+	Observations   []DataPortalObservation `json:"observations"`
 }
 
 func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		Date string `json:"date"`
+		Date  string `json:"date"`
 		Value string `json:"value"`
 	}{
-		Date: formatDate(o.Date),
+		Date:  formatDate(o.Date),
 		Value: fmt.Sprintf("%.4f", o.Value),
 	})
 }
@@ -87,12 +92,12 @@ func (so SeriesObservations) MarshalJSON() ([]byte, error) {
 	type Alias SeriesObservations
 	return json.Marshal(&struct {
 		ObservationStart string `json:"observationStart"`
-		ObservationEnd string `json:"observationEnd"`
+		ObservationEnd   string `json:"observationEnd"`
 		Alias
 	}{
 		ObservationStart: formatDate(so.ObservationStart),
-		ObservationEnd: formatDate(so.ObservationEnd),
-		Alias: (Alias)(so),
+		ObservationEnd:   formatDate(so.ObservationEnd),
+		Alias:            (Alias)(so),
 	})
 }
 

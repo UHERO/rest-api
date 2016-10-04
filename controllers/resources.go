@@ -49,4 +49,9 @@ type (
 	ObservationList struct {
 		Data models.SeriesObservations `json:"data"`
 	}
+
+	// GET - /geo
+	GeographiesResource struct {
+		Data []models.Geography
+	}
 )
