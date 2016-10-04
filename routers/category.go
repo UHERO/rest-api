@@ -16,6 +16,7 @@ func SetCategoryRoutes(
 	router.HandleFunc("/v1/category", controllers.GetCategoryRoots(categoryRepository)).Methods("GET").Queries("top_level", "true")
 	router.HandleFunc("/v1/category", controllers.GetCategories(categoryRepository)).Methods("GET").Queries("top_level", "false")
 	router.HandleFunc("/v1/category", controllers.GetCategories(categoryRepository)).Methods("GET")
+	router.HandleFunc("/v1/category/series", controllers.GetSeriesByCategoryIdAndGeoHandle(seriesRepository)).Methods("GET").Queries("id", "{id:[0-9]+}", "geo", "{geo:[A-Za-z0-9]+}")
 	router.HandleFunc("/v1/category/series", controllers.GetSeriesByCategoryId(seriesRepository)).Methods("GET").Queries("id", "{id:[0-9]+}")
 	return router
 }
