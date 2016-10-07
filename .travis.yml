@@ -1,11 +1,4 @@
 language: go
 
 go:
-  - release
-  - tip
-
-install:
- - godep restore
-
-script:
- - go test -v ./...
+  - 1.7
