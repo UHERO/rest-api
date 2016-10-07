@@ -3,5 +3,6 @@ language: go
 go:
   - 1.7
 
+install: go build
 script: go test ./...
 
