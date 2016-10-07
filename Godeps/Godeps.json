@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/uhero/rest-api",
+	"ImportPath": "github.com/UHERO/rest-api",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
 	"Deps": [

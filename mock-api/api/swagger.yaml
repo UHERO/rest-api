@@ -4,7 +4,7 @@ info:
   description: "API for UHERO Data"
   version: "0.1.0"
   title: "UHERO Data API"
-host: "api.uhero.hawaii.edu"
+host: "api.UHERO.hawaii.edu"
 basePath: "/v1"
 schemes:
 - "http"

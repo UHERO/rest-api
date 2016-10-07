@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/uhero/rest-api/models"
+	"github.com/UHERO/rest-api/models"
 )
 
 type (

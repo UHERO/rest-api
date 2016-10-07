@@ -6,8 +6,8 @@ import (
 
 	"errors"
 	"github.com/gorilla/mux"
-	"github.com/uhero/rest-api/common"
-	"github.com/uhero/rest-api/data"
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/data"
 	"strconv"
 	"log"
 )

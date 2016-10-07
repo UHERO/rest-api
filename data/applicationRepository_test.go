@@ -1,7 +1,7 @@
 package data
 
 import (
-	"github.com/uhero/rest-api/models"
+	"github.com/UHERO/rest-api/models"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"reflect"
 	"testing"

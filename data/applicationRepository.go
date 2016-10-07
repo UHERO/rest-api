@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
-	"github.com/uhero/rest-api/models"
+	"github.com/UHERO/rest-api/models"
 	"log"
 	"time"
 )

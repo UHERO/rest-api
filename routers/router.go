@@ -3,8 +3,8 @@ package routers
 import (
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
-	"github.com/uhero/rest-api/controllers"
-	"github.com/uhero/rest-api/data"
+	"github.com/UHERO/rest-api/controllers"
+	"github.com/UHERO/rest-api/data"
 )
 
 func InitRoutes(

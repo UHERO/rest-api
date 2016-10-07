@@ -3,7 +3,7 @@ package data
 import (
 	"database/sql"
 
-	"github.com/uhero/rest-api/models"
+	"github.com/UHERO/rest-api/models"
 )
 
 type GeographyRepository struct {

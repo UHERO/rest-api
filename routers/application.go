@@ -6,9 +6,9 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
-	"github.com/uhero/rest-api/common"
-	"github.com/uhero/rest-api/controllers"
-	"github.com/uhero/rest-api/data"
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/controllers"
+	"github.com/UHERO/rest-api/data"
 	"os"
 )
 

@@ -144,7 +144,7 @@ func Authorize(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 func StoreJWT(w http.ResponseWriter, r *http.Request, token string) {
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty.
-	session, err := store.Get(r, "uhero-data-developer")
+	session, err := store.Get(r, "UHERO-data-developer")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -159,7 +159,7 @@ func StoreJWT(w http.ResponseWriter, r *http.Request, token string) {
 func GetJWTFromStore(w http.ResponseWriter, r *http.Request) (token string) {
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty.
-	session, err := store.Get(r, "uhero-data-developer")
+	session, err := store.Get(r, "UHERO-data-developer")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

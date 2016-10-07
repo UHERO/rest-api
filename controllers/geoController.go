@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/uhero/rest-api/common"
-	"github.com/uhero/rest-api/data"
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/data"
 )
 
 func GetGeographies(geographyRepository *data.GeographyRepository) func(http.ResponseWriter, *http.Request) {
