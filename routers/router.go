@@ -22,6 +22,7 @@ func InitRoutes(
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository)
 
 	router.PathPrefix("/v1").Handler(negroni.New(
+		negroni.HandlerFunc(controllers.CORSOptionsHandler),
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
 		negroni.Wrap(apiRouter),
 	))

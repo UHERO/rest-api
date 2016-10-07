@@ -87,9 +87,28 @@ func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.Re
 			)
 			return
 		}
+		origin := r.Header.Get("Origin")
+		if strings.HasPrefix(origin, "http://localhost") ||
+			strings.HasPrefix(origin, applications[0].Hostname) ||
+			origin == "" {
+			w.Header().Add("Access-Control-Allow-Origin", origin)
+		}
 		log.Print("Off to the next handler")
 		next(w, r)
 	}
+}
+
+func CORSOptionsHandler(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	if (r.Method == http.MethodOptions) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Credentials", "true")
+		w.Header().Add("Access-Control-Allow-Methods", "GET, POST")
+		w.Header().Add("Access-Control-Allow-Headers", "authorization")
+		w.WriteHeader(http.StatusOK)
+		w.Write(nil)
+		return
+	}
+	next(w, r)
 }
 
 // UpdateApplication will return a handler for updating an application
