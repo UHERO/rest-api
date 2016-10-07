@@ -1,0 +1,70 @@
+{
+	"ImportPath": "github.com/uhero/rest-api",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v74",
+	"Deps": [
+		{
+			"ImportPath": "github.com/codegangsta/negroni",
+			"Comment": "v0.2.0-55-gdc6b9d0",
+			"Rev": "dc6b9d037e8dab60cbfc09c61d6932537829be8b"
+		},
+		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v3.0.0-6-g63734ea",
+			"Rev": "63734eae1ef55eaac06fdc0f312615f2e321e273"
+		},
+		{
+			"ImportPath": "github.com/dgrijalva/jwt-go/request",
+			"Comment": "v3.0.0-6-g63734ea",
+			"Rev": "63734eae1ef55eaac06fdc0f312615f2e321e273"
+		},
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.2-196-g3654d25",
+			"Rev": "3654d25ec346ee8ce71a68431025458d52a38ac0"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Comment": "v1.1-4-gaed02d1",
+			"Rev": "aed02d124ae4a0e94fea4541c8effd05bf0c8296"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1-15-gd391bea",
+			"Rev": "d391bea3118c9fc17a88d62c9189bb791255e0ef"
+		},
+		{
+			"ImportPath": "github.com/gorilla/securecookie",
+			"Comment": "v1.1-2-gff35634",
+			"Rev": "ff356348f74133a59d3e93aa24b5b4551b6fe90d"
+		},
+		{
+			"ImportPath": "github.com/gorilla/sessions",
+			"Rev": "56ba4b0a11da87516629a57408a5f7e4c8ea7b0b"
+		},
+		{
+			"ImportPath": "github.com/markbates/goth",
+			"Rev": "856ef9b93159844904a15d528aca9c78e00faab6"
+		},
+		{
+			"ImportPath": "github.com/markbates/goth/gothic",
+			"Rev": "856ef9b93159844904a15d528aca9c78e00faab6"
+		},
+		{
+			"ImportPath": "github.com/markbates/goth/providers/github",
+			"Rev": "856ef9b93159844904a15d528aca9c78e00faab6"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "6a513affb38dc9788b449d59ffed099b8de18fa0"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2",
+			"Rev": "1364adb2c63445016c5ed4518fc71f6a3cda6169"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/internal",
+			"Rev": "1364adb2c63445016c5ed4518fc71f6a3cda6169"
+		}
+	]
+}
