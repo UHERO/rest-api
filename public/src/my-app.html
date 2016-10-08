@@ -70,12 +70,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <app-drawer-layout fullbleed>
       <!-- Drawer content -->
       <app-drawer>
-        <app-toolbar>Menu</app-toolbar>
-        <template is="dom-if" if="[[_loggedOut]]">
-          <a href="/auth?provider=github" tabindex="-1">
-            <paper-button>Login</paper-button>
-          </a>
-        </template>
+        <app-toolbar>
+          Menu
+        </app-toolbar>
+      <template is="dom-if" if="[[_loggedOut]]">
+        <a href="/auth?provider=github" tabindex="-1" style="display:block">
+          <paper-button>Login</paper-button>
+        </a>
+      </template>
+      <a href="/docs/index.html" style="display:block"><paper-button>DOCS</paper-button></a>
       </app-drawer>
 
       <!-- Main content -->

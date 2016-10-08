@@ -51,8 +51,13 @@ func main() {
 	n := negroni.Classic()
 	n.UseHandler(router)
 
+	port := os.Getenv("GO_REST_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf(":%s", port),
 		Handler: n,
 	}
 	log.Printf("Listening on %s...", server.Addr)
