@@ -16,6 +16,14 @@ You can look at the API docs at http://localhost:8080/docs
 
 When looking at examples in the documentation, you will need to replace `api.UHERO.hawaii.edu` with `localhost:8080` to get valid results.
 
+## Generating Documentation
+
+```
+npm install -g bootprint
+npm install -g bootprint-swagger
+bootprint swagger mock-api/api/swagger.yaml public/docs
+```
+
 
 ## Environment Variables
 
