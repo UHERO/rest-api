@@ -29,6 +29,7 @@ bootprint swagger mock-api/api/swagger.yaml public/docs
 
 * GITHUB_KEY
 * GITHUB_SECRET
+* GITHUB_CALLBACK
 * DB_USER
 * DB_PASSWORD
 
@@ -39,7 +40,7 @@ export SESSION_SECRET=`openssl rand -base64 32`
 ```
 
 ## Config
-`common/config.json` allows you to change the database connection string.
+`config.json` allows you to change the database connection string.
 
 ## Key files to put in the `key` folder
 ```

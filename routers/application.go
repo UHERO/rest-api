@@ -1,14 +1,14 @@
 package routers
 
 import (
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/controllers"
+	"github.com/UHERO/rest-api/data"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
-	"github.com/UHERO/rest-api/common"
-	"github.com/UHERO/rest-api/controllers"
-	"github.com/UHERO/rest-api/data"
 	"os"
 )
 
@@ -16,7 +16,7 @@ func SetApplicationRoutes(router *mux.Router, applicationRepository *data.Applic
 	goth.UseProviders(github.New(
 		os.Getenv("GITHUB_KEY"),
 		os.Getenv("GITHUB_SECRET"),
-		"http://localhost:8080/auth/callback?provider=github",
+		os.Getenv("GITHUB_CALLBACK"),
 	))
 	router.HandleFunc("/auth/callback", controllers.AuthCallback).Methods("GET")
 	router.HandleFunc("/auth", gothic.BeginAuthHandler).Methods("GET")
