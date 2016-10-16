@@ -89,7 +89,7 @@ func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.Re
 		}
 		origin := r.Header.Get("Origin")
 		if strings.HasPrefix(origin, "http://localhost") ||
-			strings.HasPrefix(origin, applications[0].Hostname) ||
+			strings.Contains(origin, applications[0].Hostname) ||
 			origin == "" {
 			w.Header().Add("Access-Control-Allow-Origin", origin)
 		}
