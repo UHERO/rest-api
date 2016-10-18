@@ -78,10 +78,10 @@ func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.Re
 			)
 			return
 		}
-		if len(applications) == 0 {
+		if applications == nil || len(applications) == 0 {
 			common.DisplayAppError(
 				w,
-				err,
+				errors.New("Invalid API Key!"),
 				"Invalid API Key!",
 				401,
 			)
