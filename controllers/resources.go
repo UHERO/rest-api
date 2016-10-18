@@ -52,6 +52,6 @@ type (
 
 	// GET - /geo
 	GeographiesResource struct {
-		Data []models.Geography
+		Data []models.DataPortalGeography `json:"data"`
 	}
 )

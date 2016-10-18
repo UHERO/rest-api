@@ -27,6 +27,12 @@ type CategoryWithAncestry struct {
 }
 
 type Geography struct {
+	FIPS   sql.NullString `json:"fips"`
+	Name   sql.NullString `json:"name"`
+	Handle string `json:"handle"`
+}
+
+type DataPortalGeography struct {
 	FIPS   string `json:"fips"`
 	Name   string `json:"name"`
 	Handle string `json:"handle"`

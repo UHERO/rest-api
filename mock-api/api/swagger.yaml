@@ -46,7 +46,7 @@ paths:
               $ref: "#/definitions/Category"
           examples:
             application/json:
-              categories:
+              data:
               - id: 1
                 name: "Summary"
               - id: 2
@@ -87,7 +87,7 @@ paths:
               $ref: "#/definitions/Category"
           examples:
             application/json:
-              categories:
+              data:
               - id: 3
                 name: "Major Economic Indicator Summary"
                 parent: 1
@@ -139,7 +139,7 @@ paths:
               $ref: "#/definitions/Series"
           examples:
             application/json:
-              series:
+              data:
               - id: "E_NF@HI.A"
                 title: "NonFarm Jobs"
                 observationStart: "1958-01-01"
@@ -193,6 +193,44 @@ paths:
           schema:
             $ref: "#/definitions/Error"
       x-swagger-router-controller: "Categories"
+  /category/geo:
+    get:
+      tags:
+      - "Categories"
+      summary: "Geographies Available in Category"
+      description: "The geographies which are represented in the selected category\n"
+      operationId: "categoryGeoGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Category ID"
+        required: true
+        type: "number"
+      responses:
+        200:
+          description: "An array of geographies"
+          schema:
+            $ref: "#/definitions/inline_response_200"
+          examples:
+            application/json:
+              data:
+              - fips: "15"
+                name: "State of Hawaii"
+                handle: "HI"
+              - fips: "JA"
+                name: "Japan"
+                handle: "JP"
+              - fips: "15001"
+                name: "Hawaii County"
+                handle: "HAW"
+              - fips: "15003"
+                name: "Honolulu"
+                handle: "HON"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Categories"
   /geo:
     get:
       tags:
@@ -219,7 +257,7 @@ paths:
             $ref: "#/definitions/inline_response_200"
           examples:
             application/json:
-              geographies:
+              data:
               - fips: "15"
                 name: "State of Hawaii"
                 handle: "HI"
@@ -280,7 +318,7 @@ paths:
               $ref: "#/definitions/Series"
           examples:
             application/json:
-              series:
+              data:
               - id: "E_NF@HI.A"
                 title: "NonFarm Jobs"
                 observationStart: "1958-01-01"
@@ -351,7 +389,7 @@ paths:
               $ref: "#/definitions/Category"
           examples:
             application/json:
-              categories:
+              data:
               - id: 3
                 name: "Major Economic Indicator Summary"
                 parent: 1
@@ -396,99 +434,100 @@ paths:
             $ref: "#/definitions/ObservationResult"
           examples:
             application/json:
-              observationStart: "1995-01-01"
-              observationEnd: "2015-01-01"
-              orderBy: "observationDate"
-              sortOrder: "desc"
-              transformationResults:
-              - transformation: "lvl"
-                observations:
-                - date: "2015-01-01"
-                  value: "636.867"
-                - date: "2014-01-01"
-                  value: "627.225"
-                - date: "2013-01-01"
-                  value: "618.575"
-                - date: "2012-01-01"
-                  value: "606.283"
-                - date: "2011-01-01"
-                  value: "593.392"
-                - date: "2010-01-01"
-                  value: "586.908"
-                - date: "2009-01-01"
-                  value: "591.492"
-                - date: "2008-01-01"
-                  value: "619.233"
-                - date: "2007-01-01"
-                  value: "624.875"
-                - date: "2006-01-01"
-                  value: "617.108"
-                - date: "2005-01-01"
-                  value: "601.642"
-                - date: "2004-01-01"
-                  value: "583.408"
-                - date: "2003-01-01"
-                  value: "567.633"
-                - date: "2002-01-01"
-                  value: "556.792"
-                - date: "2001-01-01"
-                  value: "555.000"
-                - date: "2000-01-01"
-                  value: "551.358"
-                - date: "1999-01-01"
-                  value: "535.025"
-                - date: "1998-01-01"
-                  value: "531.283"
-                - date: "1997-01-01"
-                  value: "531.617"
-                - date: "1996-01-01"
-                  value: "530.733"
-                - date: "1995-01-01"
-                  value: "532.883"
-              - transformation: "pc1"
-                observations:
-                - date: "2015-01-01"
-                  value: "1.5"
-                - date: "2014-01-01"
-                  value: "1.4"
-                - date: "2013-01-01"
-                  value: "2.0"
-                - date: "2012-01-01"
-                  value: "2.2"
-                - date: "2011-01-01"
-                  value: "1.1"
-                - date: "2010-01-01"
-                  value: "-0.8"
-                - date: "2009-01-01"
-                  value: "-4.5"
-                - date: "2008-01-01"
-                  value: "-0.9"
-                - date: "2007-01-01"
-                  value: "1.3"
-                - date: "2006-01-01"
-                  value: "2.6"
-                - date: "2005-01-01"
-                  value: "3.1"
-                - date: "2004-01-01"
-                  value: "2.8"
-                - date: "2003-01-01"
-                  value: "1.9"
-                - date: "2002-01-01"
-                  value: "0.3"
-                - date: "2001-01-01"
-                  value: "0.7"
-                - date: "2000-01-01"
-                  value: "3.1"
-                - date: "1999-01-01"
-                  value: "0.7"
-                - date: "1998-01-01"
-                  value: "-0.1"
-                - date: "1997-01-01"
-                  value: "0.2"
-                - date: "1996-01-01"
-                  value: "-0.4"
-                - date: "1995-01-01"
-                  value: "-0.6"
+              data:
+                observationStart: "1995-01-01"
+                observationEnd: "2015-01-01"
+                orderBy: "observationDate"
+                sortOrder: "desc"
+                transformationResults:
+                - transformation: "lvl"
+                  observations:
+                  - date: "2015-01-01"
+                    value: "636.867"
+                  - date: "2014-01-01"
+                    value: "627.225"
+                  - date: "2013-01-01"
+                    value: "618.575"
+                  - date: "2012-01-01"
+                    value: "606.283"
+                  - date: "2011-01-01"
+                    value: "593.392"
+                  - date: "2010-01-01"
+                    value: "586.908"
+                  - date: "2009-01-01"
+                    value: "591.492"
+                  - date: "2008-01-01"
+                    value: "619.233"
+                  - date: "2007-01-01"
+                    value: "624.875"
+                  - date: "2006-01-01"
+                    value: "617.108"
+                  - date: "2005-01-01"
+                    value: "601.642"
+                  - date: "2004-01-01"
+                    value: "583.408"
+                  - date: "2003-01-01"
+                    value: "567.633"
+                  - date: "2002-01-01"
+                    value: "556.792"
+                  - date: "2001-01-01"
+                    value: "555.000"
+                  - date: "2000-01-01"
+                    value: "551.358"
+                  - date: "1999-01-01"
+                    value: "535.025"
+                  - date: "1998-01-01"
+                    value: "531.283"
+                  - date: "1997-01-01"
+                    value: "531.617"
+                  - date: "1996-01-01"
+                    value: "530.733"
+                  - date: "1995-01-01"
+                    value: "532.883"
+                - transformation: "pc1"
+                  observations:
+                  - date: "2015-01-01"
+                    value: "1.5"
+                  - date: "2014-01-01"
+                    value: "1.4"
+                  - date: "2013-01-01"
+                    value: "2.0"
+                  - date: "2012-01-01"
+                    value: "2.2"
+                  - date: "2011-01-01"
+                    value: "1.1"
+                  - date: "2010-01-01"
+                    value: "-0.8"
+                  - date: "2009-01-01"
+                    value: "-4.5"
+                  - date: "2008-01-01"
+                    value: "-0.9"
+                  - date: "2007-01-01"
+                    value: "1.3"
+                  - date: "2006-01-01"
+                    value: "2.6"
+                  - date: "2005-01-01"
+                    value: "3.1"
+                  - date: "2004-01-01"
+                    value: "2.8"
+                  - date: "2003-01-01"
+                    value: "1.9"
+                  - date: "2002-01-01"
+                    value: "0.3"
+                  - date: "2001-01-01"
+                    value: "0.7"
+                  - date: "2000-01-01"
+                    value: "3.1"
+                  - date: "1999-01-01"
+                    value: "0.7"
+                  - date: "1998-01-01"
+                    value: "-0.1"
+                  - date: "1997-01-01"
+                    value: "0.2"
+                  - date: "1996-01-01"
+                    value: "-0.4"
+                  - date: "1995-01-01"
+                    value: "-0.6"
         default:
           description: "Unexpected error"
           schema:
@@ -509,7 +548,7 @@ paths:
             $ref: "#/definitions/inline_response_200_1"
           examples:
             application/json:
-              transformations:
+              data:
               - id: "lvl"
                 description: "Value in levels"
                 formula: "x(t)"
