@@ -49,6 +49,7 @@ type DataPortalSeries struct {
 	Title              string `json:"title,omitempty"`
 	Description        string `json:"description,omitempty"`
 	Frequency          string `json:"frequency,omitempty"`
+	FrequencyShort     string `json:"frequencyShort,omitempty"`
 	SeasonallyAdjusted bool   `json:"seasonallyAdjusted,omitempty"`
 	UnitsLabel         string `json:"unitsLabel,omitEmpty"`
 	UnitsLabelShort    string `json:"unitsLabelShort,omitEmpty"`

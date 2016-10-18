@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/markbates/goth/gothic"
 	"github.com/UHERO/rest-api/common"
+	"github.com/markbates/goth/gothic"
 )
 
 // IndexHandler produces the landing page

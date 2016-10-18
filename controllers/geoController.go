@@ -35,4 +35,3 @@ func GetGeographies(geographyRepository *data.GeographyRepository) func(http.Res
 		w.Write(j)
 	}
 }
-
