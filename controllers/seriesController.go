@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"errors"
-	"github.com/gorilla/mux"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
-	"strconv"
+	"github.com/gorilla/mux"
 	"log"
+	"strconv"
 )
 
 func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {

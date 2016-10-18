@@ -3,11 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/codegangsta/negroni"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/routers"
+	"github.com/codegangsta/negroni"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
 	"os"

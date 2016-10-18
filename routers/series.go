@@ -1,9 +1,9 @@
 package routers
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/UHERO/rest-api/controllers"
 	"github.com/UHERO/rest-api/data"
+	"github.com/gorilla/mux"
 )
 
 func SetSeriesRoutes(

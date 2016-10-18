@@ -26,8 +26,8 @@ var transformations map[string]string = map[string]string{
 }
 
 func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
-categoryId int64,
-geoHandle string,
+	categoryId int64,
+	geoHandle string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		`SELECT id, name, description, frequency,
@@ -147,6 +147,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 		return
 	}
 	dataPortalSeries = models.DataPortalSeries{Id: series.Id, Name: series.Name}
+	dataPortalSeries.FrequencyShort = series.Name[len(series.Name)-1:]
 	if series.DataPortalName.Valid {
 		dataPortalSeries.Title = series.DataPortalName.String
 	}
@@ -224,7 +225,7 @@ func (r *SeriesRepository) GetTransformation(transformation string, seriesId int
 		observations = append(
 			observations,
 			models.DataPortalObservation{
-				Date: observation.Date,
+				Date:  observation.Date,
 				Value: observation.Value.Float64,
 			},
 		)

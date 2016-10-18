@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
+	"github.com/gorilla/mux"
 	"strings"
 )
 
@@ -99,7 +99,7 @@ func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.Re
 }
 
 func CORSOptionsHandler(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	if (r.Method == http.MethodOptions) {
+	if r.Method == http.MethodOptions {
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Header().Add("Access-Control-Allow-Credentials", "true")
 		w.Header().Add("Access-Control-Allow-Methods", "GET, POST")
