@@ -10,19 +10,30 @@ type SeriesRepository struct {
 	DB *sql.DB
 }
 
+type transformation struct {
+	Statement string
+	PlaceholderCount int
+}
+
 const (
 	Levels = "lvl"
 	YoyPCh = "pc1"
 )
 
-var transformations map[string]string = map[string]string{
-	"lvl": `SELECT date, value FROM data_points WHERE series_id = ? and current = 1;`,
-	"pc1": `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy
-		FROM (SELECT value, date, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
-		FROM data_points WHERE series_id = ? AND current = 1) AS t1
-		LEFT JOIN (SELECT value AS last_value, date
-		FROM data_points WHERE series_id = 146634 and current = 1) AS t2
-		ON (t1.last_year = t2.date);`,
+var transformations map[string]transformation = map[string]transformation{
+	"lvl": {
+		Statement: `SELECT date, value FROM data_points WHERE series_id = ? and current = 1;`,
+		PlaceholderCount: 1,
+	},
+	"pc1": {
+		Statement: `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy
+				FROM (SELECT value, date, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
+				FROM data_points WHERE series_id = ? AND current = 1) AS t1
+				LEFT JOIN (SELECT value AS last_value, date
+				FROM data_points WHERE series_id = ? and current = 1) AS t2
+				ON (t1.last_year = t2.date);`,
+		PlaceholderCount: 2,
+	},
 }
 
 func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
@@ -190,13 +201,24 @@ func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservat
 	return
 }
 
+func variadicSeriesId(seriesId int64, count int) []interface{} {
+	variadic := make([]interface{}, count, count)
+	for i := range variadic {
+		variadic[i] = seriesId
+	}
+	return variadic
+}
+
 func (r *SeriesRepository) GetTransformation(transformation string, seriesId int64) (
 	transformationResult models.TransformationResult,
 	observationStart time.Time,
 	observationEnd time.Time,
 	err error,
 ) {
-	rows, err := r.DB.Query(transformations[transformation], seriesId)
+	rows, err := r.DB.Query(
+		transformations[transformation].Statement,
+		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
+	)
 	if err != nil {
 		return
 	}
