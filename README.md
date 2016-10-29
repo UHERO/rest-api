@@ -32,15 +32,14 @@ bootprint swagger mock-api/api/swagger.yaml public/docs
 * GITHUB_CALLBACK
 * DB_USER
 * DB_PASSWORD
+* DB_HOST
+* SESSION_SECRET
 
 ### Session Secret
 * SESSION_SECRET example:
 ```
 export SESSION_SECRET=`openssl rand -base64 32`
 ```
-
-## Config
-`config.json` allows you to change the database connection string.
 
 ## Key files to put in the `key` folder
 ```

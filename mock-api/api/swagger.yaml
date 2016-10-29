@@ -210,7 +210,9 @@ paths:
         200:
           description: "An array of geographies"
           schema:
-            $ref: "#/definitions/inline_response_200"
+            type: "array"
+            items:
+              $ref: "#/definitions/Geography"
           examples:
             application/json:
               data:
@@ -254,7 +256,9 @@ paths:
         200:
           description: "An array of geographies"
           schema:
-            $ref: "#/definitions/inline_response_200"
+            type: "array"
+            items:
+              $ref: "#/definitions/Geography"
           examples:
             application/json:
               data:
@@ -545,7 +549,9 @@ paths:
         200:
           description: "An array of transformations"
           schema:
-            $ref: "#/definitions/inline_response_200_1"
+            type: "array"
+            items:
+              $ref: "#/definitions/Transformation"
           examples:
             application/json:
               data:
@@ -698,15 +704,3 @@ definitions:
         type: "string"
       fields:
         type: "string"
-  inline_response_200:
-    properties:
-      geographies:
-        type: "array"
-        items:
-          $ref: "#/definitions/Geography"
-  inline_response_200_1:
-    properties:
-      transformations:
-        type: "array"
-        items:
-          $ref: "#/definitions/Transformation"

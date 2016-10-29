@@ -7,23 +7,28 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/routers"
 	"github.com/codegangsta/negroni"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
 	"os"
+	"time"
+	"net"
 )
 
 func main() {
 	common.StartUp()
+
 	// Set up MySQL
-	connectionString := fmt.Sprintf(
-		"%s:%s@%s(%s)/%s?parseTime=true&loc=US%%2FHawaii",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		common.AppConfig.Protocol,
-		common.AppConfig.Server,
-		common.AppConfig.Database,
-	)
+	mysqlConfig := mysql.Config{
+		User: os.Getenv("DB_USER"),
+		Passwd: os.Getenv("DB_PASSWORD"),
+		Net: "tcp",
+		Addr: net.JoinHostPort(os.Getenv("DB_HOST"), "3306"),
+		Loc: time.Local,
+		ParseTime: true,
+		DBName: "uhero_db_dev",
+	}
+	connectionString := mysqlConfig.FormatDSN()
 	db, err := sql.Open("mysql", connectionString)
 	if err != nil {
 		panic(err)
