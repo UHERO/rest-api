@@ -61,7 +61,6 @@ func initKeys() {
 		panic(err)
 	}
 	store = sessions.NewCookieStore([]byte(verifyKey))
-	log.Println("initKeys completed.")
 }
 
 // Generate JWT token
