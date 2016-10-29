@@ -41,9 +41,6 @@ bootprint swagger mock-api/api/swagger.yaml public/docs
 export SESSION_SECRET=`openssl rand -base64 32`
 ```
 
-## Config
-`common/config.json` allows you to change the database connection string.
-
 ## Key files to put in the `key` folder
 ```
 openssl genrsa -out app.rsa 1024
