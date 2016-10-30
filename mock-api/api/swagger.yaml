@@ -376,6 +376,58 @@ paths:
           schema:
             $ref: "#/definitions/Error"
       x-swagger-router-controller: "Series"
+  /series/siblings:
+    get:
+      tags:
+      - "Series"
+      summary: "Series Siblings"
+      description: "A list of series that measure the same thing in other regions or frequencies\n"
+      operationId: "seriesSiblingsGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Series ID"
+        required: true
+        type: "number"
+      responses:
+        200:
+          description: "An array of series"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Series"
+          examples:
+            application/json:
+              data:
+              - id: "E_NF@HI.A"
+                title: "NonFarm Jobs"
+                observationStart: "1958-01-01"
+                observationEnd: "2015-01-01"
+                frequency: "Annual"
+                frequencyShort: "A"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Not Seasonally Adjusted"
+                seasonalAdjustmentShort: "NSA"
+                source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
+                sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+              - id: "E_NF@HI.M"
+                title: "NonFarm Jobs"
+                observationStart: "1958-01-01"
+                observationEnd: "2016-06-01"
+                frequency: "Monthly"
+                frequencyShort: "M"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Seasonally Adjusted"
+                seasonalAdjustmentShort: "SA"
+                source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
+                sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Series"
   /series/categories:
     get:
       tags:
