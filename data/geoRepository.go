@@ -48,9 +48,10 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 		    FROM
 		      (SELECT name
 		        FROM series
-		        WHERE (SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-		        LIKE CONCAT('%', LEFT(name, LOCATE("@", name)), '%')) AS catnames) AS catgeo
+		        WHERE (SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]')))
+		        REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]')) AS catnames) AS catgeo
 		        LEFT JOIN geographies ON catgeo.chandle LIKE geographies.handle;`,
+		categoryId,
 		categoryId,
 	)
 	if err != nil {
