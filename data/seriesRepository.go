@@ -45,7 +45,7 @@ func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
 	FROM series WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	LIKE CONCAT(left(name, locate("@", name)), '%') AND
+	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND
 	name LIKE CONCAT('%@%.', ?);`,
 		categoryId,
 		freq,
@@ -102,7 +102,7 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
 	FROM series WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	LIKE CONCAT(left(name, locate("@", name)), '%') AND name LIKE CONCAT('%@%', ? ,'%.%') AND
+	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND name LIKE CONCAT('%@%', ? ,'%.%') AND
 	name LIKE CONCAT('%@%.', ?);`,
 		categoryId,
 		geoHandle,
@@ -159,7 +159,7 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
 	FROM series WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	LIKE CONCAT(left(name, locate("@", name)), '%') AND name LIKE CONCAT('%@%', ? ,'%.%');`,
+	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND name LIKE CONCAT('%@%', ? ,'%.%');`,
 		categoryId,
 		geoHandle,
 	)
@@ -210,7 +210,7 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
 	FROM series WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	LIKE CONCAT(left(name, locate("@", name)), '%');`, categoryId)
+	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]');`, categoryId)
 	if err != nil {
 		return
 	}
