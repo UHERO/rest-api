@@ -12,8 +12,7 @@ type CategoryRepository struct {
 }
 
 func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT
-	id, name, ancestry FROM categories;`)
+	rows, err := r.DB.Query("SELECT	id, name, ancestry FROM categories ORDER BY `order`;")
 	if err != nil {
 		return
 	}
@@ -51,8 +50,7 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 }
 
 func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT
-	id, name FROM categories WHERE ancestry IS NULL;`)
+	rows, err := r.DB.Query("SELECT id, name FROM categories WHERE ancestry IS NULL ORDER BY `order`;")
 	if err != nil {
 		return
 	}
@@ -90,7 +88,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 
 func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
 	fuzzyString := "%" + name + "%"
-	rows, err := r.DB.Query("SELECT id, name, ancestry FROM categories WHERE LOWER(name) LIKE ?;", fuzzyString)
+	rows, err := r.DB.Query("SELECT id, name, ancestry FROM categories WHERE LOWER(name) LIKE ? ORDER BY `order`;", fuzzyString)
 	if err != nil {
 		return
 	}
@@ -115,8 +113,7 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 }
 
 func (r *CategoryRepository) GetChildrenOf(id int64) (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT
-	id, name, parent_id FROM categories WHERE parent_id = ?;`, id)
+	rows, err := r.DB.Query("SELECT id, name, parent_id FROM categories WHERE parent_id = ? ORDER BY `order;`", id)
 	if err != nil {
 		return
 	}
