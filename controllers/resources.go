@@ -40,6 +40,11 @@ type (
 		Data []models.DataPortalSeries `json:"data"`
 	}
 
+	// GET - /series/siblings/freq
+	FrequencyListResource struct {
+		Data []models.FrequencyResult `json:"data"`
+	}
+
 	// GET - /series
 	SeriesResource struct {
 		Data models.DataPortalSeries `json:"data"`

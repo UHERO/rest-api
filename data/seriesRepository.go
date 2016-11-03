@@ -300,6 +300,31 @@ func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []m
 	return
 }
 
+func (r *SeriesRepository) GetSeriesSiblingsFreqById(seriesId int64) (frequencyList []models.FrequencyResult, err error) {
+	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq, frequency
+	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
+	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%');`, seriesId)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		frequency := models.Frequency{}
+		err = rows.Scan(
+			&frequency.Freq,
+			&frequency.Label,
+		)
+		if err != nil {
+			return
+		}
+		frequencyResult := models.FrequencyResult{Freq: frequency.Freq}
+		if frequency.Label.Valid {
+			frequencyResult.Label = frequency.Label.String
+		}
+		frequencyList = append(frequencyList, frequencyResult)
+	}
+	return
+}
+
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row := r.DB.QueryRow(`SELECT id, name, description, frequency,
 	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName

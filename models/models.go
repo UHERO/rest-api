@@ -38,6 +38,16 @@ type DataPortalGeography struct {
 	Handle string `json:"handle"`
 }
 
+type FrequencyResult struct {
+	Freq string `json:"freq"`
+	Label string `json:"label"`
+}
+
+type Frequency struct {
+	Freq string
+	Label sql.NullString
+}
+
 type Series struct {
 	Id                 int64
 	Name               string
