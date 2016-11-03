@@ -305,7 +305,55 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(seriesId int64, freq str
 	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
 	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
 	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-	AND series.name LIKE CONCAT('%@%.', ?);;`, seriesId, freq)
+	AND series.name LIKE CONCAT('%@%.', ?);`, seriesId, freq)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		series := models.Series{}
+		err = rows.Scan(
+			&series.Id,
+			&series.Name,
+			&series.Description,
+			&series.Frequency,
+			&series.SeasonallyAdjusted,
+			&series.UnitsLabel,
+			&series.UnitsLabelShort,
+			&series.DataPortalName,
+		)
+		if err != nil {
+			return
+		}
+		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
+		if series.DataPortalName.Valid {
+			dataPortalSeries.Title = series.DataPortalName.String
+		}
+		if series.Description.Valid {
+			dataPortalSeries.Description = series.Description.String
+		}
+		if series.Frequency.Valid {
+			dataPortalSeries.Frequency = series.Frequency.String
+		}
+		if series.SeasonallyAdjusted.Valid {
+			dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
+		}
+		if series.UnitsLabel.Valid {
+			dataPortalSeries.UnitsLabel = series.UnitsLabel.String
+		}
+		if series.UnitsLabelShort.Valid {
+			dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+		}
+		seriesList = append(seriesList, dataPortalSeries)
+	}
+	return
+}
+
+func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(seriesId int64, geo string) (seriesList []models.DataPortalSeries, err error) {
+	rows, err := r.DB.Query(`SELECT id, series.name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
+	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
+	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
+	AND series.name LIKE CONCAT('%@%', ? ,'%.%');`, seriesId, geo)
 	if err != nil {
 		return
 	}

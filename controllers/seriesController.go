@@ -414,6 +414,67 @@ func GetSeriesSiblingsByIdAndFreq(seriesRepository *data.SeriesRepository) func(
 	}
 }
 
+func GetSeriesSiblingsByIdAndGeo(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idParam, ok := mux.Vars(r)["id"]
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get series id from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		geo, ok := mux.Vars(r)["geo"]
+		log.Printf("Geo: %s", geo)
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get geography from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+
+		log.Printf("Getting Series Siblings by id and geo: %d, %s", id, geo)
+		seriesList, err := seriesRepository.GetSeriesSiblingsByIdAndGeo(id, geo)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		j, err := json.Marshal(SeriesListResource{Data: seriesList})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error processing JSON has occurred",
+				500,
+			)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
+	}
+}
+
 func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]
