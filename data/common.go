@@ -24,7 +24,11 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if err != nil {
 		return
 	}
-	dataPortalSeries = models.DataPortalSeries{Id: series.Id, Name: series.Name}
+	dataPortalSeries = models.DataPortalSeries{
+		Id: series.Id,
+		Name: series.Name,
+		FrequencyShort: series.Name[len(series.Name)-1:],
+	}
 	if series.DataPortalName.Valid {
 		dataPortalSeries.Title = series.DataPortalName.String
 	}
@@ -73,7 +77,11 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	if err != nil {
 		return
 	}
-	dataPortalSeries = models.DataPortalSeries{Id: series.Id, Name: series.Name}
+	dataPortalSeries = models.DataPortalSeries{
+		Id: series.Id,
+		Name: series.Name,
+		FrequencyShort: series.Name[len(series.Name)-1:],
+	}
 	if series.DataPortalName.Valid {
 		dataPortalSeries.Title = series.DataPortalName.String
 	}

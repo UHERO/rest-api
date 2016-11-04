@@ -7,7 +7,47 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"log"
+	"github.com/gorilla/mux"
+	"errors"
 )
+
+func GetSeriesBySearchText(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		searchText, ok := mux.Vars(r)["search_text"]
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get searchText from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+		seriesList, err := seriesRepository.GetSeriesBySearchText(searchText)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		j, err := json.Marshal(SeriesListResource{Data: seriesList})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error processing JSON has occurred",
+				500,
+			)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
+	}
+}
 
 func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

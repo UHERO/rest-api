@@ -13,6 +13,9 @@ func SetSeriesRoutes(
 	router.HandleFunc("/v1/series", controllers.GetSeriesById(seriesRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
+	router.HandleFunc("/v1/series", controllers.GetSeriesBySearchText(seriesRepository)).Methods("GET").Queries(
+		"search_text", "{search_text:.+}",
+	)
 	router.HandleFunc("/v1/series/siblings", controllers.GetSeriesSiblingsByIdGeoAndFreq(seriesRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 		"geo", "{geo:[A-Za-z0-9]+}",
