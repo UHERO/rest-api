@@ -41,12 +41,13 @@ func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
-		`SELECT id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
-	FROM series WHERE
+		`SELECT series.id, name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, handle,  display_name_short
+	FROM series JOIN geographies WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
 	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND
-	name LIKE CONCAT('%@%.', ?);`,
+	name LIKE CONCAT('%@%.', ?) AND name LIKE CONCAT('%@', handle, '.%');`,
 		categoryId,
 		freq,
 	)
@@ -54,38 +55,9 @@ func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 		return
 	}
 	for rows.Next() {
-		series := models.Series{}
-		err = rows.Scan(
-			&series.Id,
-			&series.Name,
-			&series.Description,
-			&series.Frequency,
-			&series.SeasonallyAdjusted,
-			&series.UnitsLabel,
-			&series.UnitsLabelShort,
-			&series.DataPortalName,
-		)
-		if err != nil {
-			return
-		}
-		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
-		if series.DataPortalName.Valid {
-			dataPortalSeries.Title = series.DataPortalName.String
-		}
-		if series.Description.Valid {
-			dataPortalSeries.Description = series.Description.String
-		}
-		if series.Frequency.Valid {
-			dataPortalSeries.Frequency = series.Frequency.String
-		}
-		if series.SeasonallyAdjusted.Valid {
-			dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
-		}
-		if series.UnitsLabel.Valid {
-			dataPortalSeries.UnitsLabel = series.UnitsLabel.String
-		}
-		if series.UnitsLabelShort.Valid {
-			dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+		dataPortalSeries, scanErr  := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
 		}
 		seriesList = append(seriesList, dataPortalSeries)
 	}
@@ -98,12 +70,13 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
-		`SELECT id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
-	FROM series WHERE
+		`SELECT series.id, name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, handle,  display_name_short
+	FROM series JOIN geographies WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
 	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND name LIKE CONCAT('%@%', ? ,'%.%') AND
-	name LIKE CONCAT('%@%.', ?);`,
+	name LIKE CONCAT('%@%.', ?) AND name LIKE CONCAT('%@', handle, '.%');`,
 		categoryId,
 		geoHandle,
 		freq,
@@ -112,38 +85,9 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 		return
 	}
 	for rows.Next() {
-		series := models.Series{}
-		err = rows.Scan(
-			&series.Id,
-			&series.Name,
-			&series.Description,
-			&series.Frequency,
-			&series.SeasonallyAdjusted,
-			&series.UnitsLabel,
-			&series.UnitsLabelShort,
-			&series.DataPortalName,
-		)
-		if err != nil {
-			return
-		}
-		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
-		if series.DataPortalName.Valid {
-			dataPortalSeries.Title = series.DataPortalName.String
-		}
-		if series.Description.Valid {
-			dataPortalSeries.Description = series.Description.String
-		}
-		if series.Frequency.Valid {
-			dataPortalSeries.Frequency = series.Frequency.String
-		}
-		if series.SeasonallyAdjusted.Valid {
-			dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
-		}
-		if series.UnitsLabel.Valid {
-			dataPortalSeries.UnitsLabel = series.UnitsLabel.String
-		}
-		if series.UnitsLabelShort.Valid {
-			dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+		dataPortalSeries, scanErr  := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
 		}
 		seriesList = append(seriesList, dataPortalSeries)
 	}
@@ -155,11 +99,13 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 	geoHandle string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
-		`SELECT id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
-	FROM series WHERE
+		`SELECT series.id, name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, handle,  display_name_short
+	FROM series JOIN geographies WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND name LIKE CONCAT('%@%', ? ,'%.%');`,
+	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND name LIKE CONCAT('%@%', ? ,'%.%')
+	AND name LIKE CONCAT('%@', handle, '.%');`,
 		categoryId,
 		geoHandle,
 	)
@@ -167,38 +113,9 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 		return
 	}
 	for rows.Next() {
-		series := models.Series{}
-		err = rows.Scan(
-			&series.Id,
-			&series.Name,
-			&series.Description,
-			&series.Frequency,
-			&series.SeasonallyAdjusted,
-			&series.UnitsLabel,
-			&series.UnitsLabelShort,
-			&series.DataPortalName,
-		)
-		if err != nil {
-			return
-		}
-		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
-		if series.DataPortalName.Valid {
-			dataPortalSeries.Title = series.DataPortalName.String
-		}
-		if series.Description.Valid {
-			dataPortalSeries.Description = series.Description.String
-		}
-		if series.Frequency.Valid {
-			dataPortalSeries.Frequency = series.Frequency.String
-		}
-		if series.SeasonallyAdjusted.Valid {
-			dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
-		}
-		if series.UnitsLabel.Valid {
-			dataPortalSeries.UnitsLabel = series.UnitsLabel.String
-		}
-		if series.UnitsLabelShort.Valid {
-			dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+		dataPortalSeries, scanErr  := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
 		}
 		seriesList = append(seriesList, dataPortalSeries)
 	}
@@ -206,47 +123,18 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 }
 
 func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
-	FROM series WHERE
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]');`, categoryId)
+	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, handle,  display_name_short
+	FROM series JOIN geographies WHERE (SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
+	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND name LIKE CONCAT('%@', handle, '.%');`, categoryId)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
-		series := models.Series{}
-		err = rows.Scan(
-			&series.Id,
-			&series.Name,
-			&series.Description,
-			&series.Frequency,
-			&series.SeasonallyAdjusted,
-			&series.UnitsLabel,
-			&series.UnitsLabelShort,
-			&series.DataPortalName,
-		)
-		if err != nil {
-			return
-		}
-		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
-		if series.DataPortalName.Valid {
-			dataPortalSeries.Title = series.DataPortalName.String
-		}
-		if series.Description.Valid {
-			dataPortalSeries.Description = series.Description.String
-		}
-		if series.Frequency.Valid {
-			dataPortalSeries.Frequency = series.Frequency.String
-		}
-		if series.SeasonallyAdjusted.Valid {
-			dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
-		}
-		if series.UnitsLabel.Valid {
-			dataPortalSeries.UnitsLabel = series.UnitsLabel.String
-		}
-		if series.UnitsLabelShort.Valid {
-			dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+		dataPortalSeries, scanErr  := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
 		}
 		seriesList = append(seriesList, dataPortalSeries)
 	}
@@ -254,46 +142,19 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 }
 
 func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT id, series.name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
-	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%');`, seriesId)
+	rows, err := r.DB.Query(`SELECT series.id, series.name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, handle, display_name_short
+	FROM series JOIN geographies JOIN (SELECT name FROM series where id = ?) as original_series
+	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
+	AND series.name LIKE CONCAT('%@',handle,'.%');`, seriesId)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
-		series := models.Series{}
-		err = rows.Scan(
-			&series.Id,
-			&series.Name,
-			&series.Description,
-			&series.Frequency,
-			&series.SeasonallyAdjusted,
-			&series.UnitsLabel,
-			&series.UnitsLabelShort,
-			&series.DataPortalName,
-		)
-		if err != nil {
-			return
-		}
-		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
-		if series.DataPortalName.Valid {
-			dataPortalSeries.Title = series.DataPortalName.String
-		}
-		if series.Description.Valid {
-			dataPortalSeries.Description = series.Description.String
-		}
-		if series.Frequency.Valid {
-			dataPortalSeries.Frequency = series.Frequency.String
-		}
-		if series.SeasonallyAdjusted.Valid {
-			dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
-		}
-		if series.UnitsLabel.Valid {
-			dataPortalSeries.UnitsLabel = series.UnitsLabel.String
-		}
-		if series.UnitsLabelShort.Valid {
-			dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
 		}
 		seriesList = append(seriesList, dataPortalSeries)
 	}
@@ -301,47 +162,19 @@ func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []m
 }
 
 func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(seriesId int64, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT id, series.name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
-	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
+	rows, err := r.DB.Query(`SELECT series.id, series.name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, handle, display_name_short
+	FROM series JOIN geographies JOIN (SELECT name FROM series where id = ?) as original_series
 	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-	AND series.name LIKE CONCAT('%@%.', ?);`, seriesId, freq)
+	AND series.name LIKE CONCAT('%@%.', ?) AND series.name LIKE CONCAT('%@',handle,'.%');`, seriesId, freq)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
-		series := models.Series{}
-		err = rows.Scan(
-			&series.Id,
-			&series.Name,
-			&series.Description,
-			&series.Frequency,
-			&series.SeasonallyAdjusted,
-			&series.UnitsLabel,
-			&series.UnitsLabelShort,
-			&series.DataPortalName,
-		)
-		if err != nil {
-			return
-		}
-		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
-		if series.DataPortalName.Valid {
-			dataPortalSeries.Title = series.DataPortalName.String
-		}
-		if series.Description.Valid {
-			dataPortalSeries.Description = series.Description.String
-		}
-		if series.Frequency.Valid {
-			dataPortalSeries.Frequency = series.Frequency.String
-		}
-		if series.SeasonallyAdjusted.Valid {
-			dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
-		}
-		if series.UnitsLabel.Valid {
-			dataPortalSeries.UnitsLabel = series.UnitsLabel.String
-		}
-		if series.UnitsLabelShort.Valid {
-			dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
 		}
 		seriesList = append(seriesList, dataPortalSeries)
 	}
@@ -349,47 +182,19 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(seriesId int64, freq str
 }
 
 func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(seriesId int64, geo string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT id, series.name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
-	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
+	rows, err := r.DB.Query(`SELECT series.id, series.name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, handle, display_name_short
+	FROM series JOIN geographies JOIN (SELECT name FROM series where id = ?) as original_series
 	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-	AND series.name LIKE CONCAT('%@%', ? ,'%.%');`, seriesId, geo)
+	AND series.name LIKE CONCAT('%@%', ? ,'%.%') AND series.name LIKE CONCAT('%@',handle,'.%');`, seriesId, geo)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
-		series := models.Series{}
-		err = rows.Scan(
-			&series.Id,
-			&series.Name,
-			&series.Description,
-			&series.Frequency,
-			&series.SeasonallyAdjusted,
-			&series.UnitsLabel,
-			&series.UnitsLabelShort,
-			&series.DataPortalName,
-		)
-		if err != nil {
-			return
-		}
-		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
-		if series.DataPortalName.Valid {
-			dataPortalSeries.Title = series.DataPortalName.String
-		}
-		if series.Description.Valid {
-			dataPortalSeries.Description = series.Description.String
-		}
-		if series.Frequency.Valid {
-			dataPortalSeries.Frequency = series.Frequency.String
-		}
-		if series.SeasonallyAdjusted.Valid {
-			dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
-		}
-		if series.UnitsLabel.Valid {
-			dataPortalSeries.UnitsLabel = series.UnitsLabel.String
-		}
-		if series.UnitsLabelShort.Valid {
-			dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
 		}
 		seriesList = append(seriesList, dataPortalSeries)
 	}
@@ -397,47 +202,19 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(seriesId int64, geo strin
 }
 
 func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(seriesId int64, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT id, series.name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
-	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
+	rows, err := r.DB.Query(`SELECT series.id, series.name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, handle, display_name_short
+	FROM series JOIN geographies JOIN (SELECT name FROM series where id = ?) as original_series
 	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-	AND series.name LIKE CONCAT('%@', ?, '.', ?);`, seriesId, geo, freq)
+	AND series.name LIKE CONCAT('%@', ?, '.', ?) AND series.name LIKE CONCAT('%@',handle,'.%');`, seriesId, geo, freq)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
-		series := models.Series{}
-		err = rows.Scan(
-			&series.Id,
-			&series.Name,
-			&series.Description,
-			&series.Frequency,
-			&series.SeasonallyAdjusted,
-			&series.UnitsLabel,
-			&series.UnitsLabelShort,
-			&series.DataPortalName,
-		)
-		if err != nil {
-			return
-		}
-		dataPortalSeries := models.DataPortalSeries{Id: series.Id, Name: series.Name}
-		if series.DataPortalName.Valid {
-			dataPortalSeries.Title = series.DataPortalName.String
-		}
-		if series.Description.Valid {
-			dataPortalSeries.Description = series.Description.String
-		}
-		if series.Frequency.Valid {
-			dataPortalSeries.Frequency = series.Frequency.String
-		}
-		if series.SeasonallyAdjusted.Valid {
-			dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
-		}
-		if series.UnitsLabel.Valid {
-			dataPortalSeries.UnitsLabel = series.UnitsLabel.String
-		}
-		if series.UnitsLabelShort.Valid {
-			dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
 		}
 		seriesList = append(seriesList, dataPortalSeries)
 	}
@@ -470,42 +247,13 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(seriesId int64) (frequencyL
 }
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
-	row := r.DB.QueryRow(`SELECT id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName
-	FROM series WHERE id = ?`, seriesId)
-	series := models.Series{}
-	err = row.Scan(
-		&series.Id,
-		&series.Name,
-		&series.Description,
-		&series.Frequency,
-		&series.SeasonallyAdjusted,
-		&series.UnitsLabel,
-		&series.UnitsLabelShort,
-		&series.DataPortalName,
-	)
-	if err != nil {
-		return
-	}
-	dataPortalSeries = models.DataPortalSeries{Id: series.Id, Name: series.Name}
-	dataPortalSeries.FrequencyShort = series.Name[len(series.Name)-1:]
-	if series.DataPortalName.Valid {
-		dataPortalSeries.Title = series.DataPortalName.String
-	}
-	if series.Description.Valid {
-		dataPortalSeries.Description = series.Description.String
-	}
-	if series.Frequency.Valid {
-		dataPortalSeries.Frequency = series.Frequency.String
-	}
-	if series.SeasonallyAdjusted.Valid {
-		dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
-	}
-	if series.UnitsLabel.Valid {
-		dataPortalSeries.UnitsLabel = series.UnitsLabel.String
-	}
-	if series.UnitsLabelShort.Valid {
-		dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+	row := r.DB.QueryRow(`SELECT series.id, name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, handle, display_name_short
+	FROM series JOIN geographies WHERE series.id = ? AND series.name LIKE CONCAT('%@',handle,'.%');`, seriesId)
+	dataPortalSeries, scanErr := getNextSeriesFromRow(row)
+	if scanErr != nil {
+		return dataPortalSeries, scanErr
 	}
 	return
 }

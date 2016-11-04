@@ -152,6 +152,10 @@ paths:
                 seasonalAdjustmentShort: "NSA"
                 source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
                 sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+                geography:
+                  fips: "15"
+                  name: "Hawaii"
+                  handle: "HI"
               - id: "E_NF@HI.M"
                 title: "NonFarm Jobs"
                 observationStart: "1958-01-01"
@@ -164,6 +168,10 @@ paths:
                 seasonalAdjustmentShort: "SA"
                 source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
                 sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+                geography:
+                  fips: "15"
+                  name: "Hawaii"
+                  handle: "HI"
               - id: "VIS@HON.A"
                 title: "Total Visitor Arrivals"
                 observationStart: "1990-01-01"
@@ -176,6 +184,10 @@ paths:
                 seasonalAdjustmentShort: "NSA"
                 source: "Hawaii Dept. of Business, Economic Development and Tourism"
                 sourceLink: "http://www.hawaii.gov/dbedt/info/visitor-stats/"
+                geography:
+                  fips: "15003"
+                  name: "Honolulu"
+                  handle: "HON"
               - id: "VIS@HON.M"
                 title: "Total Visitor Arrivals"
                 observationStart: "1990-01-01"
@@ -188,6 +200,10 @@ paths:
                 seasonalAdjustmentShort: "NSA"
                 source: "Hawaii Dept. of Business, Economic Development and Tourism"
                 sourceLink: "http://www.hawaii.gov/dbedt/info/visitor-stats/"
+                geography:
+                  fips: "15003"
+                  name: "Honolulu"
+                  handle: "HON"
         default:
           description: "Unexpected error"
           schema:
@@ -335,6 +351,10 @@ paths:
                 seasonalAdjustmentShort: "NSA"
                 source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
                 sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+                geography:
+                  fips: "15"
+                  name: "Hawaii"
+                  handle: "HI"
               - id: "E_NF@HI.M"
                 title: "NonFarm Jobs"
                 observationStart: "1958-01-01"
@@ -347,6 +367,10 @@ paths:
                 seasonalAdjustmentShort: "SA"
                 source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
                 sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+                geography:
+                  fips: "15"
+                  name: "Hawaii"
+                  handle: "HI"
               - id: "VIS@HON.A"
                 title: "Total Visitor Arrivals"
                 observationStart: "1990-01-01"
@@ -359,6 +383,10 @@ paths:
                 seasonalAdjustmentShort: "NSA"
                 source: "Hawaii Dept. of Business, Economic Development and Tourism"
                 sourceLink: "http://www.hawaii.gov/dbedt/info/visitor-stats/"
+                geography:
+                  fips: "15003"
+                  name: "Honolulu"
+                  handle: "HON"
               - id: "VIS@HON.M"
                 title: "Total Visitor Arrivals"
                 observationStart: "1990-01-01"
@@ -371,6 +399,10 @@ paths:
                 seasonalAdjustmentShort: "NSA"
                 source: "Hawaii Dept. of Business, Economic Development and Tourism"
                 sourceLink: "http://www.hawaii.gov/dbedt/info/visitor-stats/"
+                geography:
+                  fips: "15003"
+                  name: "Honolulu"
+                  handle: "HON"
         default:
           description: "Unexpected error"
           schema:
@@ -389,6 +421,24 @@ paths:
         description: "Series ID"
         required: true
         type: "number"
+      - name: "freq"
+        in: "query"
+        description: "Frequency"
+        required: false
+        type: "string"
+        default: "A"
+        enum:
+        - "A"
+        - "Q"
+        - "M"
+        - "W"
+        - "D"
+      - name: "geo"
+        in: "query"
+        description: "Geography (FIPS)"
+        required: false
+        type: "string"
+        default: "15000"
       responses:
         200:
           description: "An array of series"
@@ -411,6 +461,10 @@ paths:
                 seasonalAdjustmentShort: "NSA"
                 source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
                 sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+                geography:
+                  fips: "15"
+                  name: "Hawaii"
+                  handle: "HI"
               - id: "E_NF@HI.M"
                 title: "NonFarm Jobs"
                 observationStart: "1958-01-01"
@@ -423,6 +477,84 @@ paths:
                 seasonalAdjustmentShort: "SA"
                 source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
                 sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+                geography:
+                  fips: "15"
+                  name: "Hawaii"
+                  handle: "HI"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Series"
+  /series/siblings/geo:
+    get:
+      tags:
+      - "Series"
+      summary: "Series Siblings Geographies"
+      description: "Geographies represented in the siblings of this series\n"
+      operationId: "seriesSiblingsGeoGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Series ID"
+        required: true
+        type: "number"
+      responses:
+        200:
+          description: "An array of geographies"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Geography"
+          examples:
+            application/json:
+              data:
+              - fips: "15"
+                name: "State of Hawaii"
+                handle: "HI"
+              - fips: "JA"
+                name: "Japan"
+                handle: "JP"
+              - fips: "15001"
+                name: "Hawaii County"
+                handle: "HAW"
+              - fips: "15003"
+                name: "Honolulu"
+                handle: "HON"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Series"
+  /series/siblings/freq:
+    get:
+      tags:
+      - "Series"
+      summary: "Series Siblings Frequencies"
+      description: "Frequencies represented in the siblings of this series\n"
+      operationId: "seriesSiblingsFreqGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Series ID"
+        required: true
+        type: "number"
+      responses:
+        200:
+          description: "An array of frequencies"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Frequency"
+          examples:
+            application/json:
+              data:
+              - freq: "A"
+                label: "year"
+              - freq: "M"
+                label: "month"
+              - freq: "Q"
+                label: "quarter"
         default:
           description: "Unexpected error"
           schema:
@@ -722,6 +854,8 @@ definitions:
       sourceLink:
         type: "string"
         description: "URL for source"
+      geography:
+        $ref: "#/definitions/Geography"
   Transformation:
     type: "object"
     properties:
@@ -746,6 +880,15 @@ definitions:
       handle:
         type: "string"
         description: "Short Geography Handle"
+  Frequency:
+    type: "object"
+    properties:
+      freq:
+        type: "string"
+        description: "Frequency Handle"
+      label:
+        type: "string"
+        description: "Frequency Label"
   Error:
     type: "object"
     properties:

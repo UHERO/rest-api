@@ -69,6 +69,7 @@ type DataPortalSeries struct {
 	SeasonallyAdjusted bool   `json:"seasonallyAdjusted,omitempty"`
 	UnitsLabel         string `json:"unitsLabel,omitEmpty"`
 	UnitsLabelShort    string `json:"unitsLabelShort,omitEmpty"`
+	Geography DataPortalGeography `json:"geography,omitEmpty"`
 }
 
 type Observation struct {
