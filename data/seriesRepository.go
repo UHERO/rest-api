@@ -45,12 +45,16 @@ func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies
+	ON name LIKE CONCAT('%@', handle, '.%')
 	WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
 	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND
-	name LIKE CONCAT('%@%.', ?);`,
+	name LIKE CONCAT('%@%.', ?)
+	ORDER BY LOCATE(left(name, locate("@", name)),
+	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`,
 		categoryId,
 		freq,
+		categoryId,
 	)
 	if err != nil {
 		return
@@ -78,10 +82,13 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 	WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
 	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND name LIKE CONCAT('%@%', ? ,'%.%') AND
-	name LIKE CONCAT('%@%.', ?);`,
+	name LIKE CONCAT('%@%.', ?)
+	ORDER BY LOCATE(left(name, locate("@", name)),
+	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`,
 		categoryId,
 		geoHandle,
 		freq,
+		categoryId,
 	)
 	if err != nil {
 		return
@@ -108,9 +115,12 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 	WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
 	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]')
-	AND name LIKE CONCAT('%@%', ? ,'%.%');`,
+	AND name LIKE CONCAT('%@%', ? ,'%.%')
+	ORDER BY LOCATE(left(name, locate("@", name)),
+	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`,
 		categoryId,
 		geoHandle,
+		categoryId,
 	)
 	if err != nil {
 		return
@@ -154,7 +164,12 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	WHERE
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]');`, categoryId)
+	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]')
+	ORDER BY LOCATE(left(name, locate("@", name)),
+	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`,
+	categoryId,
+	categoryId,
+	)
 	if err != nil {
 		return
 	}
