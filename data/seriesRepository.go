@@ -18,6 +18,7 @@ type transformation struct {
 const (
 	Levels = "lvl"
 	YoyPCh = "pc1"
+	YTD = "ytd"
 )
 
 var transformations map[string]transformation = map[string]transformation{
@@ -32,6 +33,19 @@ var transformations map[string]transformation = map[string]transformation{
 				LEFT JOIN (SELECT value AS last_value, date
 				FROM data_points WHERE series_id = ? and current = 1) AS t2
 				ON (t1.last_year = t2.date);`,
+		PlaceholderCount: 2,
+	},
+	"ytd": {
+		Statement: `SELECT t1.date, (t1.ytd/t2.last_ytd - 1)*100 AS ytd
+      FROM (SELECT date, value, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
+            @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
+          FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
+          WHERE series_id = ? AND current = 1 ORDER BY date) AS t1
+      LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
+            @year := year(date)
+          FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
+          WHERE series_id = ? AND current = 1 ORDER BY date) AS t2
+      ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
 	},
 }
@@ -319,7 +333,17 @@ func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservat
 	if end.Before(yoyEnd) {
 		end = yoyEnd
 	}
-	seriesObservations.TransformationResults = []models.TransformationResult{lvlTransform, yoyTransform}
+	ytdTransform, ytdStart, ytdEnd, err := r.GetTransformation(YTD, seriesId)
+	if err != nil {
+		return
+	}
+	if ytdStart.Before(start) {
+		start = ytdStart
+	}
+	if end.Before(ytdEnd) {
+		end = ytdEnd
+	}
+	seriesObservations.TransformationResults = []models.TransformationResult{lvlTransform, yoyTransform, ytdTransform}
 	seriesObservations.ObservationStart = start
 	seriesObservations.ObservationEnd = end
 	return
