@@ -5,6 +5,15 @@ import (
 	"github.com/UHERO/rest-api/models"
 )
 
+var freqLabel map[string]string = map[string]string{
+	"A": "Annual",
+	"S": "Semiannual",
+	"Q": "Quartely",
+	"M": "Monthly",
+	"W": "Weekly",
+	"D": "Daily",
+}
+
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
 	series := models.Series{}
 	geography := models.Geography{}
@@ -29,14 +38,12 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		Name: series.Name,
 		FrequencyShort: series.Name[len(series.Name)-1:],
 	}
+	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
 	if series.DataPortalName.Valid {
 		dataPortalSeries.Title = series.DataPortalName.String
 	}
 	if series.Description.Valid {
 		dataPortalSeries.Description = series.Description.String
-	}
-	if series.Frequency.Valid {
-		dataPortalSeries.Frequency = series.Frequency.String
 	}
 	if series.SeasonallyAdjusted.Valid {
 		dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
@@ -82,14 +89,12 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		Name: series.Name,
 		FrequencyShort: series.Name[len(series.Name)-1:],
 	}
+	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
 	if series.DataPortalName.Valid {
 		dataPortalSeries.Title = series.DataPortalName.String
 	}
 	if series.Description.Valid {
 		dataPortalSeries.Description = series.Description.String
-	}
-	if series.Frequency.Valid {
-		dataPortalSeries.Frequency = series.Frequency.String
 	}
 	if series.SeasonallyAdjusted.Valid {
 		dataPortalSeries.SeasonallyAdjusted = series.SeasonallyAdjusted.Bool
