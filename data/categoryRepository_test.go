@@ -5,7 +5,6 @@ import (
 	"github.com/UHERO/rest-api/models"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"testing"
-	"fmt"
 )
 
 func TestGetAllCategories(t *testing.T) {
