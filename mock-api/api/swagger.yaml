@@ -49,17 +49,20 @@ paths:
               data:
               - id: 1
                 name: "Summary"
+                defaults:
+                  geo: "HI"
+                  freq: "A"
               - id: 2
                 name: "Income"
               - id: 3
                 name: "Major Economic Indicator Summary"
-                parent: 1
+                parentId: 1
               - id: 4
                 name: "Summary of External Indicators"
-                parent: 1
+                parentId: 1
               - id: 5
                 name: "Personal Income Summary"
-                parent: 2
+                parentId: 2
         default:
           description: "Unexpected error"
           schema:
@@ -90,10 +93,10 @@ paths:
               data:
               - id: 3
                 name: "Major Economic Indicator Summary"
-                parent: 1
+                parentId: 1
               - id: 4
                 name: "Summary of External Indicators"
-                parent: 1
+                parentId: 1
         default:
           description: "Unexpected error"
           schema:
@@ -772,10 +775,19 @@ definitions:
       description:
         type: "string"
         description: "Description of the category (optional)"
-      parent_id:
+      parentId:
         type: "number"
         description: "Category ID of the parent category (not returned if there is\
           \ no parent)"
+      defaults:
+        type: "object"
+        properties:
+          geo:
+            type: "string"
+            description: "Default geographic handle (optional)"
+          freq:
+            type: "string"
+            description: "Default frequency (optional)"
   Observation:
     type: "object"
     properties:

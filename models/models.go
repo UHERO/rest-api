@@ -18,18 +18,26 @@ type Category struct {
 	Id       int64  `json:"id"`
 	Name     string `json:"name"`
 	ParentId int64  `json:"parentId,omitempty"`
+	DefaultGeoFreq *GeoFreq `json:"defaults,omitempty"`
+}
+
+type GeoFreq struct {
+	Geography string `json:"geo,omitempty"`
+	Frequency string `json:"freq,omitempty"`
 }
 
 type CategoryWithAncestry struct {
-	Id       int64
-	Name     string
-	Ancestry sql.NullString
+	Id               int64
+	Name             string
+	Ancestry         sql.NullString
+	DefaultHandle    sql.NullString
+	DefaultFrequency sql.NullString
 }
 
 type Geography struct {
 	FIPS   sql.NullString `json:"fips"`
 	Name   sql.NullString `json:"name"`
-	Handle string `json:"handle"`
+	Handle string         `json:"handle"`
 }
 
 type DataPortalGeography struct {
@@ -39,12 +47,12 @@ type DataPortalGeography struct {
 }
 
 type FrequencyResult struct {
-	Freq string `json:"freq"`
+	Freq  string `json:"freq"`
 	Label string `json:"label"`
 }
 
 type Frequency struct {
-	Freq string
+	Freq  string
 	Label sql.NullString
 }
 
@@ -60,16 +68,16 @@ type Series struct {
 }
 
 type DataPortalSeries struct {
-	Id                 int64  `json:"id"`
-	Name               string `json:"name"`
-	Title              string `json:"title,omitempty"`
-	Description        string `json:"description,omitempty"`
-	Frequency          string `json:"frequency,omitempty"`
-	FrequencyShort     string `json:"frequencyShort,omitempty"`
-	SeasonallyAdjusted bool   `json:"seasonallyAdjusted,omitempty"`
-	UnitsLabel         string `json:"unitsLabel,omitEmpty"`
-	UnitsLabelShort    string `json:"unitsLabelShort,omitEmpty"`
-	Geography DataPortalGeography `json:"geography,omitEmpty"`
+	Id                 int64               `json:"id"`
+	Name               string              `json:"name"`
+	Title              string              `json:"title,omitempty"`
+	Description        string              `json:"description,omitempty"`
+	Frequency          string              `json:"frequency,omitempty"`
+	FrequencyShort     string              `json:"frequencyShort,omitempty"`
+	SeasonallyAdjusted bool                `json:"seasonallyAdjusted,omitempty"`
+	UnitsLabel         string              `json:"unitsLabel,omitEmpty"`
+	UnitsLabelShort    string              `json:"unitsLabelShort,omitEmpty"`
+	Geography          DataPortalGeography `json:"geography,omitEmpty"`
 }
 
 type Observation struct {

@@ -12,7 +12,12 @@ type CategoryRepository struct {
 }
 
 func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
-	rows, err := r.DB.Query("SELECT	id, name, ancestry FROM categories ORDER BY `order`;")
+	rows, err := r.DB.Query(`
+	SELECT cat1.id, MAX(cat1.name), MAX(cat1.ancestry),
+	MAX(COALESCE(NULLIF(cat1.default_handle, ''), NULLIF(cat2.default_handle, ''))) AS geo,
+	MAX(COALESCE(NULLIF(cat1.default_freq, ''), NULLIF(cat2.default_freq, ''))) AS freq
+	FROM categories AS cat1 LEFT JOIN categories AS cat2 ON cat1.ancestry regexp concat('(^|/)', cat2.id, '($|/)') GROUP BY cat1.id;
+	`)
 	if err != nil {
 		return
 	}
@@ -22,17 +27,26 @@ func (r *CategoryRepository) GetAllCategories() (categories []models.Category, e
 			&category.Id,
 			&category.Name,
 			&category.Ancestry,
+			&category.DefaultHandle,
+			&category.DefaultFrequency,
 		)
 		if err != nil {
 			return
 		}
 
 		parentId := getParentId(category.Ancestry)
-		categories = append(categories, models.Category{
+		dataPortalCategory := models.Category{
 			Id:       category.Id,
 			Name:     category.Name,
 			ParentId: parentId,
-		})
+		}
+		if category.DefaultHandle.Valid && category.DefaultFrequency.Valid {
+			dataPortalCategory.DefaultGeoFreq = &models.GeoFreq{
+				Geography: category.DefaultHandle.String,
+				Frequency: category.DefaultFrequency.String,
+			}
+		}
+		categories = append(categories, dataPortalCategory)
 	}
 	return
 }
