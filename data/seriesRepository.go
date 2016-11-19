@@ -254,13 +254,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(seriesId int64, geo strin
 }
 
 func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(seriesId int64, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, series.name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-	AND series.name LIKE CONCAT('%@', ?, '.', ?);`, seriesId, geo, freq)
+	rows, err := r.DB.Query(siblingsPrefix, seriesId, geo, freq)
 	if err != nil {
 		return
 	}
