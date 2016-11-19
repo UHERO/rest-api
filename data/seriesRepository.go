@@ -3,8 +3,8 @@ package data
 import (
 	"database/sql"
 	"github.com/UHERO/rest-api/models"
-	"time"
 	"strings"
+	"time"
 )
 
 type SeriesRepository struct {
@@ -12,19 +12,19 @@ type SeriesRepository struct {
 }
 
 type transformation struct {
-	Statement string
+	Statement        string
 	PlaceholderCount int
 }
 
 const (
 	Levels = "lvl"
 	YoyPCh = "pc1"
-	YTD = "ytd"
+	YTD    = "ytd"
 )
 
 var transformations map[string]transformation = map[string]transformation{
 	"lvl": {
-		Statement: `SELECT date, value FROM data_points WHERE series_id = ? and current = 1;`,
+		Statement:        `SELECT date, value FROM data_points WHERE series_id = ? and current = 1;`,
 		PlaceholderCount: 1,
 	},
 	"pc1": {
@@ -66,12 +66,13 @@ var sortStmt = ` ORDER BY LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(name, locat
 	LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(name, locate('@', name) - 1)), 'NS@'),
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`
 var siblingsPrefix = `SELECT series.id, series.name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	!(series.name REGEXP '.*NS@.*') AS seasonally_adjusted,
+	unitsLabel, unitsLabelShort, dataPortalName,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-	AND series.name LIKE CONCAT('%@', ?, '.', ?);`
+	WHERE TRIM(TRAILING 'NS' FROM left(series.name, locate('@', series.name) - 1))
+	LIKE TRIM(TRAILING 'NS' FROM left(original_series.name, locate("@", original_series.name) - 1))`
 
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	categoryId int64,
@@ -88,7 +89,7 @@ func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 		return
 	}
 	for rows.Next() {
-		dataPortalSeries, scanErr  := getNextSeriesFromRows(rows)
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -114,7 +115,7 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 		return
 	}
 	for rows.Next() {
-		dataPortalSeries, scanErr  := getNextSeriesFromRows(rows)
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -138,7 +139,7 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 		return
 	}
 	for rows.Next() {
-		dataPortalSeries, scanErr  := getNextSeriesFromRows(rows)
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -161,7 +162,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 		return
 	}
 	for rows.Next() {
-		dataPortalSeries, scanErr  := getNextSeriesFromRows(rows)
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -181,7 +182,7 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 		return
 	}
 	for rows.Next() {
-		dataPortalSeries, scanErr  := getNextSeriesFromRows(rows)
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -191,13 +192,7 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 }
 
 func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, series.name, description, frequency,
-	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
-	unitsLabel, unitsLabelShort, dataPortalName,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%');`, seriesId)
+	rows, err := r.DB.Query(siblingsPrefix, seriesId)
 	if err != nil {
 		return
 	}
@@ -211,14 +206,11 @@ func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []m
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(seriesId int64, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, series.name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-	AND series.name LIKE CONCAT('%@%.', ?);`, seriesId, freq)
+func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
+	seriesId int64,
+	freq string,
+) (seriesList []models.DataPortalSeries, err error) {
+	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, freqFilter}, ""), seriesId, freq)
 	if err != nil {
 		return
 	}
@@ -232,14 +224,11 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(seriesId int64, freq str
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(seriesId int64, geo string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, series.name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-	AND series.name LIKE CONCAT('%@%', ? ,'%.%');`, seriesId, geo)
+func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
+	seriesId int64,
+	geo string,
+) (seriesList []models.DataPortalSeries, err error) {
+	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, geoFilter}, ""), seriesId, geo)
 	if err != nil {
 		return
 	}
@@ -253,8 +242,14 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(seriesId int64, geo strin
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(seriesId int64, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(siblingsPrefix, seriesId, geo, freq)
+func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
+	seriesId int64,
+	geo string,
+	freq string,
+) (seriesList []models.DataPortalSeries, err error) {
+	rows, err := r.DB.Query(
+		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter}, ""),
+		seriesId, geo, freq)
 	if err != nil {
 		return
 	}
@@ -268,7 +263,9 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(seriesId int64, geo s
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsFreqById(seriesId int64) (frequencyList []models.FrequencyResult, err error) {
+func (r *SeriesRepository) GetSeriesSiblingsFreqById(
+	seriesId int64,
+) (frequencyList []models.FrequencyResult, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq, frequency
 	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
 	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%');`, seriesId)
@@ -304,7 +301,9 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	return
 }
 
-func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
+func (r *SeriesRepository) GetSeriesObservations(
+	seriesId int64,
+) (seriesObservations models.SeriesObservations, err error) {
 	lvlTransform, start, end, err := r.GetTransformation(Levels, seriesId)
 	if err != nil {
 		return
