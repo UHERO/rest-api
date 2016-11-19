@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/UHERO/rest-api/models"
 	"time"
+	"strings"
 )
 
 type SeriesRepository struct {
@@ -50,24 +51,37 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 }
 
+var seriesPrefix = `SELECT series.id, name, description, frequency,
+	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
+	unitsLabel, unitsLabelShort, dataPortalName,
+	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
+	WHERE
+	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
+	REGEXP CONCAT('[[:<:]]', TRIM(TRAILING 'NS' FROM left(name, locate('@', name) - 1)), '(NS){0,1}@.*[[:>:]]')`
+var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
+var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
+var sortStmt = ` ORDER BY LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(name, locate('@', name) - 1)), '@'),
+	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)) +
+	LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(name, locate('@', name) - 1)), 'NS@'),
+	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`
+var siblingsPrefix = `SELECT series.id, series.name, description, frequency,
+	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
+	JOIN (SELECT name FROM series where id = ?) as original_series
+	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
+	AND series.name LIKE CONCAT('%@', ?, '.', ?);`
+
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	categoryId int64,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
-		`SELECT series.id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies
-	ON name LIKE CONCAT('%@', handle, '.%')
-	WHERE
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND
-	name LIKE CONCAT('%@%.', ?)
-	ORDER BY LOCATE(left(name, locate("@", name)),
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`,
+		strings.Join([]string{seriesPrefix, freqFilter, sortStmt}, ""),
 		categoryId,
 		freq,
+		categoryId,
 		categoryId,
 	)
 	if err != nil {
@@ -89,19 +103,11 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
-		`SELECT series.id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	WHERE
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]') AND name LIKE CONCAT('%@%', ? ,'%.%') AND
-	name LIKE CONCAT('%@%.', ?)
-	ORDER BY LOCATE(left(name, locate("@", name)),
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`,
+		strings.Join([]string{seriesPrefix, geoFilter, freqFilter, sortStmt}, ""),
 		categoryId,
 		geoHandle,
 		freq,
+		categoryId,
 		categoryId,
 	)
 	if err != nil {
@@ -122,18 +128,10 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 	geoHandle string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
-		`SELECT series.id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	WHERE
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]')
-	AND name LIKE CONCAT('%@%', ? ,'%.%')
-	ORDER BY LOCATE(left(name, locate("@", name)),
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`,
+		strings.Join([]string{seriesPrefix, geoFilter, sortStmt}, ""),
 		categoryId,
 		geoHandle,
+		categoryId,
 		categoryId,
 	)
 	if err != nil {
@@ -151,7 +149,8 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
+	unitsLabel, unitsLabelShort, dataPortalName,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	WHERE
@@ -172,17 +171,11 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 }
 
 func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	WHERE
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]')
-	ORDER BY LOCATE(left(name, locate("@", name)),
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`,
-	categoryId,
-	categoryId,
+	rows, err := r.DB.Query(
+		strings.Join([]string{seriesPrefix, sortStmt}, ""),
+		categoryId,
+		categoryId,
+		categoryId,
 	)
 	if err != nil {
 		return
@@ -199,7 +192,8 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 
 func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, series.name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
+	unitsLabel, unitsLabelShort, dataPortalName,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	JOIN (SELECT name FROM series where id = ?) as original_series
@@ -307,14 +301,12 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(seriesId int64) (frequencyL
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row := r.DB.QueryRow(`SELECT series.id, name, description, frequency,
-	seasonally_adjusted, unitsLabel, unitsLabelShort, dataPortalName,
+	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
+	unitsLabel, unitsLabelShort, dataPortalName,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	WHERE series.id = ?;`, seriesId)
-	dataPortalSeries, scanErr := getNextSeriesFromRow(row)
-	if scanErr != nil {
-		return dataPortalSeries, scanErr
-	}
+	dataPortalSeries, err = getNextSeriesFromRow(row)
 	return
 }
 
