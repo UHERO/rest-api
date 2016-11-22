@@ -51,7 +51,15 @@
 			"Rev": "856ef9b93159844904a15d528aca9c78e00faab6"
 		},
 		{
+			"ImportPath": "github.com/markbates/goth/providers/facebook",
+			"Rev": "856ef9b93159844904a15d528aca9c78e00faab6"
+		},
+		{
 			"ImportPath": "github.com/markbates/goth/providers/github",
+			"Rev": "856ef9b93159844904a15d528aca9c78e00faab6"
+		},
+		{
+			"ImportPath": "github.com/markbates/goth/providers/gplus",
 			"Rev": "856ef9b93159844904a15d528aca9c78e00faab6"
 		},
 		{

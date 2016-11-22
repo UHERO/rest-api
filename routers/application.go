@@ -31,9 +31,5 @@ func SetApplicationRoutes(router *mux.Router, applicationRepository *data.Applic
 		negroni.HandlerFunc(common.IsAuthenticated),
 		negroni.Wrap(applicationRouter),
 	))
-	//router.Handle("/developer", negroni.New(
-	//	negroni.HandlerFunc(common.IsAuthenticated),
-	//	negroni.Wrap(http.HandlerFunc(controllers.DeveloperHandler(applicationRepository))),
-	//))
 	return router
 }

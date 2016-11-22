@@ -15,6 +15,7 @@ func InitRoutes(
 ) *mux.Router {
 	router := mux.NewRouter().StrictSlash(false)
 	router = SetApplicationRoutes(router, applicationRepository)
+	router = SetUserRoutes(router)
 
 	apiRouter := mux.NewRouter().StrictSlash(false)
 	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository)
