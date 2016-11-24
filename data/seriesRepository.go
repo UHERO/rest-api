@@ -51,19 +51,19 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 }
 
-var seriesPrefix = `SELECT series.id, name, description, frequency,
-	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
+var seriesPrefix = `SELECT series.id, series.name, description, frequency,
+	!(series.name REGEXP '.*NS@.*') AS seasonally_adjusted,
 	unitsLabel, unitsLabelShort, dataPortalName,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	WHERE
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)
-	REGEXP CONCAT('[[:<:]]', TRIM(TRAILING 'NS' FROM left(name, locate('@', name) - 1)), '(NS){0,1}@.*[[:>:]]')`
+	JOIN data_lists_series ON data_lists_series.series_id = series.id
+	JOIN categories ON categories.data_list_id = data_lists_series.data_list_id
+	WHERE categories.id = ?`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
-var sortStmt = ` ORDER BY LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(name, locate('@', name) - 1)), '@'),
+var sortStmt = ` ORDER BY LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(series.name, locate('@', series.name) - 1)), '@'),
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)) +
-	LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(name, locate('@', name) - 1)), 'NS@'),
+	LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(series.name, locate('@', series.name) - 1)), 'NS@'),
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`
 var siblingsPrefix = `SELECT series.id, series.name, description, frequency,
 	!(series.name REGEXP '.*NS@.*') AS seasonally_adjusted,
@@ -191,6 +191,32 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 	return
 }
 
+func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []models.FrequencyResult, err error) {
+	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
+	FROM series
+	JOIN data_lists_series ON data_lists_series.series_id = series.id
+	JOIN categories ON categories.data_list_id = data_lists_series.data_list_id
+	WHERE categories.id = ?;`, categoryId)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		frequency := models.Frequency{}
+		err = rows.Scan(
+			&frequency.Freq,
+		)
+		if err != nil {
+			return
+		}
+		frequencies = append(
+			frequencies,
+			models.FrequencyResult{Freq: frequency.Freq, Label: freqLabel[frequency.Freq]},
+		)
+	}
+	return
+
+}
+
 func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(siblingsPrefix, seriesId)
 	if err != nil {
@@ -266,7 +292,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	seriesId int64,
 ) (frequencyList []models.FrequencyResult, err error) {
-	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq, frequency
+	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
 	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%');`, seriesId)
 	if err != nil {
@@ -276,16 +302,14 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 		frequency := models.Frequency{}
 		err = rows.Scan(
 			&frequency.Freq,
-			&frequency.Label,
 		)
 		if err != nil {
 			return
 		}
-		frequencyResult := models.FrequencyResult{Freq: frequency.Freq}
-		if frequency.Label.Valid {
-			frequencyResult.Label = frequency.Label.String
-		}
-		frequencyList = append(frequencyList, frequencyResult)
+		frequencyList = append(
+			frequencyList,
+			models.FrequencyResult{Freq: frequency.Freq, Label: freqLabel[frequency.Freq]},
+		)
 	}
 	return
 }
