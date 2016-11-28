@@ -9,10 +9,10 @@ import (
 	"github.com/codegangsta/negroni"
 	"github.com/go-sql-driver/mysql"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
-	"net"
 )
 
 func main() {
@@ -20,13 +20,13 @@ func main() {
 
 	// Set up MySQL
 	mysqlConfig := mysql.Config{
-		User: os.Getenv("DB_USER"),
-		Passwd: os.Getenv("DB_PASSWORD"),
-		Net: "tcp",
-		Addr: net.JoinHostPort(os.Getenv("DB_HOST"), "3306"),
-		Loc: time.Local,
+		User:      os.Getenv("DB_USER"),
+		Passwd:    os.Getenv("DB_PASSWORD"),
+		Net:       "tcp",
+		Addr:      net.JoinHostPort(os.Getenv("DB_HOST"), "3306"),
+		Loc:       time.Local,
 		ParseTime: true,
-		DBName: "uhero_db_dev",
+		DBName:    "uhero_db_dev",
 	}
 	connectionString := mysqlConfig.FormatDSN()
 	db, err := sql.Open("mysql", connectionString)

@@ -1,13 +1,40 @@
 package controllers
 
 import (
-	"net/http"
-	"github.com/gorilla/mux"
-	"strconv"
-	"github.com/UHERO/rest-api/common"
 	"errors"
+	"github.com/UHERO/rest-api/common"
+	"github.com/gorilla/mux"
 	"log"
+	"net/http"
+	"strconv"
+	"github.com/UHERO/rest-api/models"
+	"encoding/json"
 )
+
+func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter) {
+	if err != nil {
+		common.DisplayAppError(
+			w,
+			err,
+			"An unexpected error has occurred",
+			500,
+		)
+		return
+	}
+	j, err := json.Marshal(SeriesListResource{Data: seriesList})
+	if err != nil {
+		common.DisplayAppError(
+			w,
+			err,
+			"An unexpected error processing JSON has occurred",
+			500,
+		)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(j)
+}
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
 	ok = true
@@ -164,4 +191,3 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 	}
 	return
 }
-

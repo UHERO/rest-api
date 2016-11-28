@@ -53,7 +53,7 @@ var transformations map[string]transformation = map[string]transformation{
 
 var seriesPrefix = `SELECT series.id, series.name, description, frequency,
 	!(series.name REGEXP '.*NS@.*') AS seasonally_adjusted,
-	unitsLabel, unitsLabelShort, dataPortalName,
+	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	JOIN data_lists_series ON data_lists_series.series_id = series.id
@@ -67,7 +67,7 @@ var sortStmt = ` ORDER BY LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(series.name
 	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`
 var siblingsPrefix = `SELECT series.id, series.name, description, frequency,
 	!(series.name REGEXP '.*NS@.*') AS seasonally_adjusted,
-	unitsLabel, unitsLabelShort, dataPortalName,
+	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	JOIN (SELECT name FROM series where id = ?) as original_series
@@ -151,7 +151,7 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency,
 	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
-	unitsLabel, unitsLabelShort, dataPortalName,
+	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	WHERE
@@ -317,7 +317,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row := r.DB.QueryRow(`SELECT series.id, name, description, frequency,
 	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
-	unitsLabel, unitsLabelShort, dataPortalName,
+	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	WHERE series.id = ?;`, seriesId)

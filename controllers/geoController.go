@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"errors"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
 	"strconv"
-	"errors"
 )
 
 func GetGeographies(geographyRepository *data.GeographyRepository) func(http.ResponseWriter, *http.Request) {
