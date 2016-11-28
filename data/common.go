@@ -26,6 +26,8 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.UnitsLabel,
 		&series.UnitsLabelShort,
 		&series.DataPortalName,
+		&series.Percent,
+		&series.Real,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -34,8 +36,8 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		return
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id: series.Id,
-		Name: series.Name,
+		Id:             series.Id,
+		Name:           series.Name,
 		FrequencyShort: series.Name[len(series.Name)-1:],
 	}
 	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
@@ -53,6 +55,12 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	}
 	if series.UnitsLabelShort.Valid {
 		dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+	}
+	if series.Percent.Valid {
+		dataPortalSeries.Percent = &series.Percent.Bool
+	}
+	if series.Real.Valid {
+		dataPortalSeries.Real = &series.Real.Bool
 	}
 	dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 	if geography.FIPS.Valid {
@@ -77,6 +85,8 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.UnitsLabel,
 		&series.UnitsLabelShort,
 		&series.DataPortalName,
+		&series.Percent,
+		&series.Real,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -85,8 +95,8 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		return
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id: series.Id,
-		Name: series.Name,
+		Id:             series.Id,
+		Name:           series.Name,
 		FrequencyShort: series.Name[len(series.Name)-1:],
 	}
 	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
@@ -104,6 +114,12 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.UnitsLabelShort.Valid {
 		dataPortalSeries.UnitsLabelShort = series.UnitsLabelShort.String
+	}
+	if series.Percent.Valid {
+		dataPortalSeries.Percent = &series.Percent.Bool
+	}
+	if series.Real.Valid {
+		dataPortalSeries.Real = &series.Real.Bool
 	}
 	dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 	if geography.FIPS.Valid {
