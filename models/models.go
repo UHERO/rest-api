@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+type User struct {
+	Name     string `json:"name"`
+	NickName string `json:"nickname"`
+	Email    string `json:"email"`
+}
+
 type Application struct {
 	Id       int64  `json:"id"`
 	Name     string `json:"name"`
@@ -15,9 +21,9 @@ type Application struct {
 }
 
 type Category struct {
-	Id       int64  `json:"id"`
-	Name     string `json:"name"`
-	ParentId int64  `json:"parentId,omitempty"`
+	Id             int64    `json:"id"`
+	Name           string   `json:"name"`
+	ParentId       int64    `json:"parentId,omitempty"`
 	DefaultGeoFreq *GeoFreq `json:"defaults,omitempty"`
 }
 
@@ -74,7 +80,7 @@ type DataPortalSeries struct {
 	Description        string              `json:"description,omitempty"`
 	Frequency          string              `json:"frequency,omitempty"`
 	FrequencyShort     string              `json:"frequencyShort,omitempty"`
-	SeasonallyAdjusted *bool                `json:"seasonallyAdjusted,omitempty"`
+	SeasonallyAdjusted *bool               `json:"seasonallyAdjusted,omitempty"`
 	UnitsLabel         string              `json:"unitsLabel,omitEmpty"`
 	UnitsLabelShort    string              `json:"unitsLabelShort,omitEmpty"`
 	Geography          DataPortalGeography `json:"geography,omitEmpty"`

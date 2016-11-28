@@ -28,3 +28,8 @@ func ProviderCallback(provider string) func(http.ResponseWriter, *http.Request) 
 	}
 
 }
+
+func GetEmail(w http.ResponseWriter, r *http.Request) {
+
+
+}
