@@ -15,9 +15,9 @@ type Application struct {
 }
 
 type Category struct {
-	Id       int64  `json:"id"`
-	Name     string `json:"name"`
-	ParentId int64  `json:"parentId,omitempty"`
+	Id             int64    `json:"id"`
+	Name           string   `json:"name"`
+	ParentId       int64    `json:"parentId,omitempty"`
 	DefaultGeoFreq *GeoFreq `json:"defaults,omitempty"`
 }
 
@@ -65,6 +65,8 @@ type Series struct {
 	UnitsLabel         sql.NullString
 	UnitsLabelShort    sql.NullString
 	DataPortalName     sql.NullString
+	Percent            sql.NullBool
+	Real               sql.NullBool
 }
 
 type DataPortalSeries struct {
@@ -74,10 +76,12 @@ type DataPortalSeries struct {
 	Description        string              `json:"description,omitempty"`
 	Frequency          string              `json:"frequency,omitempty"`
 	FrequencyShort     string              `json:"frequencyShort,omitempty"`
-	SeasonallyAdjusted *bool                `json:"seasonallyAdjusted,omitempty"`
+	SeasonallyAdjusted *bool               `json:"seasonallyAdjusted,omitempty"`
 	UnitsLabel         string              `json:"unitsLabel,omitEmpty"`
 	UnitsLabelShort    string              `json:"unitsLabelShort,omitEmpty"`
 	Geography          DataPortalGeography `json:"geography,omitEmpty"`
+	Percent            *bool               `json:"percent,omitempty"`
+	Real               *bool               `json:"real,omitempty"`
 }
 
 type Observation struct {

@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"errors"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
-	"log"
 	"github.com/gorilla/mux"
-	"errors"
+	"log"
 )
 
 func GetSeriesBySearchText(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
@@ -24,28 +24,7 @@ func GetSeriesBySearchText(seriesRepository *data.SeriesRepository) func(http.Re
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesBySearchText(searchText)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		j, err := json.Marshal(SeriesListResource{Data: seriesList})
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		returnSeriesList(seriesList, err, w)
 	}
 }
 
@@ -56,28 +35,7 @@ func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.Re
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategory(id)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		j, err := json.Marshal(SeriesListResource{Data: seriesList})
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		returnSeriesList(seriesList, err, w)
 	}
 }
 
@@ -88,28 +46,7 @@ func GetSeriesByCategoryIdAndGeoHandle(seriesRepository *data.SeriesRepository) 
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryAndGeo(id, geoHandle)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		j, err := json.Marshal(SeriesListResource{Data: seriesList})
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		returnSeriesList(seriesList, err, w)
 	}
 }
 
@@ -120,28 +57,7 @@ func GetSeriesByCategoryIdAndFreq(seriesRepository *data.SeriesRepository) func(
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryAndFreq(id, freq)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		j, err := json.Marshal(SeriesListResource{Data: seriesList})
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		returnSeriesList(seriesList, err, w)
 	}
 }
 
@@ -152,28 +68,7 @@ func GetSeriesByCategoryIdGeoHandleAndFreq(seriesRepository *data.SeriesReposito
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryGeoAndFreq(id, geoHandle, freq)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		j, err := json.Marshal(SeriesListResource{Data: seriesList})
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		returnSeriesList(seriesList, err, w)
 	}
 }
 
@@ -219,28 +114,7 @@ func GetSeriesSiblingsById(seriesRepository *data.SeriesRepository) func(http.Re
 		}
 		log.Printf("Getting Series by id: %d", id)
 		seriesList, err := seriesRepository.GetSeriesSiblingsById(id)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		j, err := json.Marshal(SeriesListResource{Data: seriesList})
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		returnSeriesList(seriesList, err, w)
 	}
 }
 
@@ -252,28 +126,7 @@ func GetSeriesSiblingsByIdAndFreq(seriesRepository *data.SeriesRepository) func(
 		}
 		log.Printf("Getting Series Siblings by id and frequency: %d, %s", id, freq)
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdAndFreq(id, freq)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		j, err := json.Marshal(SeriesListResource{Data: seriesList})
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		returnSeriesList(seriesList, err, w)
 	}
 }
 
@@ -285,28 +138,7 @@ func GetSeriesSiblingsByIdAndGeo(seriesRepository *data.SeriesRepository) func(h
 		}
 		log.Printf("Getting Series Siblings by id and geo: %d, %s", id, geo)
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdAndGeo(id, geo)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		j, err := json.Marshal(SeriesListResource{Data: seriesList})
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		returnSeriesList(seriesList, err, w)
 	}
 }
 
@@ -318,28 +150,7 @@ func GetSeriesSiblingsByIdGeoAndFreq(seriesRepository *data.SeriesRepository) fu
 		}
 		log.Printf("Getting Series Siblings by id, geo, and freq: %d, %s, %s", id, geo, freq)
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdGeoAndFreq(id, geo, freq)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		j, err := json.Marshal(SeriesListResource{Data: seriesList})
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		returnSeriesList(seriesList, err, w)
 	}
 }
 
