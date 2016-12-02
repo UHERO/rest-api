@@ -73,6 +73,11 @@ var siblingsPrefix = `SELECT series.id, series.name, description, frequency,
 	JOIN (SELECT name FROM series where id = ?) as original_series
 	WHERE TRIM(TRAILING 'NS' FROM left(series.name, locate('@', series.name) - 1))
 	LIKE TRIM(TRAILING 'NS' FROM left(original_series.name, locate("@", original_series.name) - 1))`
+var siblingIds = `SELECT series.id
+	FROM series
+	JOIN (SELECT name FROM series where id = ?) as original_series
+	WHERE TRIM(TRAILING 'NS' FROM left(series.name, locate('@', series.name) - 1))
+	LIKE TRIM(TRAILING 'NS' FROM left(original_series.name, locate("@", original_series.name) - 1))`
 
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	categoryId int64,

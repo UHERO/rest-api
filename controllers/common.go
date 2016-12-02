@@ -1,14 +1,14 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
-	"github.com/UHERO/rest-api/models"
-	"encoding/json"
 )
 
 func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter) {

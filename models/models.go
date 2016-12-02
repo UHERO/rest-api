@@ -20,6 +20,12 @@ type Application struct {
 	APIKey   string `json:"apiKey"`
 }
 
+type DataList struct {
+	Id        int64   `json:"id"`
+	Name      string  `json:"name"`
+	SeriesIds []int64 `json:"seriesIds"`
+}
+
 type Category struct {
 	Id             int64    `json:"id"`
 	Name           string   `json:"name"`

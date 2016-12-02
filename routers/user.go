@@ -1,18 +1,19 @@
 package routers
 
 import (
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/controllers"
+	"github.com/UHERO/rest-api/data"
+	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/gplus"
 	"github.com/markbates/goth/providers/facebook"
+	"github.com/markbates/goth/providers/gplus"
 	"os"
-	"github.com/UHERO/rest-api/controllers"
-	"github.com/codegangsta/negroni"
-	"github.com/UHERO/rest-api/common"
 )
 
-func SetUserRoutes(router *mux.Router) *mux.Router {
+func SetUserRoutes(router *mux.Router, dataListRepository *data.DataListRepository) *mux.Router {
 	goth.UseProviders(
 		gplus.New(os.Getenv("GOOGLE_KEY"), os.Getenv("GOOGLE_SECRET"), os.Getenv("GOOGLE_CALLBACK")),
 		facebook.New(os.Getenv("FACEBOOK_KEY"), os.Getenv("FACEBOOK_SECRET"), os.Getenv("FACEBOOK_CALLBACK")),

@@ -1,14 +1,14 @@
 package controllers
 
 import (
-	"net/http"
-	"github.com/markbates/goth/gothic"
 	"fmt"
 	"github.com/UHERO/rest-api/common"
+	"github.com/markbates/goth/gothic"
+	"net/http"
 )
 
 func ProviderCallback(provider string) func(http.ResponseWriter, *http.Request) {
-	return func (w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		q.Add("provider", provider)
 		r.URL.RawQuery = q.Encode()
@@ -18,7 +18,12 @@ func ProviderCallback(provider string) func(http.ResponseWriter, *http.Request) 
 			return
 		}
 
-		token, err := common.GenerateJWT(userProfile.Email, "dataPortalUser")
+		// add user to user table if not already there
+
+		// get
+
+		// attach the user Id to the JWT
+		token, err := common.GenerateJWT(nil, userProfile.Email, "dataPortalUser")
 		common.StoreJWT(w, r, token)
 		if err != nil {
 			panic(err)
@@ -30,6 +35,5 @@ func ProviderCallback(provider string) func(http.ResponseWriter, *http.Request) 
 }
 
 func GetEmail(w http.ResponseWriter, r *http.Request) {
-
 
 }

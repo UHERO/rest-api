@@ -21,6 +21,14 @@ type (
 		User         string
 		Applications []models.Application
 	}
+
+	// for data_lists
+	DataListResource struct {
+		Data models.DataList `json:"data"`
+	}
+	DataListResources struct {
+		Data []models.DataList `json:"data"`
+	}
 )
 
 // for core API, all prefixed by /v1
