@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -27,10 +28,12 @@ type DataList struct {
 }
 
 type Category struct {
-	Id             int64    `json:"id"`
-	Name           string   `json:"name"`
-	ParentId       int64    `json:"parentId,omitempty"`
-	DefaultGeoFreq *GeoFreq `json:"defaults,omitempty"`
+	Id               int64     `json:"id"`
+	Name             string    `json:"name"`
+	ParentId         int64     `json:"parentId,omitempty"`
+	DefaultGeoFreq   *GeoFreq  `json:"defaults,omitempty"`
+	ObservationStart *time.Time `json:"observationStart,omitempty"`
+	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
 
 type GeoFreq struct {
@@ -44,6 +47,8 @@ type CategoryWithAncestry struct {
 	Ancestry         sql.NullString
 	DefaultHandle    sql.NullString
 	DefaultFrequency sql.NullString
+	ObservationStart NullTime
+	ObservationEnd   NullTime
 }
 
 type Geography struct {
@@ -145,4 +150,27 @@ func (so SeriesObservations) MarshalJSON() ([]byte, error) {
 
 func formatDate(date time.Time) string {
 	return fmt.Sprintf("%d-%02d-%02d", date.Year(), date.Month(), date.Day())
+}
+
+// from https://github.com/lib/pq/blob/master/encode.go
+type NullTime struct {
+	Time  time.Time
+	Valid bool // Valid is true if Time is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (nt *NullTime) Scan(value interface{}) error {
+	nt.Time, nt.Valid = value.(time.Time)
+	if nt.Time.IsZero() {
+		nt.Valid = false
+	}
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (nt NullTime) Value() (driver.Value, error) {
+	if !nt.Valid {
+		return nil, nil
+	}
+	return nt.Time, nil
 }
