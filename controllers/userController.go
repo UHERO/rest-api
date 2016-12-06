@@ -5,9 +5,10 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/markbates/goth/gothic"
 	"net/http"
+	"github.com/UHERO/rest-api/data"
 )
 
-func ProviderCallback(provider string) func(http.ResponseWriter, *http.Request) {
+func ProviderCallback(userRepository *data.UserRepository, provider string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		q.Add("provider", provider)
@@ -19,11 +20,13 @@ func ProviderCallback(provider string) func(http.ResponseWriter, *http.Request) 
 		}
 
 		// add user to user table if not already there
-
-		// get
+		userId, err := userRepository.GetUserId(provider, userProfile)
+		if err != nil {
+			fmt.Fprintln(w, err)
+		}
 
 		// attach the user Id to the JWT
-		token, err := common.GenerateJWT(nil, userProfile.Email, "dataPortalUser")
+		token, err := common.GenerateJWT(userId, userProfile.Email, "dataPortalUser")
 		common.StoreJWT(w, r, token)
 		if err != nil {
 			panic(err)
@@ -34,6 +37,3 @@ func ProviderCallback(provider string) func(http.ResponseWriter, *http.Request) 
 
 }
 
-func GetEmail(w http.ResponseWriter, r *http.Request) {
-
-}

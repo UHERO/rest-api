@@ -13,13 +13,13 @@ import (
 	"os"
 )
 
-func SetUserRoutes(router *mux.Router, dataListRepository *data.DataListRepository) *mux.Router {
+func SetUserRoutes(router *mux.Router, userRepository *data.UserRepository, dataListRepository *data.DataListRepository) *mux.Router {
 	goth.UseProviders(
 		gplus.New(os.Getenv("GOOGLE_KEY"), os.Getenv("GOOGLE_SECRET"), os.Getenv("GOOGLE_CALLBACK")),
 		facebook.New(os.Getenv("FACEBOOK_KEY"), os.Getenv("FACEBOOK_SECRET"), os.Getenv("FACEBOOK_CALLBACK")),
 	)
-	router.HandleFunc("/user/auth/gplus/callback", controllers.ProviderCallback("gplus")).Methods("GET")
-	router.HandleFunc("/user/auth/facebook/callback", controllers.ProviderCallback("facebook")).Methods("GET")
+	router.HandleFunc("/user/auth/gplus/callback", controllers.ProviderCallback(userRepository, "gplus")).Methods("GET")
+	router.HandleFunc("/user/auth/facebook/callback", controllers.ProviderCallback(userRepository, "facebook")).Methods("GET")
 	router.HandleFunc("/user/auth", gothic.BeginAuthHandler).Methods("GET")
 
 	userRouter := mux.NewRouter()
