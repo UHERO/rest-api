@@ -20,6 +20,8 @@ type Category struct {
 	Name             string    `json:"name"`
 	ParentId         int64     `json:"parentId,omitempty"`
 	DefaultGeoFreq   *GeoFreq  `json:"defaults,omitempty"`
+	ObservationStart *time.Time `json:"observationStart,omitempty"`
+	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
 
 type GeoFreq struct {
@@ -33,6 +35,8 @@ type CategoryWithAncestry struct {
 	Ancestry         sql.NullString
 	DefaultHandle    sql.NullString
 	DefaultFrequency sql.NullString
+	ObservationStart NullTime
+	ObservationEnd   NullTime
 }
 
 type Geography struct {
