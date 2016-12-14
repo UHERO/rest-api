@@ -51,28 +51,30 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 }
 
-var seriesPrefix = `SELECT series.id, series.name, description, frequency,
-	!(series.name REGEXP '.*NS@.*') AS seasonally_adjusted,
-	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
+var seriesPrefix = `SELECT series.id, series.name, description, frequency, seasonally_adjusted,
+	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	JOIN data_lists_series ON data_lists_series.series_id = series.id
-	JOIN categories ON categories.data_list_id = data_lists_series.data_list_id
+	JOIN measurements ON measurements.id = series.measurement_id
+	JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	WHERE categories.id = ?`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
-var sortStmt = ` ORDER BY LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(series.name, locate('@', series.name) - 1)), '@'),
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?)) +
-	LOCATE(CONCAT(TRIM(TRAILING 'NS' FROM left(series.name, locate('@', series.name) - 1)), 'NS@'),
-	(SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND categories.id = ?));`
-var siblingsPrefix = `SELECT series.id, series.name, description, frequency,
-	!(series.name REGEXP '.*NS@.*') AS seasonally_adjusted,
-	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
+var sortStmt = ` ORDER BY data_list_measurements.list_order;`
+var siblingsPrefix = `SELECT series.id, series.name, description, frequency, seasonally_adjusted,
+	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, series.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE TRIM(TRAILING 'NS' FROM left(series.name, locate('@', series.name) - 1))
-	LIKE TRIM(TRAILING 'NS' FROM left(original_series.name, locate("@", original_series.name) - 1))`
+	WHERE
+  		TRIM(TRAILING '&NS' FROM TRIM(TRAILING 'NS' FROM
+  		  UPPER(LEFT(series.name, LOCATE('@', series.name) - 1))
+  		))
+	LIKE
+  		TRIM(TRAILING '&NS' FROM TRIM(TRAILING 'NS' FROM
+  		  UPPER(LEFT(original_series.name, LOCATE('@', original_series.name) - 1))
+  		))`
 
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	categoryId int64,
@@ -82,8 +84,6 @@ func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 		strings.Join([]string{seriesPrefix, freqFilter, sortStmt}, ""),
 		categoryId,
 		freq,
-		categoryId,
-		categoryId,
 	)
 	if err != nil {
 		return
@@ -108,8 +108,6 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 		categoryId,
 		geoHandle,
 		freq,
-		categoryId,
-		categoryId,
 	)
 	if err != nil {
 		return
@@ -132,8 +130,6 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 		strings.Join([]string{seriesPrefix, geoFilter, sortStmt}, ""),
 		categoryId,
 		geoHandle,
-		categoryId,
-		categoryId,
 	)
 	if err != nil {
 		return
@@ -149,8 +145,7 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 }
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency,
-	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
+	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
 	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
@@ -174,8 +169,6 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{seriesPrefix, sortStmt}, ""),
-		categoryId,
-		categoryId,
 		categoryId,
 	)
 	if err != nil {
@@ -315,8 +308,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 }
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
-	row := r.DB.QueryRow(`SELECT series.id, name, description, frequency,
-	!(name REGEXP '.*NS@.*') AS seasonally_adjusted,
+	row := r.DB.QueryRow(`SELECT series.id, name, description, frequency, seasonally_adjusted,
 	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
