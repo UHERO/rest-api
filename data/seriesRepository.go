@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/UHERO/rest-api/models"
 	"strings"
 	"time"
@@ -14,20 +15,24 @@ type SeriesRepository struct {
 type transformation struct {
 	Statement        string
 	PlaceholderCount int
+	Label            string
 }
 
 const (
-	Levels = "lvl"
-	YoyPCh = "pc1"
-	YTD    = "ytd"
+	Levels           = "lvl"
+	YOYPercentChange = "pc1"
+	YTDPercentChange = "ytdpc1"
+	YOYChange        = "ch1"
+	YTDChange        = "ytdch1"
 )
 
 var transformations map[string]transformation = map[string]transformation{
-	"lvl": {
+	Levels: { // untransformed value
 		Statement:        `SELECT date, value FROM data_points WHERE series_id = ? and current = 1;`,
 		PlaceholderCount: 1,
+		Label: "lvl",
 	},
-	"pc1": {
+	YOYPercentChange: { // percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy
 				FROM (SELECT value, date, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
 				FROM data_points WHERE series_id = ? AND current = 1) AS t1
@@ -35,8 +40,33 @@ var transformations map[string]transformation = map[string]transformation{
 				FROM data_points WHERE series_id = ? and current = 1) AS t2
 				ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
+		Label: "pc1",
 	},
-	"ytd": {
+	YOYChange: { // change from 1 year ago
+		Statement: `SELECT t1.date, t1.value - t2.last_value AS yoy
+				FROM (SELECT value, date, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
+				FROM data_points WHERE series_id = ? AND current = 1) AS t1
+				LEFT JOIN (SELECT value AS last_value, date
+				FROM data_points WHERE series_id = ? and current = 1) AS t2
+				ON (t1.last_year = t2.date);`,
+		PlaceholderCount: 2,
+		Label: "pc1",
+	},
+	YTDChange: { // ytd change from 1 year ago
+		Statement: `SELECT t1.date, t1.ytd - t2.last_ytd AS ytd
+      FROM (SELECT date, value, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
+            @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
+          FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
+          WHERE series_id = ? AND current = 1 ORDER BY date) AS t1
+      LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
+            @year := year(date)
+          FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
+          WHERE series_id = ? AND current = 1 ORDER BY date) AS t2
+      ON (t1.last_year = t2.date);`,
+		PlaceholderCount: 2,
+		Label: "ytd",
+	},
+	YTDPercentChange: { // ytd percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.ytd/t2.last_ytd - 1)*100 AS ytd
       FROM (SELECT date, value, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
             @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
@@ -48,6 +78,7 @@ var transformations map[string]transformation = map[string]transformation{
           WHERE series_id = ? AND current = 1 ORDER BY date) AS t2
       ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
+		Label: "ytd",
 	},
 }
 
@@ -63,18 +94,12 @@ var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
 var siblingsPrefix = `SELECT series.id, series.name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, series.real,
+	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
-	JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE
-  		TRIM(TRAILING '&NS' FROM TRIM(TRAILING 'NS' FROM
-  		  UPPER(LEFT(series.name, LOCATE('@', series.name) - 1))
-  		))
-	LIKE
-  		TRIM(TRAILING '&NS' FROM TRIM(TRAILING 'NS' FROM
-  		  UPPER(LEFT(original_series.name, LOCATE('@', original_series.name) - 1))
-  		))`
+	FROM (SELECT measurement_id FROM series where id = ?) as measure
+	LEFT JOIN measurements ON measurements.id = measure.measurement_id
+	LEFT JOIN series ON series.measurement_id = measure.measurement_id
+	LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%') WHERE 1=1`
 
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	categoryId int64,
@@ -247,6 +272,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
 	seriesId int64,
 	geo string,
 ) (seriesList []models.DataPortalSeries, err error) {
+	fmt.Printf("\n%s%s\n", siblingsPrefix, geoFilter)
 	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, geoFilter}, ""), seriesId, geo)
 	if err != nil {
 		return
@@ -317,33 +343,41 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	return
 }
 
+// GetSeriesObservations returns an observations struct containing the default transformations.
+// It checks the value of percent for the selected series and chooses the appropriate transformations.
 func (r *SeriesRepository) GetSeriesObservations(
 	seriesId int64,
 ) (seriesObservations models.SeriesObservations, err error) {
-	lvlTransform, start, end, err := r.GetTransformation(Levels, seriesId)
+	var start, end time.Time
+	var percent sql.NullBool
+	YOY, YTD := YOYPercentChange, YTDPercentChange
+
+	err = r.DB.QueryRow(`SELECT measurements.percent
+	FROM series LEFT JOIN measurements
+	ON measurements.id = series.measurement_id
+	WHERE series.id = ?`, seriesId).Scan(&percent)
 	if err != nil {
 		return
 	}
-	yoyTransform, yoyStart, yoyEnd, err := r.GetTransformation(YoyPCh, seriesId)
+	if percent.Valid && percent.Bool {
+		fmt.Println("Percent = TRUE")
+		YOY = YOYChange
+		YTD = YTDChange
+	}
+
+	lvlTransform, err := r.GetTransformation(Levels, seriesId, &start, &end)
 	if err != nil {
 		return
 	}
-	if yoyStart.Before(start) {
-		start = yoyStart
-	}
-	if end.Before(yoyEnd) {
-		end = yoyEnd
-	}
-	ytdTransform, ytdStart, ytdEnd, err := r.GetTransformation(YTD, seriesId)
+	yoyTransform, err := r.GetTransformation(YOY, seriesId, &start, &end)
 	if err != nil {
 		return
 	}
-	if ytdStart.Before(start) {
-		start = ytdStart
+	ytdTransform, err := r.GetTransformation(YTD, seriesId, &start, &end)
+	if err != nil {
+		return
 	}
-	if end.Before(ytdEnd) {
-		end = ytdEnd
-	}
+
 	seriesObservations.TransformationResults = []models.TransformationResult{lvlTransform, yoyTransform, ytdTransform}
 	seriesObservations.ObservationStart = start
 	seriesObservations.ObservationEnd = end
@@ -358,12 +392,16 @@ func variadicSeriesId(seriesId int64, count int) []interface{} {
 	return variadic
 }
 
-func (r *SeriesRepository) GetTransformation(transformation string, seriesId int64) (
+func (r *SeriesRepository) GetTransformation(
+	transformation string,
+	seriesId int64,
+	currentStart *time.Time,
+	currentEnd *time.Time,
+) (
 	transformationResult models.TransformationResult,
-	observationStart time.Time,
-	observationEnd time.Time,
 	err error,
 ) {
+	var observationStart, observationEnd time.Time
 	rows, err := r.DB.Query(
 		transformations[transformation].Statement,
 		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
@@ -401,7 +439,13 @@ func (r *SeriesRepository) GetTransformation(transformation string, seriesId int
 			},
 		)
 	}
-	transformationResult.Transformation = transformation
+	if currentStart.IsZero() || currentStart.After(observationStart) {
+		*currentStart = observationStart
+	}
+	if currentEnd.IsZero() || currentEnd.Before(observationEnd) {
+		*currentEnd = observationEnd
+	}
+	transformationResult.Transformation = transformations[transformation].Label
 	transformationResult.Observations = observations
 	return
 }
