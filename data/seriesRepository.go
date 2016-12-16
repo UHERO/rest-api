@@ -171,9 +171,10 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
+	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
+	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	WHERE
 	((MATCH(name, description, dataPortalName)
 	AGAINST(? IN NATURAL LANGUAGE MODE))
@@ -214,7 +215,7 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	FROM series
 	JOIN data_lists_series ON data_lists_series.series_id = series.id
 	JOIN categories ON categories.data_list_id = data_lists_series.data_list_id
-	WHERE categories.id = ?;`, categoryId)
+	WHERE categories.id = ? ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
 	}
@@ -313,7 +314,8 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 ) (frequencyList []models.FrequencyResult, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%');`, seriesId)
+	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
+	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
 		return
 	}
@@ -335,9 +337,10 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row := r.DB.QueryRow(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	unitsLabel, unitsLabelShort, dataPortalName, percent, series.real,
+	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
+	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	WHERE series.id = ?;`, seriesId)
 	dataPortalSeries, err = getNextSeriesFromRow(row)
 	return
