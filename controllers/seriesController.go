@@ -102,7 +102,6 @@ func GetSeriesById(seriesRepository *data.SeriesRepository) func(http.ResponseWr
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(j)
-
 	}
 }
 
@@ -136,7 +135,6 @@ func GetSeriesSiblingsByIdAndGeo(seriesRepository *data.SeriesRepository) func(h
 		if !ok {
 			return
 		}
-		log.Printf("Getting Series Siblings by id and geo: %d, %s", id, geo)
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdAndGeo(id, geo)
 		returnSeriesList(seriesList, err, w)
 	}
@@ -249,6 +247,5 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository) func(http.Re
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(j)
-
 	}
 }

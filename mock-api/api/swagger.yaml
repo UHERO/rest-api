@@ -788,12 +788,6 @@ definitions:
           freq:
             type: "string"
             description: "Default frequency (optional)"
-      observationStart:
-        type: "string"
-        format: "date"
-      observationEnd:
-        type: "string"
-        format: "date"
   Observation:
     type: "object"
     properties:

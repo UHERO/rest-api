@@ -14,16 +14,9 @@ type CategoryRepository struct {
 
 func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
 	rows, err := r.DB.Query(`
-SELECT cat1.id, MAX(cat1.name), MAX(cat1.ancestry),
-  MAX(COALESCE(NULLIF(cat1.default_handle, ''), NULLIF(cat2.default_handle, ''))) AS geo,
-  MAX(COALESCE(NULLIF(cat1.default_freq, ''), NULLIF(cat2.default_freq, ''))) AS freq,
-  MIN(data_points.date) AS start_date, MAX(data_points.date) AS end_date
-FROM categories AS cat1
-  LEFT JOIN categories AS cat2 ON cat1.ancestry regexp concat('(^|/)', cat2.id, '($|/)')
-  LEFT JOIN data_lists_series ON cat1.data_list_id = data_lists_series.data_list_id
-  LEFT JOIN data_points ON data_lists_series.series_id = data_points.series_id
-GROUP BY cat1.id
-ORDER BY cat1.order;
+SELECT id, name, ancestry, default_handle, default_freq
+FROM categories
+ORDER BY categories.order;
 	`)
 	if err != nil {
 		return
@@ -36,8 +29,6 @@ ORDER BY cat1.order;
 			&category.Ancestry,
 			&category.DefaultHandle,
 			&category.DefaultFrequency,
-			&category.ObservationStart,
-			&category.ObservationEnd,
 		)
 		if err != nil {
 			return
@@ -54,12 +45,6 @@ ORDER BY cat1.order;
 				Geography: category.DefaultHandle.String,
 				Frequency: category.DefaultFrequency.String,
 			}
-		}
-		if category.ObservationStart.Valid && category.ObservationStart.Time.After(time.Time{}){
-			dataPortalCategory.ObservationStart = &category.ObservationStart.Time
-		}
-		if category.ObservationEnd.Valid && category.ObservationEnd.Time.After(time.Time{}){
-			dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
 		}
 		categories = append(categories, dataPortalCategory)
 	}
@@ -100,19 +85,31 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
 	var category models.CategoryWithAncestry
 	err := r.DB.QueryRow(`SELECT
-	id, name, ancestry
+	categories.id, MAX(name), MAX(ancestry),
+	MIN(data_points.date) AS start_date, MAX(data_points.date) AS end_date
 	FROM categories
-	WHERE id = ?;`, id).Scan(
+	LEFT JOIN data_lists_series ON categories.data_list_id = data_lists_series.data_list_id
+ 	LEFT JOIN data_points ON data_lists_series.series_id = data_points.series_id
+	WHERE categories.id = ? AND data_points.current GROUP BY categories.id;`, id).Scan(
 		&category.Id,
 		&category.Name,
 		&category.Ancestry,
+		&category.ObservationStart,
+		&category.ObservationEnd,
 	)
 	parentId := getParentId(category.Ancestry)
-	return models.Category{
+	dataPortalCategory := models.Category{
 		Id:       category.Id,
 		Name:     category.Name,
 		ParentId: parentId,
-	}, err
+	}
+	if category.ObservationStart.Valid && category.ObservationStart.Time.After(time.Time{}){
+		dataPortalCategory.ObservationStart = &category.ObservationStart.Time
+	}
+	if category.ObservationEnd.Valid && category.ObservationEnd.Time.After(time.Time{}){
+		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
+	}
+	return dataPortalCategory, err
 }
 
 func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
