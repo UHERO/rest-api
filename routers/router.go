@@ -12,10 +12,12 @@ func InitRoutes(
 	categoryRepository *data.CategoryRepository,
 	seriesRepository *data.SeriesRepository,
 	geographyRepository *data.GeographyRepository,
+	userRepository *data.UserRepository,
+	dataListRepository *data.DataListRepository,
 ) *mux.Router {
 	router := mux.NewRouter().StrictSlash(false)
 	router = SetApplicationRoutes(router, applicationRepository)
-	router = SetUserRoutes(router)
+	router = SetUserRoutes(router, userRepository, dataListRepository)
 
 	apiRouter := mux.NewRouter().StrictSlash(false)
 	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository)

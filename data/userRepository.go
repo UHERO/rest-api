@@ -2,7 +2,6 @@ package data
 
 import (
 	"database/sql"
-	"log"
 	"fmt"
 	"github.com/markbates/goth"
 	"errors"

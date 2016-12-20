@@ -24,9 +24,10 @@ func SetUserRoutes(router *mux.Router, userRepository *data.UserRepository, data
 
 	userRouter := mux.NewRouter()
 	userRouter.HandleFunc("/data_lists", controllers.CreateDataList(dataListRepository)).Methods("POST")
-	userRouter.HandleFunc("/data_lists", controllers.ReadDataLists(dataListRepository)).Methods("GET")
-	userRouter.HandleFunc("/data_lists/{id}", controllers.UpdateDataList(dataListRepository)).Methods("PUT", "POST")
-	userRouter.HandleFunc("/data_lists/{id}", controllers.DeleteDataList(dataListRepository)).Methods("DELETE")
+	// TODO
+	//userRouter.HandleFunc("/data_lists", controllers.ReadDataLists(dataListRepository)).Methods("GET")
+	//userRouter.HandleFunc("/data_lists/{id}", controllers.UpdateDataList(dataListRepository)).Methods("PUT", "POST")
+	//userRouter.HandleFunc("/data_lists/{id}", controllers.DeleteDataList(dataListRepository)).Methods("DELETE")
 	router.PathPrefix("/data_lists/").Handler(negroni.New(
 		negroni.HandlerFunc(common.IsAuthenticated),
 		negroni.Wrap(userRouter),

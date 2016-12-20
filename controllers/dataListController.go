@@ -21,6 +21,6 @@ func CreateDataList(dataListRepository *data.DataListRepository) func(http.Respo
 			)
 			return
 		}
-		_, err = dataListRepository.CreateDataList()
+		//_, err = dataListRepository.CreateDataList()
 	}
 }

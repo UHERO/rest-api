@@ -40,17 +40,14 @@ func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPort
 
 func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geographies []models.DataPortalGeography, err error) {
 	rows, err := r.DB.Query(
-		`SELECT
-		  geographies.fips, geographies.display_name_short,
-		  catgeo.chandle AS handle
-		FROM
-		  (SELECT DISTINCT(SUBSTRING_INDEX(SUBSTR(catnames.name, LOCATE('@', catnames.name) + 1), '.', 1)) AS chandle
-		    FROM
-		      (SELECT name
-		        FROM series
-		        WHERE (SELECT list FROM data_lists JOIN categories WHERE categories.data_list_id = data_lists.id AND (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]')))
-		        REGEXP CONCAT('[[:<:]]', left(name, locate("@", name)), '.*[[:>:]]')) AS catnames) AS catgeo
-		        LEFT JOIN geographies ON catgeo.chandle LIKE geographies.handle;`,
+		`SELECT geographies.fips, geographies.display_name_short, geographies.handle
+		  FROM
+		(SELECT DISTINCT(SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1)) AS handle
+		FROM categories
+		  LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+		  LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
+		WHERE categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]')) AS category_handles
+		LEFT JOIN geographies ON geographies.handle LIKE category_handles.handle;`,
 		categoryId,
 		categoryId,
 	)

@@ -61,7 +61,7 @@ func AuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := common.GenerateJWT(nil, userProfile.NickName, "user")
+	token, err := common.GenerateJWT(0, userProfile.NickName, "user")
 	common.StoreJWT(w, r, token)
 	if err != nil {
 		panic(err)

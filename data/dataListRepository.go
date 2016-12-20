@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"github.com/UHERO/rest-api/models"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -37,47 +36,30 @@ func (r *DataListRepository) CreateDataList(userId int64, dataList *models.DataL
 	if err != nil {
 		return
 	}
-	siblings, err := r.siblingIdsFromSeriesIds(dataList.SeriesIds)
-	if err != nil {
-		return
-	}
 
-	// loop over each id
-	siblingSql := "INSERT INTO data_lists_series(data_lists_id, series_id) VALUES "
-	vals := make([]int64, 5)
-	for siblingId := range siblings {
-		siblingSql += "(?, ?),"
-		vals = append(vals, dataList.Id, siblingId)
-	}
-	strings.TrimSuffix(siblingSql, ",")
-	stmt, err = r.DB.Prepare(siblingSql)
-	if err != nil {
-		return
-	}
-	res, err = stmt.Exec(vals...)
-	if err != nil {
-		return
-	}
-	return res.RowsAffected()
+	// find requested measurements
+
+	// create data_list_measurements entries
+	return
 }
 
 // Loop over each id to find all the siblings
 func (r *DataListRepository) siblingIdsFromSeriesIds(seriesIds []int64) (siblings map[int]bool, err error) {
-	for seriesId := range seriesIds {
-		// runs a query for each entry in the list
-		rows, err := r.DB.Query(siblingIds, seriesId)
-		if err != nil {
-			return
-		}
-		for rows.Next() {
-			var id int
-			err = rows.Scan(&id)
-			if err != nil {
-				return
-			}
-			siblings[id] = true
-		}
-	}
+	//for seriesId := range seriesIds {
+	//	// runs a query for each entry in the list
+	//	//rows, err := r.DB.Query(siblingIds, seriesId)
+	//	//if err != nil {
+	//	//	return
+	//	//}
+	//	//for rows.Next() {
+	//	//	var id int
+	//	//	err = rows.Scan(&id)
+	//	//	if err != nil {
+	//	//		return
+	//	//	}
+	//	//	siblings[id] = true
+	//	//}
+	//}
 	return
 }
 
