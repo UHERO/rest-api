@@ -221,7 +221,30 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []models.DataPortalSeries, err error) {
+func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []models.InflatedSeries, err error) {
+	rows, err := r.DB.Query(
+		strings.Join([]string{seriesPrefix, sortStmt}, ""),
+		categoryId,
+	)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
+		seriesList = append(seriesList, inflatedSeries)
+	}
+	return
+}
+
+func (r *SeriesRepository) GetInflatedSeriesByCategory(categoryId int64) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{seriesPrefix, sortStmt}, ""),
 		categoryId,

@@ -40,6 +40,17 @@ func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.Re
 	}
 }
 
+func GetInflatedSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, ok := getId(w, r)
+		if !ok {
+			return
+		}
+		seriesList, err := seriesRepository.GetInflatedSeriesByCategory(id)
+		returnSeriesList(seriesList, err, w)
+	}
+}
+
 func GetSeriesByCategoryIdAndGeoHandle(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, geoHandle, ok := getIdAndGeo(w, r)
