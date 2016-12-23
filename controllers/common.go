@@ -1,15 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 	"strconv"
-	"github.com/UHERO/rest-api/models"
-	"encoding/json"
-	"fmt"
 )
 
 func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter) {
@@ -114,7 +112,6 @@ func getIdAndGeo(w http.ResponseWriter, r *http.Request) (id int64, geo string, 
 		return
 	}
 	geo, gotGeo := mux.Vars(r)["geo"]
-	log.Printf("Geo Handle: %s", geo)
 	if !gotGeo {
 		common.DisplayAppError(
 			w,
@@ -153,7 +150,6 @@ func getIdAndFreq(w http.ResponseWriter, r *http.Request) (id int64, freq string
 		return
 	}
 	freq, gotFreq := mux.Vars(r)["freq"]
-	log.Printf("Frequency: %s", freq)
 	if !gotFreq {
 		common.DisplayAppError(
 			w,
@@ -192,7 +188,6 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 		return
 	}
 	geo, gotGeo := mux.Vars(r)["geo"]
-	log.Printf("Geo Handle: %s", geo)
 	if !gotGeo {
 		common.DisplayAppError(
 			w,
@@ -204,7 +199,6 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 		return
 	}
 	freq, gotFreq := mux.Vars(r)["freq"]
-	log.Printf("Frequency: %s", freq)
 	if !gotFreq {
 		common.DisplayAppError(
 			w,

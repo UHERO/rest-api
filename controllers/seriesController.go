@@ -9,7 +9,6 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
 	"log"
-	"fmt"
 )
 
 func GetSeriesBySearchText(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
@@ -47,7 +46,7 @@ func GetInflatedSeriesByCategoryId(seriesRepository *data.SeriesRepository) func
 			return
 		}
 		seriesList, err := seriesRepository.GetInflatedSeriesByCategory(id)
-		returnSeriesList(seriesList, err, w)
+		returnInflatedSeriesList(seriesList, err, w)
 	}
 }
 

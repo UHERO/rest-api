@@ -103,10 +103,10 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		Name:     category.Name,
 		ParentId: parentId,
 	}
-	if category.ObservationStart.Valid && category.ObservationStart.Time.After(time.Time{}){
+	if category.ObservationStart.Valid && category.ObservationStart.Time.After(time.Time{}) {
 		dataPortalCategory.ObservationStart = &category.ObservationStart.Time
 	}
-	if category.ObservationEnd.Valid && category.ObservationEnd.Time.After(time.Time{}){
+	if category.ObservationEnd.Valid && category.ObservationEnd.Time.After(time.Time{}) {
 		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
 	}
 	return dataPortalCategory, err

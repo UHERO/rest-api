@@ -46,7 +46,7 @@ func SetCategoryRoutes(
 		"id", "{id:[0-9]+}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
 	)
-	router.HandleFunc("/v1/category/series", controllers.GetSeriesByCategoryId(seriesRepository)).Methods("GET").Queries(
+	router.HandleFunc("/v1/category/series", controllers.GetInflatedSeriesByCategoryId(seriesRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 		"expand", "true",
 	)
