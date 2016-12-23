@@ -39,6 +39,9 @@ type (
 	SeriesListResource struct {
 		Data []models.DataPortalSeries `json:"data"`
 	}
+	InflatedSeriesListResource struct {
+		Data []models.InflatedSeries `json:"data"`
+	}
 
 	// GET - /series/siblings/freq
 	FrequencyListResource struct {

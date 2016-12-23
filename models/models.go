@@ -16,10 +16,10 @@ type Application struct {
 }
 
 type Category struct {
-	Id               int64     `json:"id"`
-	Name             string    `json:"name"`
-	ParentId         int64     `json:"parentId,omitempty"`
-	DefaultGeoFreq   *GeoFreq  `json:"defaults,omitempty"`
+	Id               int64      `json:"id"`
+	Name             string     `json:"name"`
+	ParentId         int64      `json:"parentId,omitempty"`
+	DefaultGeoFreq   *GeoFreq   `json:"defaults,omitempty"`
 	ObservationStart *time.Time `json:"observationStart,omitempty"`
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
@@ -87,6 +87,11 @@ type DataPortalSeries struct {
 	Geography          DataPortalGeography `json:"geography,omitEmpty"`
 	Percent            *bool               `json:"percent,omitempty"`
 	Real               *bool               `json:"real,omitempty"`
+}
+
+type InflatedSeries struct {
+	DataPortalSeries
+	Observations SeriesObservations `json:"seriesObservations"`
 }
 
 type Observation struct {

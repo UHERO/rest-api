@@ -147,6 +147,35 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 	return
 }
 
+func (r *SeriesRepository) GetInflatedSeriesByCategoryGeoAndFreq(
+	categoryId int64,
+	geoHandle string,
+	freq string,
+) (seriesList []models.InflatedSeries, err error) {
+	rows, err := r.DB.Query(
+		strings.Join([]string{seriesPrefix, geoFilter, freqFilter, sortStmt}, ""),
+		categoryId,
+		geoHandle,
+		freq,
+	)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
+		seriesList = append(seriesList, inflatedSeries)
+	}
+	return
+}
+
 func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 	categoryId int64,
 	geoHandle string,
