@@ -39,6 +39,17 @@ func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.Re
 	}
 }
 
+func GetInflatedSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, ok := getId(w, r)
+		if !ok {
+			return
+		}
+		seriesList, err := seriesRepository.GetInflatedSeriesByCategory(id)
+		returnInflatedSeriesList(seriesList, err, w)
+	}
+}
+
 func GetSeriesByCategoryIdAndGeoHandle(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, geoHandle, ok := getIdAndGeo(w, r)
@@ -69,6 +80,17 @@ func GetSeriesByCategoryIdGeoHandleAndFreq(seriesRepository *data.SeriesReposito
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryGeoAndFreq(id, geoHandle, freq)
 		returnSeriesList(seriesList, err, w)
+	}
+}
+
+func GetInflatedSeriesByCategoryIdGeoAndFreq(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, geoHandle, freq, ok := getIdGeoAndFreq(w, r)
+		if !ok {
+			return
+		}
+		seriesList, err := seriesRepository.GetInflatedSeriesByCategoryGeoAndFreq(id, geoHandle, freq)
+		returnInflatedSeriesList(seriesList, err, w)
 	}
 }
 

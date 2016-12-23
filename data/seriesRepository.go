@@ -30,7 +30,7 @@ var transformations map[string]transformation = map[string]transformation{
 	Levels: { // untransformed value
 		Statement:        `SELECT date, value FROM data_points WHERE series_id = ? and current = 1;`,
 		PlaceholderCount: 1,
-		Label: "lvl",
+		Label:            "lvl",
 	},
 	YOYPercentChange: { // percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy
@@ -40,7 +40,7 @@ var transformations map[string]transformation = map[string]transformation{
 				FROM data_points WHERE series_id = ? and current = 1) AS t2
 				ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
-		Label: "pc1",
+		Label:            "pc1",
 	},
 	YOYChange: { // change from 1 year ago
 		Statement: `SELECT t1.date, t1.value - t2.last_value AS yoy
@@ -50,7 +50,7 @@ var transformations map[string]transformation = map[string]transformation{
 				FROM data_points WHERE series_id = ? and current = 1) AS t2
 				ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
-		Label: "pc1",
+		Label:            "pc1",
 	},
 	YTDChange: { // ytd change from 1 year ago
 		Statement: `SELECT t1.date, t1.ytd - t2.last_ytd AS ytd
@@ -64,7 +64,7 @@ var transformations map[string]transformation = map[string]transformation{
           WHERE series_id = ? AND current = 1 ORDER BY date) AS t2
       ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
-		Label: "ytd",
+		Label:            "ytd",
 	},
 	YTDPercentChange: { // ytd percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.ytd/t2.last_ytd - 1)*100 AS ytd
@@ -78,7 +78,7 @@ var transformations map[string]transformation = map[string]transformation{
           WHERE series_id = ? AND current = 1 ORDER BY date) AS t2
       ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
-		Label: "ytd",
+		Label:            "ytd",
 	},
 }
 
@@ -147,6 +147,35 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 	return
 }
 
+func (r *SeriesRepository) GetInflatedSeriesByCategoryGeoAndFreq(
+	categoryId int64,
+	geoHandle string,
+	freq string,
+) (seriesList []models.InflatedSeries, err error) {
+	rows, err := r.DB.Query(
+		strings.Join([]string{seriesPrefix, geoFilter, freqFilter, sortStmt}, ""),
+		categoryId,
+		geoHandle,
+		freq,
+	)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
+		seriesList = append(seriesList, inflatedSeries)
+	}
+	return
+}
+
 func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 	categoryId int64,
 	geoHandle string,
@@ -188,6 +217,29 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 			return seriesList, scanErr
 		}
 		seriesList = append(seriesList, dataPortalSeries)
+	}
+	return
+}
+
+func (r *SeriesRepository) GetInflatedSeriesByCategory(categoryId int64) (seriesList []models.InflatedSeries, err error) {
+	rows, err := r.DB.Query(
+		strings.Join([]string{seriesPrefix, sortStmt}, ""),
+		categoryId,
+	)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
+		seriesList = append(seriesList, inflatedSeries)
 	}
 	return
 }

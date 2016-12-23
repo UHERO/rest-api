@@ -93,7 +93,6 @@ func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.Re
 			origin == "" {
 			w.Header().Add("Access-Control-Allow-Origin", origin)
 		}
-		log.Print("Off to the next handler")
 		next(w, r)
 	}
 }

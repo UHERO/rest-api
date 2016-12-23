@@ -1,14 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 	"strconv"
-	"github.com/UHERO/rest-api/models"
-	"encoding/json"
 )
 
 func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter) {
@@ -22,6 +21,31 @@ func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.Re
 		return
 	}
 	j, err := json.Marshal(SeriesListResource{Data: seriesList})
+	if err != nil {
+		common.DisplayAppError(
+			w,
+			err,
+			"An unexpected error processing JSON has occurred",
+			500,
+		)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(j)
+}
+
+func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w http.ResponseWriter) {
+	if err != nil {
+		common.DisplayAppError(
+			w,
+			err,
+			"An unexpected error has occurred",
+			500,
+		)
+		return
+	}
+	j, err := json.Marshal(InflatedSeriesListResource{Data: seriesList})
 	if err != nil {
 		common.DisplayAppError(
 			w,
@@ -88,7 +112,6 @@ func getIdAndGeo(w http.ResponseWriter, r *http.Request) (id int64, geo string, 
 		return
 	}
 	geo, gotGeo := mux.Vars(r)["geo"]
-	log.Printf("Geo Handle: %s", geo)
 	if !gotGeo {
 		common.DisplayAppError(
 			w,
@@ -127,7 +150,6 @@ func getIdAndFreq(w http.ResponseWriter, r *http.Request) (id int64, freq string
 		return
 	}
 	freq, gotFreq := mux.Vars(r)["freq"]
-	log.Printf("Frequency: %s", freq)
 	if !gotFreq {
 		common.DisplayAppError(
 			w,
@@ -166,7 +188,6 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 		return
 	}
 	geo, gotGeo := mux.Vars(r)["geo"]
-	log.Printf("Geo Handle: %s", geo)
 	if !gotGeo {
 		common.DisplayAppError(
 			w,
@@ -178,7 +199,6 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 		return
 	}
 	freq, gotFreq := mux.Vars(r)["freq"]
-	log.Printf("Frequency: %s", freq)
 	if !gotFreq {
 		common.DisplayAppError(
 			w,

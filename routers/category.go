@@ -27,6 +27,12 @@ func SetCategoryRoutes(
 	router.HandleFunc("/v1/category/freq", controllers.GetFreqByCategoryId(seriesRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
+	router.HandleFunc("/v1/category/series", controllers.GetInflatedSeriesByCategoryIdGeoAndFreq(seriesRepository)).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+		"geo", "{geo:[A-Za-z0-9]+}",
+		"freq", "{freq:[ASQMWDasqmwd]}",
+		"expand", "true",
+	)
 	router.HandleFunc("/v1/category/series", controllers.GetSeriesByCategoryIdGeoHandleAndFreq(seriesRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 		"geo", "{geo:[A-Za-z0-9]+}",
@@ -39,6 +45,10 @@ func SetCategoryRoutes(
 	router.HandleFunc("/v1/category/series", controllers.GetSeriesByCategoryIdAndFreq(seriesRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
+	)
+	router.HandleFunc("/v1/category/series", controllers.GetInflatedSeriesByCategoryId(seriesRepository)).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+		"expand", "true",
 	)
 	router.HandleFunc("/v1/category/series", controllers.GetSeriesByCategoryId(seriesRepository)).Methods("GET").Queries("id", "{id:[0-9]+}")
 	return router

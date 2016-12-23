@@ -133,6 +133,11 @@ paths:
         required: false
         type: "string"
         default: "15000"
+      - name: "expand"
+        in: "query"
+        description: "Include Series Observations (adds a seriesObservations property)"
+        required: false
+        type: "boolean"
       responses:
         200:
           description: "An array of series"
