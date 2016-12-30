@@ -62,4 +62,9 @@ type (
 	GeographiesResource struct {
 		Data []models.DataPortalGeography `json:"data"`
 	}
+
+	// GET - /search
+	SearchSummaryResource struct {
+		Data models.SearchSummary `json:"data"`
+	}
 )

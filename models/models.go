@@ -39,6 +39,15 @@ type CategoryWithAncestry struct {
 	ObservationEnd   NullTime
 }
 
+type SearchSummary struct {
+	SearchText       string     `json:"q"`
+	DefaultGeoFreq   *GeoFreq   `json:"defaults,omitempty"`
+	GeoFreqs         map[string][]string  `json:"geoFreqs"`
+	FreqGeos         map[string][]string  `json:"freqGeos"`
+	ObservationStart *time.Time `json:"observationStart,omitempty"`
+	ObservationEnd   *time.Time `json:"observationStart,omitempty"`
+}
+
 type Geography struct {
 	FIPS   sql.NullString `json:"fips"`
 	Name   sql.NullString `json:"name"`

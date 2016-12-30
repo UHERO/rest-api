@@ -11,6 +11,7 @@ func InitRoutes(
 	applicationRepository *data.ApplicationRepository,
 	categoryRepository *data.CategoryRepository,
 	seriesRepository *data.SeriesRepository,
+	searchRepository *data.SearchRepository,
 	geographyRepository *data.GeographyRepository,
 ) *mux.Router {
 	router := mux.NewRouter().StrictSlash(false)
@@ -19,6 +20,7 @@ func InitRoutes(
 	apiRouter := mux.NewRouter().StrictSlash(false)
 	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository)
 	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository)
+	apiRouter = SetSearchRoutes(apiRouter, searchRepository)
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository)
 
 	router.PathPrefix("/v1").Handler(negroni.New(

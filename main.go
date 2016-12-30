@@ -43,6 +43,7 @@ func main() {
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
+	searchRepository := &data.SearchRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 
 	// Get the mux router object
@@ -50,6 +51,7 @@ func main() {
 		applicationRepository,
 		categoryRepository,
 		seriesRepository,
+		searchRepository,
 		geographyRepository,
 	)
 	// Create a negroni instance

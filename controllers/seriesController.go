@@ -4,29 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"errors"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
-	"github.com/gorilla/mux"
 	"log"
 )
-
-func GetSeriesBySearchText(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := mux.Vars(r)["search_text"]
-		if !ok {
-			common.DisplayAppError(
-				w,
-				errors.New("Couldn't get searchText from request"),
-				"Bad request.",
-				400,
-			)
-			return
-		}
-		seriesList, err := seriesRepository.GetSeriesBySearchText(searchText)
-		returnSeriesList(seriesList, err, w)
-	}
-}
 
 func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
