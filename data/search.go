@@ -10,7 +10,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
-	WHERE
+	WHERE NOT restricted AND
 	((MATCH(name, description, dataPortalName)
 	AGAINST(? IN NATURAL LANGUAGE MODE))
 	OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%')) LIMIT 50;`, searchText, searchText)
@@ -31,12 +31,10 @@ func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary mo
 	searchSummary.SearchText = searchText
 	rows, err := r.DB.Query(`SELECT MAX(SUBSTRING_INDEX(SUBSTR(name, LOCATE('@', name) + 1), '.', 1)) as geo,
   MAX(RIGHT(name, 1)) as freq
-	FROM (SELECT name FROM series WHERE
-
+	FROM (SELECT name FROM series WHERE NOT restricted AND
     (MATCH(name, description, dataPortalName)
     AGAINST(? IN NATURAL LANGUAGE MODE))
-     OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%')
-       ) AS s
+     OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%')) AS s
     GROUP BY SUBSTR(name, LOCATE('@', name) + 1) ORDER BY COUNT(*) DESC;`, searchText, searchText)
 	if err != nil {
 		return
@@ -74,11 +72,18 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	FROM series
 	LEFT JOIN geographies ON handle LIKE ?
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
-	WHERE
+	WHERE NOT restricted AND
 	((MATCH(name, description, dataPortalName)
 	AGAINST(? IN NATURAL LANGUAGE MODE))
 	OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	AND LOWER(name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`, geo, geo, searchText, searchText, geo, freq)
+	AND LOWER(name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`,
+		geo,
+		geo,
+		searchText,
+		searchText,
+		geo,
+		freq,
+	)
 	if err != nil {
 		return
 	}
@@ -103,11 +108,18 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	FROM series
 	LEFT JOIN geographies ON handle LIKE ?
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
-	WHERE
+	WHERE NOT series.restricted AND
 	((MATCH(name, description, dataPortalName)
 	AGAINST(? IN NATURAL LANGUAGE MODE))
 	OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	AND LOWER(name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`, geo, geo, searchText, searchText, geo, freq)
+	AND LOWER(name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`,
+		geo,
+		geo,
+		searchText,
+		searchText,
+		geo,
+		freq,
+	)
 	if err != nil {
 		return
 	}
