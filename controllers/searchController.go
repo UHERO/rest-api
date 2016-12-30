@@ -10,9 +10,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func GetSeriesBySearchText(searchRepository *data.SearchRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesBySearchText(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := mux.Vars(r)["search_text"]
+		searchText, ok := getSearchTextFromRequest(r)
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -27,9 +27,9 @@ func GetSeriesBySearchText(searchRepository *data.SearchRepository) func(http.Re
 	}
 }
 
-func GetSearchSummary(searchRepository *data.SearchRepository) func(http.ResponseWriter, *http.Request) {
+func GetSearchSummary(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := mux.Vars(r)["search_text"]
+		searchText, ok := getSearchTextFromRequest(r)
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -63,4 +63,87 @@ func GetSearchSummary(searchRepository *data.SearchRepository) func(http.Respons
 		w.WriteHeader(http.StatusOK)
 		w.Write(j)
 	}
+}
+
+func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		searchText, ok := getSearchTextFromRequest(r)
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get searchText from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+		geo, ok := mux.Vars(r)["geo"]
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get geography from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+		freq, ok := mux.Vars(r)["freq"]
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get frequency from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+		seriesList, err := searchRepository.GetSearchResultsByGeoAndFreq(searchText, geo, freq)
+		returnSeriesList(seriesList, err, w)
+	}
+}
+
+func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		searchText, ok := getSearchTextFromRequest(r)
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get searchText from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+		geo, ok := mux.Vars(r)["geo"]
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get geography from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+		freq, ok := mux.Vars(r)["freq"]
+		if !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get frequency from request"),
+				"Bad request.",
+				400,
+			)
+			return
+		}
+		seriesList, err := searchRepository.GetInflatedSearchResultsByGeoAndFreq(searchText, geo, freq)
+		returnInflatedSeriesList(seriesList, err, w)
+	}
+}
+
+func getSearchTextFromRequest(r *http.Request) (searchText string, ok bool) {
+	searchText, ok = mux.Vars(r)["q"]
+	if ok {
+		return
+	}
+	searchText, ok = mux.Vars(r)["search_text"]
+	return
 }
