@@ -89,7 +89,7 @@ var seriesPrefix = `SELECT series.id, series.name, description, frequency, seaso
 	JOIN measurements ON measurements.id = series.measurement_id
 	JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
-	WHERE categories.id = ?`
+	WHERE categories.id = ? AND NOT series.restricted`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
@@ -99,7 +99,7 @@ var siblingsPrefix = `SELECT series.id, series.name, description, frequency, sea
 	FROM (SELECT measurement_id FROM series where id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN series ON series.measurement_id = measure.measurement_id
-	LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%') WHERE 1=1`
+	LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%') WHERE NOT series.restricted`
 
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	categoryId int64,
@@ -344,6 +344,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
 	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
+	AND NOT series.restricted
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
 		return
@@ -387,7 +388,7 @@ func (r *SeriesRepository) GetSeriesObservations(
 	err = r.DB.QueryRow(`SELECT measurements.percent
 	FROM series LEFT JOIN measurements
 	ON measurements.id = series.measurement_id
-	WHERE series.id = ?`, seriesId).Scan(&percent)
+	WHERE series.id = ? AND NOT series.restricted`, seriesId).Scan(&percent)
 	if err != nil {
 		return
 	}
