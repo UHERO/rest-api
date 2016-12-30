@@ -3,6 +3,7 @@ package data
 import (
 	"database/sql"
 	"github.com/UHERO/rest-api/models"
+	"errors"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -92,7 +93,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&geography.Name,
 	)
 	if err != nil {
-		return
+		return dataPortalSeries, errors.New("Series restricted or does not exist.")
 	}
 	dataPortalSeries = models.DataPortalSeries{
 		Id:             series.Id,
