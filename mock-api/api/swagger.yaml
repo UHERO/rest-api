@@ -11,6 +11,55 @@ schemes:
 produces:
 - "application/json"
 paths:
+  /seach:
+    get:
+      tags:
+      - "Search"
+      summary: "Search request summary"
+      description: "Provides a list of the geography and frequency combinations\
+      \ supported by the search `q`."
+      operationId: "searchGet"
+      parameters:
+      - name: "q"
+        in: "query"
+        description: "Search text"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "A search summary object"
+          schema:
+            type: "object"
+            items:
+              $ref: "#/definitions/Search"
+          examples:
+            application/json:
+              data:
+                q: "income"
+                defaults:
+                  geo: "HON"
+                  freq: "A"
+                geoFreqs:
+                  CA:
+                  - "A"
+                  - "Q"
+                  HON:
+                  - "A"
+                  - "Q"
+                  - "M"
+                freqGeos:
+                  A:
+                  - "CA"
+                  - "HON"
+                  Q:
+                  - "CA"
+                  - "HON"
+                  M:
+                  - "HON"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
   /category:
     get:
       tags:
@@ -768,6 +817,27 @@ securityDefinitions:
     name: "api_key"
     in: "header"
 definitions:
+  Search:
+    type: "object"
+    properties:
+      q:
+        type: "string"
+        description: "Search text"
+      defaults:
+        type: "object"
+        properties:
+          geo:
+            type: "string"
+            description: "Default geographic handle"
+          freq:
+            type: "string"
+            description: "Default frequency"
+      geoFreqs:
+        type: "object"
+        description: "Map of available geographic handles to frequencies"
+      freqGeos:
+        type: "object"
+        description: "Map of available frequencies to geographic handles"
   Category:
     type: "object"
     properties:
