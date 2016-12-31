@@ -106,13 +106,13 @@ type InflatedSeries struct {
 type Observation struct {
 	Date  time.Time
 	Value sql.NullFloat64
-	PseudoHistory bool
+	PseudoHistory sql.NullBool
 }
 
 type DataPortalObservation struct {
 	Date  time.Time
 	Value float64
-	PseudoHistory bool
+	PseudoHistory *bool
 }
 
 type SeriesObservations struct {
@@ -132,7 +132,7 @@ func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Date  string `json:"date"`
 		Value string `json:"value"`
-		PseudoHistory bool `json:"pseudoHistory,omitempty"`
+		PseudoHistory *bool `json:"pseudoHistory,omitempty"`
 	}{
 		Date:  formatDate(o.Date),
 		Value: fmt.Sprintf("%.4f", o.Value),
