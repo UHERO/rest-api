@@ -29,6 +29,11 @@ type GeoFreq struct {
 	Frequency string `json:"freq,omitempty"`
 }
 
+type GeographyFrequency struct {
+	Geography DataPortalGeography `json:"geo"`
+	Frequency FrequencyResult `json:"freq"`
+}
+
 type CategoryWithAncestry struct {
 	Id               int64
 	Name             string
@@ -41,9 +46,9 @@ type CategoryWithAncestry struct {
 
 type SearchSummary struct {
 	SearchText       string     `json:"q"`
-	DefaultGeoFreq   *GeoFreq   `json:"defaults,omitempty"`
-	GeoFreqs         map[string][]string  `json:"geoFreqs"`
-	FreqGeos         map[string][]string  `json:"freqGeos"`
+	DefaultGeoFreq   *GeographyFrequency   `json:"defaults,omitempty"`
+	GeoFreqs         *[]GeographyFrequencies  `json:"geoFreqs,omitempty"`
+	FreqGeos         *[]FrequencyGeographies  `json:"freqGeos,omitempty"`
 	ObservationStart *time.Time `json:"observationStart,omitempty"`
 	ObservationEnd   *time.Time `json:"observationStart,omitempty"`
 }
@@ -68,6 +73,16 @@ type FrequencyResult struct {
 type Frequency struct {
 	Freq  string
 	Label sql.NullString
+}
+
+type GeographyFrequencies struct {
+	DataPortalGeography
+	Frequencies []FrequencyResult `json:"freqs"`
+}
+
+type FrequencyGeographies struct {
+	FrequencyResult
+	Geographies []DataPortalGeography `json:"geos"`
 }
 
 type Series struct {
