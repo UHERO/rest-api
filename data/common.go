@@ -9,7 +9,7 @@ import (
 var freqLabel map[string]string = map[string]string{
 	"A": "Annual",
 	"S": "Semiannual",
-	"Q": "Quartely",
+	"Q": "Quarterly",
 	"M": "Monthly",
 	"W": "Weekly",
 	"D": "Daily",
