@@ -16,12 +16,14 @@ type Application struct {
 }
 
 type Category struct {
-	Id               int64      `json:"id"`
-	Name             string     `json:"name"`
-	ParentId         int64      `json:"parentId,omitempty"`
-	DefaultGeoFreq   *GeoFreq   `json:"defaults,omitempty"`
-	ObservationStart *time.Time `json:"observationStart,omitempty"`
-	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
+	Id                   int64                   `json:"id"`
+	Name                 string                  `json:"name"`
+	ParentId             int64                   `json:"parentId,omitempty"`
+	DefaultGeoFreq       *GeoFreq                `json:"defaults,omitempty"`
+	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
+	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
+	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
 
 type GeoFreq struct {
@@ -71,6 +73,23 @@ type FrequencyResult struct {
 	Freq  string `json:"freq"`
 	Label string `json:"label"`
 }
+
+// ByFrequency implements sort.Interface for []FrequencyResult based on
+// the Freq field.
+type ByFrequency []FrequencyResult
+type stringSlice []string
+func (s stringSlice) indexOf(stringToFind string) int {
+	for key, value := range s {
+		if value == stringToFind {
+			return key
+		}
+	}
+	return -1
+}
+var FreqOrder = stringSlice{"A", "S", "Q", "M", "W", "D"}
+func (a ByFrequency) Len() int           { return len(a) }
+func (a ByFrequency) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByFrequency) Less(i, j int) bool { return FreqOrder.indexOf(a[i].Freq) < FreqOrder.indexOf(a[j].Freq) }
 
 type Frequency struct {
 	Freq  string

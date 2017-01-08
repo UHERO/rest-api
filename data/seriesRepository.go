@@ -248,7 +248,7 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	FROM categories
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
-	WHERE categories.id = ? ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
+	WHERE categories.id = ? AND series.restricted = 0 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
 	}

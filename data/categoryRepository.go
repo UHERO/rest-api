@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"sort"
 )
 
 type CategoryRepository struct {
@@ -91,7 +92,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	LEFT JOIN data_list_measurements ON categories.data_list_id = data_list_measurements.data_list_id
  	LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
  	LEFT JOIN data_points ON data_points.series_id = series.id
-	WHERE categories.id = ? AND data_points.current GROUP BY categories.id;`, id).Scan(
+	WHERE categories.id = ? AND data_points.current AND series.restricted = 0 GROUP BY categories.id;`, id).Scan(
 		&category.Id,
 		&category.Name,
 		&category.Ancestry,
@@ -110,6 +111,68 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	if category.ObservationEnd.Valid && category.ObservationEnd.Time.After(time.Time{}) {
 		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
 	}
+
+	rows, err := r.DB.Query(`SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
+FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(name, LOCATE('@', name) + 1), '.', 1)) as geo,
+       MAX(RIGHT(name, 1)) as freq
+FROM (SELECT series.name AS name FROM categories
+LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
+WHERE categories.id = ? AND series.restricted = 0) AS s
+GROUP BY SUBSTR(name, LOCATE('@', name) + 1) ORDER BY COUNT(*) DESC) as geofreq
+LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
+	if err != nil {
+		return dataPortalCategory, err
+	}
+	geoFreqs := map[string][]models.FrequencyResult{}
+	geoByHandle := map[string]models.DataPortalGeography{}
+	freqGeos := map[string][]models.DataPortalGeography{}
+	freqByHandle := map[string]models.FrequencyResult{}
+	for rows.Next() {
+		scangeo := models.Geography{}
+		frequency := models.FrequencyResult{}
+		err = rows.Scan(
+			&scangeo.FIPS,
+			&scangeo.Name,
+			&scangeo.Handle,
+			&frequency.Freq,
+		)
+		geography := models.DataPortalGeography{Handle: scangeo.Handle}
+		if scangeo.FIPS.Valid {
+			geography.FIPS = scangeo.FIPS.String
+		}
+		if scangeo.Name.Valid {
+			geography.Name = scangeo.Name.String
+		}
+		frequency.Label = freqLabel[frequency.Freq]
+		// update the freq and geo maps
+		geoByHandle[geography.Handle] = geography
+		freqByHandle[frequency.Freq] = frequency
+		// add to the geoFreqs and freqGeos maps
+		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
+		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
+	}
+	geoFreqsResult := []models.GeographyFrequencies{}
+	for geo, freqs := range geoFreqs {
+		sort.Sort(models.ByFrequency(freqs))
+		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
+			DataPortalGeography: geoByHandle[geo],
+			Frequencies: freqs,
+		})
+	}
+
+	freqGeosResult := []models.FrequencyGeographies{}
+	for _, freq := range models.FreqOrder {
+		if val, ok := freqByHandle[freq]; ok {
+			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
+				FrequencyResult: val,
+				Geographies: freqGeos[freq],
+			})
+		}
+	}
+
+	dataPortalCategory.GeographyFrequencies = &geoFreqsResult
+	dataPortalCategory.FrequencyGeographies = &freqGeosResult
 	return dataPortalCategory, err
 }
 
