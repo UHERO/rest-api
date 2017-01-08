@@ -31,7 +31,7 @@ type GeoFreq struct {
 
 type GeographyFrequency struct {
 	Geography DataPortalGeography `json:"geo"`
-	Frequency FrequencyResult `json:"freq"`
+	Frequency FrequencyResult     `json:"freq"`
 }
 
 type CategoryWithAncestry struct {
@@ -45,12 +45,14 @@ type CategoryWithAncestry struct {
 }
 
 type SearchSummary struct {
-	SearchText       string     `json:"q"`
-	DefaultGeoFreq   *GeographyFrequency   `json:"defaults,omitempty"`
-	GeoFreqs         *[]GeographyFrequencies  `json:"geoFreqs,omitempty"`
-	FreqGeos         *[]FrequencyGeographies  `json:"freqGeos,omitempty"`
-	ObservationStart *time.Time `json:"observationStart,omitempty"`
-	ObservationEnd   *time.Time `json:"observationStart,omitempty"`
+	SearchText           string                  `json:"q"`
+	DefaultGeoFreq       *GeographyFrequency     `json:"defaults,omitempty"`
+	GeoFreqs             map[string][]string     `json:"geoFreqs,omitempty"`
+	FreqGeos             map[string][]string     `json:"freqGeos,omitempty"`
+	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
+	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
+	ObservationEnd       *time.Time              `json:"observationStart,omitempty"`
 }
 
 type Geography struct {
@@ -119,14 +121,14 @@ type InflatedSeries struct {
 }
 
 type Observation struct {
-	Date  time.Time
-	Value sql.NullFloat64
+	Date          time.Time
+	Value         sql.NullFloat64
 	PseudoHistory sql.NullBool
 }
 
 type DataPortalObservation struct {
-	Date  time.Time
-	Value float64
+	Date          time.Time
+	Value         float64
 	PseudoHistory *bool
 }
 
@@ -145,12 +147,12 @@ type TransformationResult struct {
 
 func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		Date  string `json:"date"`
-		Value string `json:"value"`
-		PseudoHistory *bool `json:"pseudoHistory,omitempty"`
+		Date          string `json:"date"`
+		Value         string `json:"value"`
+		PseudoHistory *bool  `json:"pseudoHistory,omitempty"`
 	}{
-		Date:  formatDate(o.Date),
-		Value: fmt.Sprintf("%.4f", o.Value),
+		Date:          formatDate(o.Date),
+		Value:         fmt.Sprintf("%.4f", o.Value),
 		PseudoHistory: o.PseudoHistory,
 	})
 }

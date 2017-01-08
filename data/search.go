@@ -41,6 +41,8 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 	if err != nil {
 		return
 	}
+	legacyGeoFreqs := map[string][]string{}
+	legacyFreqGeos := map[string][]string{}
 	geoFreqs := map[string][]models.FrequencyResult{}
 	geoByHandle := map[string]models.DataPortalGeography{}
 	freqGeos := map[string][]models.DataPortalGeography{}
@@ -76,6 +78,9 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 		// add to the geoFreqs and freqGeos maps
 		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
 		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
+
+		legacyGeoFreqs[geography.Handle] = append(legacyGeoFreqs[geography.Handle], frequency.Freq)
+		legacyFreqGeos[frequency.Freq] = append(legacyFreqGeos[frequency.Freq], geography.Handle)
 	}
 
 	geoFreqsResult := []models.GeographyFrequencies{}
@@ -94,8 +99,10 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 		})
 	}
 
-	searchSummary.GeoFreqs = &geoFreqsResult
-	searchSummary.FreqGeos = &freqGeosResult
+	searchSummary.GeoFreqs = legacyGeoFreqs
+	searchSummary.FreqGeos = legacyFreqGeos
+	searchSummary.GeographyFrequencies = &geoFreqsResult
+	searchSummary.FrequencyGeographies = &freqGeosResult
 	return
 }
 
