@@ -16,17 +16,24 @@ type Application struct {
 }
 
 type Category struct {
-	Id               int64      `json:"id"`
-	Name             string     `json:"name"`
-	ParentId         int64      `json:"parentId,omitempty"`
-	DefaultGeoFreq   *GeoFreq   `json:"defaults,omitempty"`
-	ObservationStart *time.Time `json:"observationStart,omitempty"`
-	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
+	Id                   int64                   `json:"id"`
+	Name                 string                  `json:"name"`
+	ParentId             int64                   `json:"parentId,omitempty"`
+	DefaultGeoFreq       *GeoFreq                `json:"defaults,omitempty"`
+	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
+	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
+	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
 
 type GeoFreq struct {
 	Geography string `json:"geo,omitempty"`
 	Frequency string `json:"freq,omitempty"`
+}
+
+type GeographyFrequency struct {
+	Geography DataPortalGeography `json:"geo"`
+	Frequency FrequencyResult     `json:"freq"`
 }
 
 type CategoryWithAncestry struct {
@@ -40,12 +47,14 @@ type CategoryWithAncestry struct {
 }
 
 type SearchSummary struct {
-	SearchText       string     `json:"q"`
-	DefaultGeoFreq   *GeoFreq   `json:"defaults,omitempty"`
-	GeoFreqs         map[string][]string  `json:"geoFreqs"`
-	FreqGeos         map[string][]string  `json:"freqGeos"`
-	ObservationStart *time.Time `json:"observationStart,omitempty"`
-	ObservationEnd   *time.Time `json:"observationStart,omitempty"`
+	SearchText           string                  `json:"q"`
+	DefaultGeoFreq       *GeographyFrequency     `json:"defaults,omitempty"`
+	GeoFreqs             map[string][]string     `json:"geoFreqs,omitempty"`
+	FreqGeos             map[string][]string     `json:"freqGeos,omitempty"`
+	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
+	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
+	ObservationEnd       *time.Time              `json:"observationStart,omitempty"`
 }
 
 type Geography struct {
@@ -65,9 +74,36 @@ type FrequencyResult struct {
 	Label string `json:"label"`
 }
 
+// ByFrequency implements sort.Interface for []FrequencyResult based on
+// the Freq field.
+type ByFrequency []FrequencyResult
+type stringSlice []string
+func (s stringSlice) indexOf(stringToFind string) int {
+	for key, value := range s {
+		if value == stringToFind {
+			return key
+		}
+	}
+	return -1
+}
+var FreqOrder = stringSlice{"A", "S", "Q", "M", "W", "D"}
+func (a ByFrequency) Len() int           { return len(a) }
+func (a ByFrequency) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByFrequency) Less(i, j int) bool { return FreqOrder.indexOf(a[i].Freq) < FreqOrder.indexOf(a[j].Freq) }
+
 type Frequency struct {
 	Freq  string
 	Label sql.NullString
+}
+
+type GeographyFrequencies struct {
+	DataPortalGeography
+	Frequencies []FrequencyResult `json:"freqs"`
+}
+
+type FrequencyGeographies struct {
+	FrequencyResult
+	Geographies []DataPortalGeography `json:"geos"`
 }
 
 type Series struct {
@@ -104,14 +140,14 @@ type InflatedSeries struct {
 }
 
 type Observation struct {
-	Date  time.Time
-	Value sql.NullFloat64
+	Date          time.Time
+	Value         sql.NullFloat64
 	PseudoHistory sql.NullBool
 }
 
 type DataPortalObservation struct {
-	Date  time.Time
-	Value float64
+	Date          time.Time
+	Value         float64
 	PseudoHistory *bool
 }
 
@@ -130,12 +166,12 @@ type TransformationResult struct {
 
 func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		Date  string `json:"date"`
-		Value string `json:"value"`
-		PseudoHistory *bool `json:"pseudoHistory,omitempty"`
+		Date          string `json:"date"`
+		Value         string `json:"value"`
+		PseudoHistory *bool  `json:"pseudoHistory,omitempty"`
 	}{
-		Date:  formatDate(o.Date),
-		Value: fmt.Sprintf("%.4f", o.Value),
+		Date:          formatDate(o.Date),
+		Value:         fmt.Sprintf("%.4f", o.Value),
 		PseudoHistory: o.PseudoHistory,
 	})
 }

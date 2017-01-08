@@ -15,6 +15,7 @@ var freqLabel map[string]string = map[string]string{
 	"D": "Daily",
 }
 
+
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
 	series := models.Series{}
 	geography := models.Geography{}
