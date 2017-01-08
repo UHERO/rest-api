@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/UHERO/rest-api/models"
+	"sort"
 )
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
@@ -85,6 +86,7 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 
 	geoFreqsResult := []models.GeographyFrequencies{}
 	for geo, freqs := range geoFreqs {
+		sort.Sort(models.ByFrequency(freqs))
 		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
 			DataPortalGeography: geoByHandle[geo],
 			Frequencies: freqs,
@@ -92,11 +94,13 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 	}
 
 	freqGeosResult := []models.FrequencyGeographies{}
-	for freq, geos := range freqGeos {
-		freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
-			FrequencyResult: freqByHandle[freq],
-			Geographies: geos,
-		})
+	for _, freq := range models.FreqOrder {
+		if val, ok := freqByHandle[freq]; ok {
+			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
+				FrequencyResult: val,
+				Geographies: freqGeos[freq],
+			})
+		}
 	}
 
 	searchSummary.GeoFreqs = legacyGeoFreqs
