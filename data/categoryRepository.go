@@ -85,11 +85,12 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
 	var category models.CategoryWithAncestry
 	err := r.DB.QueryRow(`SELECT
-	categories.id, MAX(name), MAX(ancestry),
+	categories.id, MAX(categories.name), MAX(ancestry),
 	MIN(data_points.date) AS start_date, MAX(data_points.date) AS end_date
 	FROM categories
-	LEFT JOIN data_lists_series ON categories.data_list_id = data_lists_series.data_list_id
- 	LEFT JOIN data_points ON data_lists_series.series_id = data_points.series_id
+	LEFT JOIN data_list_measurements ON categories.data_list_id = data_list_measurements.data_list_id
+ 	LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
+ 	LEFT JOIN data_points ON data_points.series_id = series.id
 	WHERE categories.id = ? AND data_points.current GROUP BY categories.id;`, id).Scan(
 		&category.Id,
 		&category.Name,
