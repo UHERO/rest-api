@@ -53,8 +53,8 @@ type SearchSummary struct {
 	FreqGeos             map[string][]string     `json:"freqGeos,omitempty"`
 	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
 	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
-	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
-	ObservationEnd       *time.Time              `json:"observationStart,omitempty"`
+	ObservationStart     *time.Time              `json:"observationStart"`
+	ObservationEnd       *time.Time              `json:"observationEnd"`
 }
 
 type Geography struct {

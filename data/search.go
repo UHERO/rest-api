@@ -3,10 +3,12 @@ package data
 import (
 	"github.com/UHERO/rest-api/models"
 	"sort"
+	"time"
+	"fmt"
 )
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
+	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted AND RIGHT(name, 1) != 'A',
 	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
@@ -30,6 +32,32 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 
 func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary models.SearchSummary, err error) {
 	searchSummary.SearchText = searchText
+
+	var observationStart, observationEnd models.NullTime
+	err = r.DB.QueryRow(`SELECT
+	MIN(data_points.date) AS start_date, MAX(data_points.date) AS end_date
+	FROM series
+ 	LEFT JOIN data_points ON data_points.series_id = series.id
+	WHERE ((MATCH(name, description, dataPortalName)
+	AGAINST(? IN NATURAL LANGUAGE MODE))
+	OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	AND data_points.current AND series.restricted = 0;`, searchText, searchText).Scan(
+		&observationStart,
+		&observationEnd,
+	)
+	if err != nil {
+		return
+	}
+	fmt.Println("ObservationStart/End")
+	if observationStart.Valid && observationStart.Time.After(time.Time{}) {
+		fmt.Printf("ObservationStart Time: %s", observationStart.Time)
+		searchSummary.ObservationStart = &observationStart.Time
+	}
+	if observationEnd.Valid && observationEnd.Time.After(time.Time{}) {
+		fmt.Printf("ObservationEnd Time: %s", observationEnd.Time)
+		searchSummary.ObservationEnd = &observationEnd.Time
+	}
+
 	rows, err := r.DB.Query(`SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
 FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(name, LOCATE('@', name) + 1), '.', 1)) as geo,
        MAX(RIGHT(name, 1)) as freq
@@ -107,11 +135,12 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 	searchSummary.FreqGeos = legacyFreqGeos
 	searchSummary.GeographyFrequencies = &geoFreqsResult
 	searchSummary.FrequencyGeographies = &freqGeosResult
+	fmt.Printf("\nOS: %s\nOE: %s\n", searchSummary.ObservationStart, searchSummary.ObservationEnd)
 	return
 }
 
 func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
+	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted AND RIGHT(name, 1) != 'A',
 	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, ?, display_name_short
 	FROM series
@@ -147,7 +176,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	geo string,
 	freq string,
 ) (seriesList []models.InflatedSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
+	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted AND RIGHT(name, 1) != 'A',
 	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, ?, display_name_short
 	FROM series
