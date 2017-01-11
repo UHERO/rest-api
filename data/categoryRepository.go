@@ -3,10 +3,10 @@ package data
 import (
 	"database/sql"
 	"github.com/UHERO/rest-api/models"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"sort"
 )
 
 type CategoryRepository struct {
@@ -157,7 +157,7 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
 		sort.Sort(models.ByFrequency(freqs))
 		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
 			DataPortalGeography: geoByHandle[geo],
-			Frequencies: freqs,
+			Frequencies:         freqs,
 		})
 	}
 
@@ -166,7 +166,7 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
 		if val, ok := freqByHandle[freq]; ok {
 			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
 				FrequencyResult: val,
-				Geographies: freqGeos[freq],
+				Geographies:     freqGeos[freq],
 			})
 		}
 	}

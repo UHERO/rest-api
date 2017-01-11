@@ -2,8 +2,8 @@ package data
 
 import (
 	"database/sql"
-	"github.com/UHERO/rest-api/models"
 	"errors"
+	"github.com/UHERO/rest-api/models"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -14,7 +14,6 @@ var freqLabel map[string]string = map[string]string{
 	"W": "Weekly",
 	"D": "Daily",
 }
-
 
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
 	series := models.Series{}
