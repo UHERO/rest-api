@@ -48,7 +48,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if series.Description.Valid {
 		dataPortalSeries.Description = series.Description.String
 	}
-	if series.SeasonallyAdjusted.Valid {
+	if series.SeasonallyAdjusted.Valid  && series.Name[len(series.Name)-1:] != "A" {
 		dataPortalSeries.SeasonallyAdjusted = &series.SeasonallyAdjusted.Bool
 	}
 	if series.UnitsLabel.Valid {
@@ -107,7 +107,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	if series.Description.Valid {
 		dataPortalSeries.Description = series.Description.String
 	}
-	if series.SeasonallyAdjusted.Valid {
+	if series.SeasonallyAdjusted.Valid  && series.Name[len(series.Name)-1:] != "A" {
 		dataPortalSeries.SeasonallyAdjusted = &series.SeasonallyAdjusted.Bool
 	}
 	if series.UnitsLabel.Valid {
