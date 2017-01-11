@@ -7,7 +7,7 @@ import (
 )
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted AND RIGHT(name, 1) != 'A',
+	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
 	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
@@ -135,7 +135,7 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 }
 
 func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted AND RIGHT(name, 1) != 'A',
+	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
 	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, ?, display_name_short
 	FROM series
@@ -171,7 +171,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	geo string,
 	freq string,
 ) (seriesList []models.InflatedSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted AND RIGHT(name, 1) != 'A',
+	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
 	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, ?, display_name_short
 	FROM series
