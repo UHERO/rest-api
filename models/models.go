@@ -78,6 +78,7 @@ type FrequencyResult struct {
 // the Freq field.
 type ByFrequency []FrequencyResult
 type stringSlice []string
+
 func (s stringSlice) indexOf(stringToFind string) int {
 	for key, value := range s {
 		if value == stringToFind {
@@ -86,10 +87,14 @@ func (s stringSlice) indexOf(stringToFind string) int {
 	}
 	return -1
 }
+
 var FreqOrder = stringSlice{"A", "S", "Q", "M", "W", "D"}
-func (a ByFrequency) Len() int           { return len(a) }
-func (a ByFrequency) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByFrequency) Less(i, j int) bool { return FreqOrder.indexOf(a[i].Freq) < FreqOrder.indexOf(a[j].Freq) }
+
+func (a ByFrequency) Len() int      { return len(a) }
+func (a ByFrequency) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByFrequency) Less(i, j int) bool {
+	return FreqOrder.indexOf(a[i].Freq) < FreqOrder.indexOf(a[j].Freq)
+}
 
 type Frequency struct {
 	Freq  string

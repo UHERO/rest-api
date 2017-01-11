@@ -4,7 +4,6 @@ import (
 	"github.com/UHERO/rest-api/models"
 	"sort"
 	"time"
-	"fmt"
 )
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
@@ -48,13 +47,10 @@ func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary mo
 	if err != nil {
 		return
 	}
-	fmt.Println("ObservationStart/End")
 	if observationStart.Valid && observationStart.Time.After(time.Time{}) {
-		fmt.Printf("ObservationStart Time: %s", observationStart.Time)
 		searchSummary.ObservationStart = &observationStart.Time
 	}
 	if observationEnd.Valid && observationEnd.Time.After(time.Time{}) {
-		fmt.Printf("ObservationEnd Time: %s", observationEnd.Time)
 		searchSummary.ObservationEnd = &observationEnd.Time
 	}
 
@@ -117,7 +113,7 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 		sort.Sort(models.ByFrequency(freqs))
 		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
 			DataPortalGeography: geoByHandle[geo],
-			Frequencies: freqs,
+			Frequencies:         freqs,
 		})
 	}
 
@@ -126,7 +122,7 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 		if val, ok := freqByHandle[freq]; ok {
 			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
 				FrequencyResult: val,
-				Geographies: freqGeos[freq],
+				Geographies:     freqGeos[freq],
 			})
 		}
 	}
@@ -135,7 +131,6 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 	searchSummary.FreqGeos = legacyFreqGeos
 	searchSummary.GeographyFrequencies = &geoFreqsResult
 	searchSummary.FrequencyGeographies = &freqGeosResult
-	fmt.Printf("\nOS: %s\nOE: %s\n", searchSummary.ObservationStart, searchSummary.ObservationEnd)
 	return
 }
 

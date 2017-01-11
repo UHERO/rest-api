@@ -8,7 +8,6 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
-	"fmt"
 )
 
 func GetSeriesBySearchText(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
@@ -50,7 +49,6 @@ func GetSearchSummary(searchRepository *data.SeriesRepository) func(http.Respons
 			)
 			return
 		}
-		fmt.Printf("\nsummary in controller:\nOS: %s\nOE: %s\n", searchSummary.ObservationStart, searchSummary.ObservationEnd)
 		j, err := json.Marshal(SearchSummaryResource{Data: searchSummary})
 		if err != nil {
 			common.DisplayAppError(
