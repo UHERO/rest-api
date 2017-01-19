@@ -17,7 +17,7 @@ func (r *CategoryRepository) GetAllCategories() (categories []models.Category, e
 	rows, err := r.DB.Query(`
 SELECT id, name, ancestry, default_handle, default_freq
 FROM categories
-ORDER BY categories.order;
+ORDER BY categories.list_order;
 	`)
 	if err != nil {
 		return
@@ -65,7 +65,7 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 }
 
 func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
-	rows, err := r.DB.Query("SELECT id, name FROM categories WHERE ancestry IS NULL ORDER BY `order`;")
+	rows, err := r.DB.Query("SELECT id, name FROM categories WHERE ancestry IS NULL ORDER BY `list_order`;")
 	if err != nil {
 		return
 	}
@@ -178,7 +178,7 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
 
 func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
 	fuzzyString := "%" + name + "%"
-	rows, err := r.DB.Query("SELECT id, name, ancestry FROM categories WHERE LOWER(name) LIKE ? ORDER BY `order`;", fuzzyString)
+	rows, err := r.DB.Query("SELECT id, name, ancestry FROM categories WHERE LOWER(name) LIKE ? ORDER BY `list_order`;", fuzzyString)
 	if err != nil {
 		return
 	}
@@ -203,7 +203,7 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 }
 
 func (r *CategoryRepository) GetChildrenOf(id int64) (categories []models.Category, err error) {
-	rows, err := r.DB.Query("SELECT id, name, parent_id FROM categories WHERE parent_id = ? ORDER BY `order;`", id)
+	rows, err := r.DB.Query("SELECT id, name, parent_id FROM categories WHERE parent_id = ? ORDER BY `list_order;`", id)
 	if err != nil {
 		return
 	}
