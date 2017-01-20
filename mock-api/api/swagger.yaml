@@ -11,7 +11,7 @@ schemes:
 produces:
 - "application/json"
 paths:
-  /seach:
+  /search:
     get:
       tags:
       - "Search"
