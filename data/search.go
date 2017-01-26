@@ -8,7 +8,9 @@ import (
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	COALESCE(series.unitsLabel, measurements.units_label),
+	COALESCE(series.unitsLabelShort, measurements.units_label_short),
+	measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
@@ -136,7 +138,9 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 
 func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	COALESCE(series.unitsLabel, measurements.units_label),
+	COALESCE(series.unitsLabelShort, measurements.units_label_short),
+	measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, ?, display_name_short
 	FROM series
 	LEFT JOIN geographies ON handle LIKE ?
@@ -172,7 +176,9 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	freq string,
 ) (seriesList []models.InflatedSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	COALESCE(series.unitsLabel, measurements.units_label),
+	COALESCE(series.unitsLabelShort, measurements.units_label_short),
+	measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, ?, display_name_short
 	FROM series
 	LEFT JOIN geographies ON handle LIKE ?

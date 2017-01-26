@@ -86,7 +86,9 @@ var transformations map[string]transformation = map[string]transformation{
 }
 
 var seriesPrefix = `SELECT series.id, series.name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	COALESCE(series.unitsLabel, measurements.units_label),
+	COALESCE(series.unitsLabelShort, measurements.units_label_short),
+	measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	JOIN measurements ON measurements.id = series.measurement_id
@@ -97,7 +99,9 @@ var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
 var siblingsPrefix = `SELECT series.id, series.name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	COALESCE(series.unitsLabel, measurements.units_label),
+	COALESCE(series.unitsLabelShort, measurements.units_label_short),
+	measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM (SELECT measurement_id FROM series where id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
@@ -369,7 +373,9 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row := r.DB.QueryRow(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	COALESCE(series.unitsLabel, measurements.units_label),
+	COALESCE(series.unitsLabelShort, measurements.units_label_short),
+	measurements.data_portal_name, measurements.percent, measurements.real,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
