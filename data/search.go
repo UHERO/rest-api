@@ -26,6 +26,12 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -165,6 +171,12 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -203,6 +215,12 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr

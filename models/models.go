@@ -137,6 +137,8 @@ type DataPortalSeries struct {
 	Geography          DataPortalGeography `json:"geography,omitEmpty"`
 	Percent            *bool               `json:"percent,omitempty"`
 	Real               *bool               `json:"real,omitempty"`
+	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
+	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
 }
 
 type InflatedSeries struct {

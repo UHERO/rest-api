@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/UHERO/rest-api/models"
+	"sort"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -131,4 +132,70 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	dataPortalSeries.Geography = dataPortalGeography
 	return
+}
+
+func getFreqGeoCombinations(r *SeriesRepository, seriesId int64) (
+[]models.GeographyFrequencies,
+[]models.FrequencyGeographies,
+error,
+) {
+	rows, err := r.DB.Query(`SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
+	FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(name, LOCATE('@', name) + 1), '.', 1)) as geo,
+		   MAX(RIGHT(name, 1)) as freq
+	FROM (SELECT series.name AS name FROM
+		series
+		WHERE series.measurement_id = (SELECT measurement_id FROM series WHERE id = ?)) AS s
+	GROUP BY SUBSTR(name, LOCATE('@', name) + 1) ORDER BY COUNT(*) DESC) as geofreq
+	LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, seriesId)
+	if err != nil {
+		return nil, nil, err
+	}
+	geoFreqs := map[string][]models.FrequencyResult{}
+	geoByHandle := map[string]models.DataPortalGeography{}
+	freqGeos := map[string][]models.DataPortalGeography{}
+	freqByHandle := map[string]models.FrequencyResult{}
+	for rows.Next() {
+		scangeo := models.Geography{}
+		frequency := models.FrequencyResult{}
+		err = rows.Scan(
+			&scangeo.FIPS,
+			&scangeo.Name,
+			&scangeo.Handle,
+			&frequency.Freq,
+		)
+		geography := models.DataPortalGeography{Handle: scangeo.Handle}
+		if scangeo.FIPS.Valid {
+			geography.FIPS = scangeo.FIPS.String
+		}
+		if scangeo.Name.Valid {
+			geography.Name = scangeo.Name.String
+		}
+		frequency.Label = freqLabel[frequency.Freq]
+		// update the freq and geo maps
+		geoByHandle[geography.Handle] = geography
+		freqByHandle[frequency.Freq] = frequency
+		// add to the geoFreqs and freqGeos maps
+		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
+		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
+	}
+	geoFreqsResult := []models.GeographyFrequencies{}
+	for geo, freqs := range geoFreqs {
+		sort.Sort(models.ByFrequency(freqs))
+		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
+			DataPortalGeography: geoByHandle[geo],
+			Frequencies:         freqs,
+		})
+	}
+
+	freqGeosResult := []models.FrequencyGeographies{}
+	for _, freq := range models.FreqOrder {
+		if val, ok := freqByHandle[freq]; ok {
+			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
+				FrequencyResult: val,
+				Geographies:     freqGeos[freq],
+			})
+		}
+	}
+
+	return geoFreqsResult, freqGeosResult, err
 }
