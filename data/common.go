@@ -30,6 +30,8 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.DataPortalName,
 		&series.Percent,
 		&series.Real,
+		&series.SourceDescription,
+		&series.SourceLink,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -49,7 +51,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if series.Description.Valid {
 		dataPortalSeries.Description = series.Description.String
 	}
-	if series.SeasonallyAdjusted.Valid  && series.Name[len(series.Name)-1:] != "A" {
+	if series.SeasonallyAdjusted.Valid && series.Name[len(series.Name)-1:] != "A" {
 		dataPortalSeries.SeasonallyAdjusted = &series.SeasonallyAdjusted.Bool
 	}
 	if series.UnitsLabel.Valid {
@@ -63,6 +65,12 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	}
 	if series.Real.Valid {
 		dataPortalSeries.Real = &series.Real.Bool
+	}
+	if series.SourceDescription.Valid {
+		dataPortalSeries.SourceDescription = series.SourceDescription.String
+	}
+	if series.SourceLink.Valid {
+		dataPortalSeries.SourceLink = series.SourceLink.String
 	}
 	dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 	if geography.FIPS.Valid {
@@ -89,6 +97,8 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.DataPortalName,
 		&series.Percent,
 		&series.Real,
+		&series.SourceDescription,
+		&series.SourceLink,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -108,7 +118,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	if series.Description.Valid {
 		dataPortalSeries.Description = series.Description.String
 	}
-	if series.SeasonallyAdjusted.Valid  && series.Name[len(series.Name)-1:] != "A" {
+	if series.SeasonallyAdjusted.Valid && series.Name[len(series.Name)-1:] != "A" {
 		dataPortalSeries.SeasonallyAdjusted = &series.SeasonallyAdjusted.Bool
 	}
 	if series.UnitsLabel.Valid {
@@ -123,6 +133,12 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	if series.Real.Valid {
 		dataPortalSeries.Real = &series.Real.Bool
 	}
+	if series.SourceDescription.Valid {
+		dataPortalSeries.SourceDescription = series.SourceDescription.String
+	}
+	if series.SourceLink.Valid {
+		dataPortalSeries.SourceLink = series.SourceLink.String
+	}
 	dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 	if geography.FIPS.Valid {
 		dataPortalGeography.FIPS = geography.FIPS.String
@@ -135,9 +151,9 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 }
 
 func getFreqGeoCombinations(r *SeriesRepository, seriesId int64) (
-[]models.GeographyFrequencies,
-[]models.FrequencyGeographies,
-error,
+	[]models.GeographyFrequencies,
+	[]models.FrequencyGeographies,
+	error,
 ) {
 	rows, err := r.DB.Query(`SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
 	FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(name, LOCATE('@', name) + 1), '.', 1)) as geo,

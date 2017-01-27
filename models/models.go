@@ -122,21 +122,25 @@ type Series struct {
 	DataPortalName     sql.NullString
 	Percent            sql.NullBool
 	Real               sql.NullBool
+	SourceDescription  sql.NullString
+	SourceLink         sql.NullString
 }
 
 type DataPortalSeries struct {
-	Id                 int64               `json:"id"`
-	Name               string              `json:"name"`
-	Title              string              `json:"title,omitempty"`
-	Description        string              `json:"description,omitempty"`
-	Frequency          string              `json:"frequency,omitempty"`
-	FrequencyShort     string              `json:"frequencyShort,omitempty"`
-	SeasonallyAdjusted *bool               `json:"seasonallyAdjusted,omitempty"`
-	UnitsLabel         string              `json:"unitsLabel,omitEmpty"`
-	UnitsLabelShort    string              `json:"unitsLabelShort,omitEmpty"`
-	Geography          DataPortalGeography `json:"geography,omitEmpty"`
-	Percent            *bool               `json:"percent,omitempty"`
-	Real               *bool               `json:"real,omitempty"`
+	Id                   int64                   `json:"id"`
+	Name                 string                  `json:"name"`
+	Title                string                  `json:"title,omitempty"`
+	Description          string                  `json:"description,omitempty"`
+	Frequency            string                  `json:"frequency,omitempty"`
+	FrequencyShort       string                  `json:"frequencyShort,omitempty"`
+	SeasonallyAdjusted   *bool                   `json:"seasonallyAdjusted,omitempty"`
+	UnitsLabel           string                  `json:"unitsLabel,omitEmpty"`
+	UnitsLabelShort      string                  `json:"unitsLabelShort,omitEmpty"`
+	Geography            DataPortalGeography     `json:"geography,omitEmpty"`
+	Percent              *bool                   `json:"percent,omitempty"`
+	Real                 *bool                   `json:"real,omitempty"`
+	SourceDescription    string                  `json:"source_description,omitempty"`
+	SourceLink           string                  `json:"source_link,omitempty"`
 	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
 	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
 }

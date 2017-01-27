@@ -85,27 +85,31 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 }
 
-var seriesPrefix = `SELECT series.id, series.name, description, frequency, seasonally_adjusted,
-	COALESCE(series.unitsLabel, measurements.units_label),
-	COALESCE(series.unitsLabelShort, measurements.units_label_short),
+var seriesPrefix = `SELECT series.id, series.name, series.description, frequency, seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	measurements.data_portal_name, measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	JOIN measurements ON measurements.id = series.measurement_id
 	JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
+	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE categories.id = ? AND NOT series.restricted`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
-var siblingsPrefix = `SELECT series.id, series.name, description, frequency, seasonally_adjusted,
-	COALESCE(series.unitsLabel, measurements.units_label),
-	COALESCE(series.unitsLabelShort, measurements.units_label_short),
+var siblingsPrefix = `SELECT series.id, series.name, series.description, frequency, seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	measurements.data_portal_name, measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM (SELECT measurement_id FROM series where id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN series ON series.measurement_id = measure.measurement_id
+	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%') WHERE NOT series.restricted`
 
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
@@ -432,13 +436,15 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 }
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
-	row := r.DB.QueryRow(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	COALESCE(series.unitsLabel, measurements.units_label),
-	COALESCE(series.unitsLabelShort, measurements.units_label_short),
+	row := r.DB.QueryRow(`SELECT series.id, name, series.description, frequency, seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	measurements.data_portal_name, measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
+	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE series.id = ? AND NOT series.restricted;`, seriesId)
 	dataPortalSeries, err = getNextSeriesFromRow(row)
 	if err != nil {
@@ -452,7 +458,6 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	dataPortalSeries.FrequencyGeographies = &freqGeos
 	return
 }
-
 
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.

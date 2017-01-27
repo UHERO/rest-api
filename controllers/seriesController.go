@@ -81,7 +81,6 @@ func GetSeriesById(seriesRepository *data.SeriesRepository) func(http.ResponseWr
 		if !ok {
 			return
 		}
-		log.Printf("Getting Series by id: %d", id)
 		series, err := seriesRepository.GetSeriesById(id)
 		if err != nil {
 			common.DisplayAppError(
@@ -114,7 +113,6 @@ func GetSeriesSiblingsById(seriesRepository *data.SeriesRepository) func(http.Re
 		if !ok {
 			return
 		}
-		log.Printf("Getting Series by id: %d", id)
 		seriesList, err := seriesRepository.GetSeriesSiblingsById(id)
 		returnSeriesList(seriesList, err, w)
 	}
@@ -126,7 +124,6 @@ func GetSeriesSiblingsByIdAndFreq(seriesRepository *data.SeriesRepository) func(
 		if !ok {
 			return
 		}
-		log.Printf("Getting Series Siblings by id and frequency: %d, %s", id, freq)
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdAndFreq(id, freq)
 		returnSeriesList(seriesList, err, w)
 	}
@@ -149,7 +146,6 @@ func GetSeriesSiblingsByIdGeoAndFreq(seriesRepository *data.SeriesRepository) fu
 		if !ok {
 			return
 		}
-		log.Printf("Getting Series Siblings by id, geo, and freq: %d, %s, %s", id, geo, freq)
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdGeoAndFreq(id, geo, freq)
 		returnSeriesList(seriesList, err, w)
 	}
@@ -161,7 +157,6 @@ func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository) func(htt
 		if !ok {
 			return
 		}
-		log.Printf("Getting Series by id: %d", id)
 		frequencyList, err := seriesRepository.GetSeriesSiblingsFreqById(id)
 		if err != nil {
 			common.DisplayAppError(
@@ -226,7 +221,6 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository) func(http.Re
 		if !ok {
 			return
 		}
-		log.Printf("Getting Series by id: %d", id)
 		series, err := seriesRepository.GetSeriesObservations(id)
 		if err != nil {
 			common.DisplayAppError(
