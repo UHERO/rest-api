@@ -7,15 +7,19 @@ import (
 )
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	rows, err := r.DB.Query(`SELECT series.id, name, series.description, frequency, seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
+	measurements.data_portal_name, measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
+	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE NOT restricted AND
-	((MATCH(name, description, dataPortalName)
+	((MATCH(name, series.description, dataPortalName)
 	AGAINST(? IN NATURAL LANGUAGE MODE))
-	OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%')) LIMIT 50;`, searchText, searchText)
+	OR LOWER(CONCAT(name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%')) LIMIT 50;`, searchText, searchText)
 	if err != nil {
 		return
 	}
@@ -24,6 +28,12 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -135,16 +145,20 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 }
 
 func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	rows, err := r.DB.Query(`SELECT series.id, name, series.description, frequency, seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
+	measurements.data_portal_name, measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, ?, display_name_short
 	FROM series
 	LEFT JOIN geographies ON handle LIKE ?
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
+	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE NOT restricted AND
-	((MATCH(name, description, dataPortalName)
+	((MATCH(name, series.description, dataPortalName)
 	AGAINST(? IN NATURAL LANGUAGE MODE))
-	OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	OR LOWER(CONCAT(name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND LOWER(name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`,
 		geo,
 		geo,
@@ -161,6 +175,12 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -171,16 +191,20 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	geo string,
 	freq string,
 ) (seriesList []models.InflatedSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	rows, err := r.DB.Query(`SELECT series.id, name, series.description, frequency, seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
+	measurements.data_portal_name, measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, ?, display_name_short
 	FROM series
 	LEFT JOIN geographies ON handle LIKE ?
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
+	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE NOT series.restricted AND
-	((MATCH(name, description, dataPortalName)
+	((MATCH(name, series.description, dataPortalName)
 	AGAINST(? IN NATURAL LANGUAGE MODE))
-	OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	OR LOWER(CONCAT(name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND LOWER(name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`,
 		geo,
 		geo,
@@ -197,6 +221,12 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr

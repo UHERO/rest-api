@@ -85,23 +85,31 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 }
 
-var seriesPrefix = `SELECT series.id, series.name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+var seriesPrefix = `SELECT series.id, series.name, series.description, frequency, seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
+	measurements.data_portal_name, measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	JOIN measurements ON measurements.id = series.measurement_id
 	JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
+	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE categories.id = ? AND NOT series.restricted`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
-var siblingsPrefix = `SELECT series.id, series.name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+var siblingsPrefix = `SELECT series.id, series.name, series.description, frequency, seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
+	measurements.data_portal_name, measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM (SELECT measurement_id FROM series where id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN series ON series.measurement_id = measure.measurement_id
+	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%') WHERE NOT series.restricted`
 
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
@@ -121,6 +129,12 @@ func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -145,6 +159,12 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -169,6 +189,12 @@ func (r *SeriesRepository) GetInflatedSeriesByCategoryGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr
@@ -196,6 +222,12 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -214,6 +246,12 @@ func (r *SeriesRepository) GetInflatedSeriesByCategory(categoryId int64) (series
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr
@@ -237,6 +275,12 @@ func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []m
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -278,6 +322,12 @@ func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []m
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -296,6 +346,12 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -314,6 +370,12 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -335,6 +397,12 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
+		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.GeographyFrequencies = &geoFreqs
+		dataPortalSeries.FrequencyGeographies = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -345,7 +413,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 ) (frequencyList []models.FrequencyResult, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
+	WHERE series.name LIKE CONCAT(TRIM(TRAILING 'NS' FROM left(original_series.name, locate("@", original_series.name))), '%')
 	AND NOT series.restricted
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
@@ -368,13 +436,26 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 }
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
-	row := r.DB.QueryRow(`SELECT series.id, name, description, frequency, seasonally_adjusted,
-	measurements.units_label, measurements.units_label_short, measurements.data_portal_name, measurements.percent, measurements.real,
+	row := r.DB.QueryRow(`SELECT series.id, name, series.description, frequency, seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
+	measurements.data_portal_name, measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
+	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE series.id = ? AND NOT series.restricted;`, seriesId)
 	dataPortalSeries, err = getNextSeriesFromRow(row)
+	if err != nil {
+		return
+	}
+	geoFreqs, freqGeos, err := getFreqGeoCombinations(r, seriesId)
+	if err != nil {
+		return
+	}
+	dataPortalSeries.GeographyFrequencies = &geoFreqs
+	dataPortalSeries.FrequencyGeographies = &freqGeos
 	return
 }
 
