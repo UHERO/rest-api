@@ -6,7 +6,6 @@ import (
 
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
-	"log"
 )
 
 func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
