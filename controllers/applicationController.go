@@ -117,6 +117,13 @@ func CheckCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.H
 	}
 }
 
+func WriteCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		// do stuff
+		next(w, r)
+	}
+}
+
 // UpdateApplication will return a handler for updating an application
 func UpdateApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
