@@ -6,10 +6,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
+	"github.com/redigo/redis"
 	"strings"
 )
 
@@ -112,7 +112,10 @@ func CORSOptionsHandler(w http.ResponseWriter, r *http.Request, next http.Handle
 
 func CheckCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		// do stuff
+		n, err := conn.Do("GET", r.URL.RawPath)
+		if err != nil {
+			//do something
+		}
 		next(w, r)
 	}
 }

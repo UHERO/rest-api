@@ -5,7 +5,7 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
-	"github.com/garyburd/redigo/redis"
+	"github.com/redigo/redis"
 )
 
 func InitRoutes(

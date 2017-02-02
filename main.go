@@ -8,12 +8,16 @@ import (
 	"github.com/UHERO/rest-api/routers"
 	"github.com/codegangsta/negroni"
 	"github.com/go-sql-driver/mysql"
+	"github.com/redigo/redis"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"time"
+
 )
+
+var redisConn redis.Conn
 
 func main() {
 	common.StartUp()
@@ -40,7 +44,7 @@ func main() {
 		log.Fatal("Start MySQL Server!")
 	}
 
-	redisConn, err := redis.Dial("tcp", ":6379")
+	redisConn, err = redis.Dial("tcp", ":6379")
 	if err != nil {
 		log.Fatal("Start Redis Server!")
 	}
