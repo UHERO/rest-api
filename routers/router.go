@@ -26,7 +26,9 @@ func InitRoutes(
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
+		negroni.HandlerFunc(controllers.CheckCache(main.redisConn)),
 		negroni.Wrap(apiRouter),
+		negroni.HandlerFunc(controllers.WriteCache(main.redisConn)),
 	))
 	return router
 }

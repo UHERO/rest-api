@@ -40,6 +40,12 @@ func main() {
 		log.Fatal("Start MySQL Server!")
 	}
 
+	redisConn, err := redis.Dial("tcp", ":6379")
+	if err != nil {
+		log.Fatal("Start Redis Server!")
+	}
+	defer redisConn.Close()
+
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
