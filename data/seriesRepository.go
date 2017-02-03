@@ -559,10 +559,10 @@ func (r *SeriesRepository) GetTransformation(
 			dataPortalObservation,
 		)
 	}
-	if currentStart.IsZero() || currentStart.After(observationStart) {
+	if currentStart.IsZero() || (!observationStart.IsZero() && currentStart.After(observationStart)) {
 		*currentStart = observationStart
 	}
-	if currentEnd.IsZero() || currentEnd.Before(observationEnd) {
+	if currentEnd.IsZero() || (!observationStart.IsZero() && currentEnd.Before(observationEnd)) {
 		*currentEnd = observationEnd
 	}
 	transformationResult.Transformation = transformations[transformation].Label
