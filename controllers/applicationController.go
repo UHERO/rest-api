@@ -112,11 +112,18 @@ func CORSOptionsHandler(w http.ResponseWriter, r *http.Request, next http.Handle
 
 func CheckCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		n, err := conn.Do("GET", r.URL.RawPath)
+		cr, err := conn.Do("GET", r.URL.RawPath)
 		if err != nil {
-			//do something
+			log.Fatal("Connection failure to Redis!")
+			// Might want to rethink this
 		}
-		next(w, r)
+		if cr == "" {
+			next(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(cr)
 	}
 }
 
