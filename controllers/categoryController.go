@@ -54,9 +54,7 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
@@ -82,9 +80,7 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
@@ -110,9 +106,7 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.Res
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
@@ -148,8 +142,6 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }

@@ -30,9 +30,7 @@ func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.Re
 		)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(j)
+	SendJSONResponse(j)
 }
 
 func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w http.ResponseWriter) {
@@ -55,9 +53,7 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 		)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(j)
+	SendJSONResponse(j)
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {

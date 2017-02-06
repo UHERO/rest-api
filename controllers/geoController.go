@@ -33,9 +33,7 @@ func GetGeographies(geographyRepository *data.GeographyRepository) func(http.Res
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
@@ -81,9 +79,7 @@ func GetGeographiesByCategory(geographyRepository *data.GeographyRepository) fun
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
@@ -129,8 +125,6 @@ func GetSibllingGeographiesBySeriesId(geographyRepository *data.GeographyReposit
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }

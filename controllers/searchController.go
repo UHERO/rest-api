@@ -59,9 +59,7 @@ func GetSearchSummary(searchRepository *data.SeriesRepository) func(http.Respons
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 

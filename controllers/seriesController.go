@@ -100,9 +100,7 @@ func GetSeriesById(seriesRepository *data.SeriesRepository) func(http.ResponseWr
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
@@ -176,9 +174,7 @@ func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository) func(htt
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
@@ -208,9 +204,7 @@ func GetFreqByCategoryId(seriesRepository *data.SeriesRepository) func(http.Resp
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
@@ -240,8 +234,6 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository) func(http.Re
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }

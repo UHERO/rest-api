@@ -121,17 +121,14 @@ func CheckCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.H
 			next(w, r)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(cr)
+		SendJSONResponse(cr)
 	}
 }
 
-func WriteCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
-	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		// do stuff
-		next(w, r)
-	}
+func SendJSONResponse(w http.ResponseWriter, payload []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(payload)
 }
 
 // UpdateApplication will return a handler for updating an application
@@ -178,9 +175,7 @@ func UpdateApplication(applicationRepository data.Repository) func(http.Response
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
@@ -205,9 +200,7 @@ func ReadApplications(applicationRepository data.Repository) func(http.ResponseW
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		SendJSONResponse(j)
 	}
 }
 
