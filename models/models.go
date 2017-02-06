@@ -124,6 +124,7 @@ type Series struct {
 	Real               sql.NullBool
 	SourceDescription  sql.NullString
 	SourceLink         sql.NullString
+	Indent             sql.NullString
 }
 
 type DataPortalSeries struct {
@@ -141,6 +142,7 @@ type DataPortalSeries struct {
 	Real                 *bool                   `json:"real,omitempty"`
 	SourceDescription    string                  `json:"source_description,omitempty"`
 	SourceLink           string                  `json:"source_link,omitempty"`
+	Indent               int                    `json:"indent,omitempty"`
 	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
 	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
 }
