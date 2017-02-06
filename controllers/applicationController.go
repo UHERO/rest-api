@@ -121,7 +121,7 @@ func CheckCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.H
 			next(w, r)
 			return
 		}
-		SendJSONResponse(cr)
+		SendJSONResponse(w, cr)
 	}
 }
 
@@ -175,7 +175,7 @@ func UpdateApplication(applicationRepository data.Repository) func(http.Response
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
 
@@ -200,7 +200,7 @@ func ReadApplications(applicationRepository data.Repository) func(http.ResponseW
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
 

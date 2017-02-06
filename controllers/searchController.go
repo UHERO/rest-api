@@ -59,7 +59,7 @@ func GetSearchSummary(searchRepository *data.SeriesRepository) func(http.Respons
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
 

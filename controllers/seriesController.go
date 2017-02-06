@@ -100,7 +100,7 @@ func GetSeriesById(seriesRepository *data.SeriesRepository) func(http.ResponseWr
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
 
@@ -174,7 +174,7 @@ func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository) func(htt
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
 
@@ -204,7 +204,7 @@ func GetFreqByCategoryId(seriesRepository *data.SeriesRepository) func(http.Resp
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
 
@@ -234,6 +234,6 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository) func(http.Re
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }

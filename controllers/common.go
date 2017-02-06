@@ -30,7 +30,7 @@ func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.Re
 		)
 		return
 	}
-	SendJSONResponse(j)
+	SendJSONResponse(w, j)
 }
 
 func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w http.ResponseWriter) {
@@ -53,7 +53,7 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 		)
 		return
 	}
-	SendJSONResponse(j)
+	SendJSONResponse(w, j)
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {

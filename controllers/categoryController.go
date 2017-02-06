@@ -54,7 +54,7 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
 
@@ -80,7 +80,7 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
 
@@ -106,7 +106,7 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.Res
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
 
@@ -142,6 +142,6 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.
 			)
 			return
 		}
-		SendJSONResponse(j)
+		SendJSONResponse(w, j)
 	}
 }
