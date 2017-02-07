@@ -16,6 +16,12 @@ var freqLabel map[string]string = map[string]string{
 	"D": "Daily",
 }
 
+var indentationLevel map[string]int = map[string]int{
+	"indent0": 0,
+	"indent1": 1,
+	"indent2": 2,
+}
+
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
 	series := models.Series{}
 	geography := models.Geography{}
@@ -32,6 +38,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.Real,
 		&series.SourceDescription,
 		&series.SourceLink,
+		&series.Indent,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -71,6 +78,9 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	}
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
+	}
+	if series.Indent.Valid {
+		dataPortalSeries.Indent = indentationLevel[series.Indent.String]
 	}
 	dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 	if geography.FIPS.Valid {
