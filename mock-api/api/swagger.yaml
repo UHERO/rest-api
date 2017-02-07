@@ -225,6 +225,7 @@ paths:
                 seasonalAdjustmentShort: "SA"
                 source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
                 sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+                indent: 1
                 geography:
                   fips: "15"
                   name: "Hawaii"
@@ -941,6 +942,9 @@ definitions:
       sourceLink:
         type: "string"
         description: "URL for source"
+      indent:
+        type: "number"
+        description: "Indentation level for tables (applicable for series within categories)"
       geography:
         $ref: "#/definitions/Geography"
   Transformation:
