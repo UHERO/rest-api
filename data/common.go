@@ -20,6 +20,7 @@ var indentationLevel map[string]int = map[string]int{
 	"indent0": 0,
 	"indent1": 1,
 	"indent2": 2,
+	"indent3": 3,
 }
 
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
