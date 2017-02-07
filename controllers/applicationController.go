@@ -123,6 +123,7 @@ func CheckCache() func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 			next(w, r)
 			return
 		}
+		log.Printf("Found %s in the cache", r.URL.RawPath)
 		SendJSONResponse(w, r, cr.([]byte))
 	}
 }
@@ -137,8 +138,9 @@ func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
 		// Might want to rethink this
 	}
 	if resp != "OK" {
-		// do something
+		log.Printf("DID NOT GET OK FROM REDIS")
 	}
+	log.Printf("Stored %s in the cache", r.URL.RawPath)
 }
 
 // UpdateApplication will return a handler for updating an application
