@@ -27,7 +27,10 @@ const (
 
 var transformations map[string]transformation = map[string]transformation{
 	Levels: { // untransformed value
-		Statement:        `SELECT date, value, (pseudo_history = b'1') FROM data_points WHERE series_id = ? and current = 1;`,
+		Statement:        `SELECT date, value/units, (pseudo_history = b'1')
+		FROM data_points
+		LEFT JOIN series ON data_points.series_id = series.id
+		WHERE series_id = ? and current = 1;`,
 		PlaceholderCount: 1,
 		Label:            "lvl",
 	},
@@ -43,20 +46,21 @@ var transformations map[string]transformation = map[string]transformation{
 		Label:            "pc1",
 	},
 	YOYChange: { // change from 1 year ago
-		Statement: `SELECT t1.date, t1.value - t2.last_value AS yoy,
+		Statement: `SELECT t1.date, (t1.value - t2.last_value)/series.units AS yoy,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
-				FROM (SELECT value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
+				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
 				FROM data_points WHERE series_id = ? AND current = 1) AS t1
 				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
 				FROM data_points WHERE series_id = ? and current = 1) AS t2
-				ON (t1.last_year = t2.date);`,
+				ON (t1.last_year = t2.date)
+				LEFT JOIN series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "pc1",
 	},
 	YTDChange: { // ytd change from 1 year ago
-		Statement: `SELECT t1.date, t1.ytd - t2.last_ytd AS ytd,
+		Statement: `SELECT t1.date, (t1.ytd - t2.last_ytd)/series.units AS ytd,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
-      FROM (SELECT date, value, pseudo_history, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
+      FROM (SELECT date, value, series_id, pseudo_history, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
             @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
           FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
           WHERE series_id = ? AND current = 1 ORDER BY date) AS t1
@@ -64,7 +68,8 @@ var transformations map[string]transformation = map[string]transformation{
             @year := year(date), pseudo_history
           FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
           WHERE series_id = ? AND current = 1 ORDER BY date) AS t2
-      ON (t1.last_year = t2.date);`,
+      ON (t1.last_year = t2.date)
+      LEFT JOIN series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
