@@ -9,7 +9,7 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
-	"github.com/redigo/redis"
+	"github.com/garyburd/redigo/redis"
 	"strings"
 )
 
@@ -110,9 +110,11 @@ func CORSOptionsHandler(w http.ResponseWriter, r *http.Request, next http.Handle
 	next(w, r)
 }
 
-func CheckCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+var RedisConn redis.Conn
+
+func CheckCache() func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		cr, err := conn.Do("GET", r.URL.RawPath)
+		cr, err := RedisConn.Do("GET", r.URL.RawPath)
 		if err != nil {
 			log.Fatal("Connection failure to Redis!")
 			// Might want to rethink this
@@ -121,7 +123,7 @@ func CheckCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.H
 			next(w, r)
 			return
 		}
-		SendJSONResponse(w, r, cr)
+		SendJSONResponse(w, r, cr.([]byte))
 	}
 }
 
@@ -129,7 +131,7 @@ func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(payload)
-	resp, err := conn.Do("SET", r.URL.RawPath, payload)
+	resp, err := RedisConn.Do("SET", r.URL.RawPath, payload)
 	if err != nil {
 		log.Fatal("Connection failure to Redis!")
 		// Might want to rethink this

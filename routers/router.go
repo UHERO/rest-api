@@ -5,7 +5,7 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
-	"github.com/redigo/redis"
+	//"github.com/garyburd/redigo/redis"
 )
 
 func InitRoutes(
@@ -26,7 +26,7 @@ func InitRoutes(
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
-		negroni.HandlerFunc(controllers.CheckCache(main.redisConn)),
+		negroni.HandlerFunc(controllers.CheckCache()),
 		negroni.Wrap(apiRouter),
 	))
 	return router
