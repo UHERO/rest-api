@@ -33,7 +33,7 @@ func GetGeographies(geographyRepository *data.GeographyRepository) func(http.Res
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }
 
@@ -79,7 +79,7 @@ func GetGeographiesByCategory(geographyRepository *data.GeographyRepository) fun
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }
 
@@ -125,6 +125,6 @@ func GetSibllingGeographiesBySeriesId(geographyRepository *data.GeographyReposit
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }

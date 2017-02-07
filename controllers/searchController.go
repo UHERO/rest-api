@@ -23,7 +23,7 @@ func GetSeriesBySearchText(searchRepository *data.SeriesRepository) func(http.Re
 			return
 		}
 		seriesList, err := searchRepository.GetSeriesBySearchText(searchText)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -59,7 +59,7 @@ func GetSearchSummary(searchRepository *data.SeriesRepository) func(http.Respons
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }
 
@@ -96,7 +96,7 @@ func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository) func(h
 			return
 		}
 		seriesList, err := searchRepository.GetSearchResultsByGeoAndFreq(searchText, geo, freq)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -133,7 +133,7 @@ func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository
 			return
 		}
 		seriesList, err := searchRepository.GetInflatedSearchResultsByGeoAndFreq(searchText, geo, freq)
-		returnInflatedSeriesList(seriesList, err, w)
+		returnInflatedSeriesList(seriesList, err, w, r)
 	}
 }
 

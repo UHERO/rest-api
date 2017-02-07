@@ -15,7 +15,7 @@ func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.Re
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategory(id)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -26,7 +26,7 @@ func GetInflatedSeriesByCategoryId(seriesRepository *data.SeriesRepository) func
 			return
 		}
 		seriesList, err := seriesRepository.GetInflatedSeriesByCategory(id)
-		returnInflatedSeriesList(seriesList, err, w)
+		returnInflatedSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -37,7 +37,7 @@ func GetSeriesByCategoryIdAndGeoHandle(seriesRepository *data.SeriesRepository) 
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryAndGeo(id, geoHandle)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -48,7 +48,7 @@ func GetSeriesByCategoryIdAndFreq(seriesRepository *data.SeriesRepository) func(
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryAndFreq(id, freq)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -59,7 +59,7 @@ func GetSeriesByCategoryIdGeoHandleAndFreq(seriesRepository *data.SeriesReposito
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryGeoAndFreq(id, geoHandle, freq)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -70,7 +70,7 @@ func GetInflatedSeriesByCategoryIdGeoAndFreq(seriesRepository *data.SeriesReposi
 			return
 		}
 		seriesList, err := seriesRepository.GetInflatedSeriesByCategoryGeoAndFreq(id, geoHandle, freq)
-		returnInflatedSeriesList(seriesList, err, w)
+		returnInflatedSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -100,7 +100,7 @@ func GetSeriesById(seriesRepository *data.SeriesRepository) func(http.ResponseWr
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }
 
@@ -111,7 +111,7 @@ func GetSeriesSiblingsById(seriesRepository *data.SeriesRepository) func(http.Re
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesSiblingsById(id)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -122,7 +122,7 @@ func GetSeriesSiblingsByIdAndFreq(seriesRepository *data.SeriesRepository) func(
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdAndFreq(id, freq)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -133,7 +133,7 @@ func GetSeriesSiblingsByIdAndGeo(seriesRepository *data.SeriesRepository) func(h
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdAndGeo(id, geo)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -144,7 +144,7 @@ func GetSeriesSiblingsByIdGeoAndFreq(seriesRepository *data.SeriesRepository) fu
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdGeoAndFreq(id, geo, freq)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r)
 	}
 }
 
@@ -174,7 +174,7 @@ func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository) func(htt
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }
 
@@ -204,7 +204,7 @@ func GetFreqByCategoryId(seriesRepository *data.SeriesRepository) func(http.Resp
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }
 
@@ -234,6 +234,6 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository) func(http.Re
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }

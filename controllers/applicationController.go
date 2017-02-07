@@ -121,14 +121,22 @@ func CheckCache(conn redis.Conn) func(http.ResponseWriter, *http.Request, http.H
 			next(w, r)
 			return
 		}
-		SendJSONResponse(w, cr)
+		SendJSONResponse(w, r, cr)
 	}
 }
 
-func SendJSONResponse(w http.ResponseWriter, payload []byte) {
+func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(payload)
+	resp, err := conn.Do("SET", r.URL.RawPath, payload)
+	if err != nil {
+		log.Fatal("Connection failure to Redis!")
+		// Might want to rethink this
+	}
+	if resp != "OK" {
+		// do something
+	}
 }
 
 // UpdateApplication will return a handler for updating an application
@@ -175,7 +183,7 @@ func UpdateApplication(applicationRepository data.Repository) func(http.Response
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }
 
@@ -200,7 +208,7 @@ func ReadApplications(applicationRepository data.Repository) func(http.ResponseW
 			)
 			return
 		}
-		SendJSONResponse(w, j)
+		SendJSONResponse(w, r, j)
 	}
 }
 
