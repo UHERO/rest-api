@@ -6,6 +6,7 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/routers"
+	"github.com/UHERO/rest-api/controllers"
 	"github.com/codegangsta/negroni"
 	"github.com/go-sql-driver/mysql"
 	"github.com/garyburd/redigo/redis"
@@ -14,8 +15,6 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/UHERO/rest-api/controllers"
 )
 
 func main() {
