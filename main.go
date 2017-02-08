@@ -59,7 +59,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Start Redis Server!")
 	}
-	_, err := redisConn.Do("AUTH", pw)
+	_, err = redisConn.Do("AUTH", pw)
 	if err != nil {
 		log.Fatal("Redis authentication failure")
 	}
