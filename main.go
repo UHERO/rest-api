@@ -55,16 +55,17 @@ func main() {
 	if !ok {
 		log.Fatal("REDIS_URL improper format?")
 	}
-	redisConn, err := redis.Dial("tcp", u.Host)
+	redis_server := u.Host+":6379"
+	redis_conn, err := redis.Dial("tcp", redis_server)
 	if err != nil {
-		log.Fatal("Start Redis Server!")
+		log.Fatal("Cannot contact redis server at "+redis_server)
 	}
-	_, err = redisConn.Do("AUTH", pw)
+	_, err = redis_conn.Do("AUTH", pw)
 	if err != nil {
 		log.Fatal("Redis authentication failure")
 	}
-	controllers.RedisConn = redisConn // inject redis connection into controllers pkg
-	defer redisConn.Close()
+	controllers.RedisConn = redis_conn // inject redis connection into controllers pkg
+	defer redis_conn.Close()
 
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
