@@ -114,25 +114,33 @@ var RedisConn redis.Conn
 
 func CheckCache() func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		cr, err := RedisConn.Do("GET", r.URL.RawPath)
+		url := r.URL.Path + "?" + r.URL.RawQuery
+		cr, err := RedisConn.Do("GET", url)
 		if err != nil {
 			log.Fatal("Connection failure to Redis!")
 			// Might want to rethink this
 		}
-		if cr == "" {
+		if cr == nil {
+			log.Printf("Cache returned nil")
 			next(w, r)
 			return
 		}
-		log.Printf("Found %s in the cache", r.URL.RawPath)
-		SendJSONResponse(w, r, cr.([]byte))
+		log.Printf("Found |%s| in the cache", url)
+		sendJSONResponseNoCache(w, cr.([]byte))
 	}
 }
 
-func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
+func sendJSONResponseNoCache(w http.ResponseWriter, payload []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(payload)
-	resp, err := RedisConn.Do("SET", r.URL.RawPath, payload)
+}
+
+func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
+	sendJSONResponseNoCache(w, payload)
+
+	url := r.URL.Path + "?" + r.URL.RawQuery
+	resp, err := RedisConn.Do("SET", url, payload)
 	if err != nil {
 		log.Fatal("Connection failure to Redis!")
 		// Might want to rethink this
@@ -140,7 +148,7 @@ func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
 	if resp != "OK" {
 		log.Printf("DID NOT GET OK FROM REDIS")
 	}
-	log.Printf("Stored %s in the cache", r.URL.RawPath)
+	log.Printf("Stored |%s| in the cache", url)
 }
 
 // UpdateApplication will return a handler for updating an application
