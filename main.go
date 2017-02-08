@@ -13,6 +13,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -42,9 +43,25 @@ func main() {
 		log.Fatal("Start MySQL Server!")
 	}
 
-	redisConn, err := redis.Dial("tcp", ":6379")
+	// Read redis connection/auth info out of REDIS_URL env var already defined
+	u, err := url.Parse(os.Getenv("REDIS_URL"))
+	if err != nil {
+		log.Fatal("No REDIS_URL env var?")
+	}
+	if u.User == nil {
+		log.Fatal("REDIS_URL improper format?")
+	}
+	pw, ok := u.User.Password()
+	if !ok {
+		log.Fatal("REDIS_URL improper format?")
+	}
+	redisConn, err := redis.Dial("tcp", u.Host)
 	if err != nil {
 		log.Fatal("Start Redis Server!")
+	}
+	_, err := redisConn.Do("AUTH", pw)
+	if err != nil {
+		log.Fatal("Redis authentication failure")
 	}
 	controllers.RedisConn = redisConn // inject redis connection into controllers pkg
 	defer redisConn.Close()
