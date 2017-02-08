@@ -121,9 +121,11 @@ func CheckCache() func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 			// Might want to rethink this
 		}
 		if cr == nil {
+			//log.Printf("Cache miss: "+url)
 			next(w, r)
 			return
 		}
+		//log.Printf("Cache HIT: "+url)
 		sendJSONResponseNoCache(w, cr.([]byte))
 	}
 }
@@ -144,8 +146,10 @@ func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
 		// Might want to rethink this
 	}
 	if resp != "OK" {
-		log.Printf("DID NOT GET OK FROM REDIS")
+		log.Printf("DID NOT GET OK FROM REDIS SET")
+		return
 	}
+	//log.Printf("Cache STORED: "+url)
 }
 
 // UpdateApplication will return a handler for updating an application
