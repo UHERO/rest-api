@@ -10,7 +10,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	rows, err := r.DB.Query(`SELECT series.id, name, series.description, frequency, seasonally_adjusted,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	measurements.data_portal_name, measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
@@ -148,7 +148,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	rows, err := r.DB.Query(`SELECT series.id, name, series.description, frequency, seasonally_adjusted,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	measurements.data_portal_name, measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, ?, display_name_short
 	FROM series
@@ -194,7 +194,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	rows, err := r.DB.Query(`SELECT series.id, name, series.description, frequency, seasonally_adjusted,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	measurements.data_portal_name, measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, ?, display_name_short
 	FROM series
