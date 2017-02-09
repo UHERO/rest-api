@@ -9,7 +9,6 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
-	"github.com/garyburd/redigo/redis"
 	"strings"
 )
 
@@ -108,46 +107,6 @@ func CORSOptionsHandler(w http.ResponseWriter, r *http.Request, next http.Handle
 		return
 	}
 	next(w, r)
-}
-
-var RedisConn redis.Conn
-
-func CheckCache() func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
-	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		url := r.URL.Path + "?" + r.URL.RawQuery
-		cr, err := RedisConn.Do("GET", url)
-		if err != nil {
-			log.Fatal("Connection failure to Redis!")
-			// Might want to rethink this
-		}
-		if cr == nil {
-			//log.Printf("Cache miss: "+url)
-			next(w, r)
-			return
-		}
-		//log.Printf("Cache HIT: "+url)
-		SendJSONResponse(w, nil, cr.([]byte))
-	}
-}
-
-func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(payload)
-	if r == nil {
-		return // Don't cache if caller didn't pass a Request object
-	}
-	url := r.URL.Path + "?" + r.URL.RawQuery
-	resp, err := RedisConn.Do("SET", url, payload)
-	if err != nil {
-		log.Fatal("Connection failure to Redis!")
-		// Might want to rethink this
-	}
-	if resp != "OK" {
-		log.Printf("DID NOT GET OK FROM REDIS SET")
-		return
-	}
-	//log.Printf("Cache STORED: "+url)
 }
 
 // UpdateApplication will return a handler for updating an application

@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+	"log"
 )
 
 func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter, r *http.Request) {
@@ -207,3 +208,27 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 	}
 	return
 }
+
+func CheckCache() func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		url := r.URL.Path + "?" + r.URL.RawQuery
+		cache_val, err := SOMETHING.Do("GET", url)
+		if cache_val == nil {
+			//log.Printf("Cache miss: "+url)
+			next(w, r)
+			return
+		}
+		//log.Printf("Cache HIT: "+url)
+		SendJSONResponse(w, nil, cache_val.([]byte))
+	}
+}
+
+func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(payload)
+
+	url := r.URL.Path + "?" + r.URL.RawQuery
+	err := foo.SetCache(url, payload)
+}
+

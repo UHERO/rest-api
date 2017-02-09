@@ -61,10 +61,14 @@ func main() {
 	}
 	else if authpw != "" {
 		if _, err = redis_conn.Do("AUTH", authpw); err != nil {
-			log.Fatal("*** Redis authentication failure!")
+			redis_conn.Close()
+			redis_conn = nil
+			log.Printf("*** Redis authentication failure. No caching!")
 		}
 	}
-	defer redis_conn.Close()
+	else {
+		defer redis_conn.Close()
+	}
 
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
@@ -78,7 +82,7 @@ func main() {
 		categoryRepository,
 		seriesRepository,
 		geographyRepository,
-        cacheRepository,
+		cacheRepository,
 	)
 	// Create a negroni instance
 	n := negroni.Classic()
