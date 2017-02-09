@@ -126,19 +126,17 @@ func CheckCache() func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 			return
 		}
 		//log.Printf("Cache HIT: "+url)
-		sendJSONResponseNoCache(w, cr.([]byte))
+		SendJSONResponse(w, nil, cr.([]byte))
 	}
 }
 
-func sendJSONResponseNoCache(w http.ResponseWriter, payload []byte) {
+func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(payload)
-}
-
-func SendJSONResponse(w http.ResponseWriter, r *http.Request, payload []byte) {
-	sendJSONResponseNoCache(w, payload)
-
+	if r == nil {
+		return // Don't cache if caller didn't pass a Request object
+	}
 	url := r.URL.Path + "?" + r.URL.RawQuery
 	resp, err := RedisConn.Do("SET", url, payload)
 	if err != nil {
@@ -196,7 +194,9 @@ func UpdateApplication(applicationRepository data.Repository) func(http.Response
 			)
 			return
 		}
-		SendJSONResponse(w, r, j)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
 	}
 }
 
@@ -221,7 +221,9 @@ func ReadApplications(applicationRepository data.Repository) func(http.ResponseW
 			)
 			return
 		}
-		SendJSONResponse(w, r, j)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(j)
 	}
 }
 

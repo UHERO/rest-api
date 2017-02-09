@@ -44,34 +44,33 @@ func main() {
 		log.Fatal("Start MySQL Server!")
 	}
 
-	// Read redis connection/auth info out of REDIS_URL env var already defined
-	u, err := url.Parse(os.Getenv("REDIS_URL"))
-	if err != nil {
-		log.Fatal("No REDIS_URL env var?")
+	var redis_server, authpw string
+	if redis_url, present := os.LookupEnv("REDIS_URL"); present {
+		if u, ok := url.Parse(redis_url); ok {
+			redis_server = u.Host // includes port where specified
+			authpw = u.User.Password()
+		}
 	}
-	if u.User == nil {
-		log.Fatal("REDIS_URL improper format?")
+	if redis_server == "" {
+		log.Printf("Valid REDIS_URL var not found; using localhost:6379")
+		redis_server = "localhost:6379"
 	}
-	pw, ok := u.User.Password()
-	if !ok {
-		log.Fatal("REDIS_URL improper format?")
-	}
-	redis_server := u.Host+":6379"
 	redis_conn, err := redis.Dial("tcp", redis_server)
 	if err != nil {
-		log.Fatal("Cannot contact redis server at "+redis_server)
+		log.Printf("*** Cannot contact redis server at %s. No caching!", redis_server)
 	}
-	_, err = redis_conn.Do("AUTH", pw)
-	if err != nil {
-		log.Fatal("Redis authentication failure")
+	else if authpw != "" {
+		if _, err = redis_conn.Do("AUTH", authpw); err != nil {
+			log.Fatal("*** Redis authentication failure!")
+		}
 	}
-	controllers.RedisConn = redis_conn // inject redis connection into controllers pkg
 	defer redis_conn.Close()
 
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
+	cacheRepository := &data.cacheRepository{DB: &redis_conn}
 
 	// Get the mux router object
 	router := routers.InitRoutes(
@@ -79,6 +78,7 @@ func main() {
 		categoryRepository,
 		seriesRepository,
 		geographyRepository,
+        cacheRepository,
 	)
 	// Create a negroni instance
 	n := negroni.Classic()
