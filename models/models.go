@@ -142,7 +142,7 @@ type DataPortalSeries struct {
 	Real                 *bool                   `json:"real,omitempty"`
 	SourceDescription    string                  `json:"source_description,omitempty"`
 	SourceLink           string                  `json:"source_link,omitempty"`
-	Indent               int                    `json:"indent,omitempty"`
+	Indent               int                     `json:"indent,omitempty"`
 	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
 	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
 }
@@ -178,7 +178,11 @@ type TransformationResult struct {
 }
 
 type Feedback struct {
-
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Feedback string `json:"feedback"`
+	Notes    string `json:"notes"`
+	Resolved bool   `json:"resolved"`
 }
 
 func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {

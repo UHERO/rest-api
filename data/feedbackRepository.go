@@ -9,7 +9,7 @@ type FeedbackRepository struct {
 	DB *sql.DB
 }
 
-func (r *FeedbackRepository) CreateFeedback(application *models.Application) (err error) {
+func (r *FeedbackRepository) CreateFeedback(feedback *models.Feedback) (err error) {
 	return
 }
 
