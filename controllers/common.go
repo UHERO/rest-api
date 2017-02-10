@@ -13,12 +13,13 @@ import (
 	"log"
 )
 
+// Following for use by gorilla/context
 type contextKey int
 const cKey contextKey = 0
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		url := GetFullPath(r)
+		url := GetFullURL(r)
 		cached_val, _ := c.GetCache(url)
 		if cached_val == nil {
 			log.Printf("DEBUG: Cache miss: "+url)
@@ -34,7 +35,7 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 
 func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		url := GetFullPath(r)
+		url := GetFullURL(r)
 		if payload, ok := context.GetOk(r, cKey); ok {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -51,7 +52,7 @@ func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.R
 	}
 }
 
-func GetFullPath(r *http.Request) string {
+func GetFullURL(r *http.Request) string {
 	path := r.URL.Path
 	if r.URL.RawQuery != "" {
 		path += "?"+r.URL.RawQuery
