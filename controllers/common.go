@@ -37,6 +37,7 @@ func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.R
 			w.WriteHeader(http.StatusOK)
 			w.Write(payload.([]byte))
 			c.SetCache(url, payload.([]byte))
+			log.Printf("DEBUG: Stored in cache: "+url)
 		} else {
 			log.Printf("*** No data returned from database!")
 		}
