@@ -25,8 +25,8 @@ func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
 		return
 	}
 	if resp != "OK" {
-		var other_err  redis.Error = "Did not get OK from redis SET"
-		//log.Printf(other_err)
+		var other_err redis.Error = "Did not get OK from redis SET"
+		log.Printf(string(other_err))
 		err = other_err
 	}
 	return
