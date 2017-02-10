@@ -51,7 +51,7 @@ func main() {
 		}
 	}
 	if redis_server == "" {
-		log.Printf("Valid REDIS_URL var not found; using localhost:6379")
+		log.Printf("Valid REDIS_URL var not found; using redis @ localhost:6379")
 		redis_server = "localhost:6379"
 	}
 	redis_conn, err := redis.Dial("tcp", redis_server)

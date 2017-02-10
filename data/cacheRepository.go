@@ -15,7 +15,10 @@ func (r *CacheRepository) GetCache(key string) ([]byte, error) {
 		log.Printf("*** Connection failure to Redis!")
 		return nil, err
 	}
-	return cval.([]byte), err
+	if cval != nil {
+		return cval.([]byte), err
+	}
+	return nil, err
 }
 
 func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
