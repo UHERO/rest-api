@@ -177,6 +177,10 @@ type TransformationResult struct {
 	Observations   []DataPortalObservation `json:"observations"`
 }
 
+type Feedback struct {
+
+}
+
 func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Date          string `json:"date"`
