@@ -15,7 +15,7 @@ import (
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		url := r.URL.Path+"?"+r.URL.RawQuery
+		url := GetFullPath(r)
 		cached_val, _ := c.GetCache(url)
 		if cached_val == nil {
 			log.Printf("DEBUG: Cache miss: "+url)
@@ -31,17 +31,29 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 
 func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		url := r.URL.Path+"?"+r.URL.RawQuery
-		if payload, ok := context.GetOk(r, url); ok {
+		url := GetFullPath(r)
+		if payload, ok := context.GetOk(r, "foo"); ok {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(payload.([]byte))
-			c.SetCache(url, payload.([]byte))
-			log.Printf("DEBUG: Stored in cache: "+url)
+			err := c.SetCache(url, payload.([]byte))
+			if err != nil {
+				log.Printf("DEBUG: Cache store FAILURE: "+url)
+			} else {
+				log.Printf("DEBUG: Stored in cache: "+url)
+			}
 		} else {
-			log.Printf("*** No data returned from database!")
+			log.Printf("*** No data returned from context!")
 		}
 	}
+}
+
+func GetFullPath(r *http.Request) string {
+	path := r.URL.Path
+	if r.URL.RawQuery != "" {
+		path += "?"+r.URL.RawQuery
+	}
+	return path
 }
 
 func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter, r *http.Request) {

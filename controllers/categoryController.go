@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/context"
 	"strconv"
+	"log"
 )
 
 func GetCategory(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
@@ -55,8 +56,8 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		context.Set(r, 0, j)
+		log.Printf("DEBUG: GetCategory: payload is "+string(j))
 	}
 }
 
@@ -82,8 +83,8 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		context.Set(r, "foo", string(j))
+		log.Printf("DEBUG: GetCategories: payload is "+string(j))
 	}
 }
 
@@ -111,6 +112,7 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.Res
 		}
 		rUrl := r.URL.Path+"?"+r.URL.RawQuery
 		context.Set(r, rUrl, j)
+		log.Printf("DEBUG: GetCategoryRoots: rUrl is "+rUrl)
 	}
 }
 
