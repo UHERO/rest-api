@@ -74,7 +74,7 @@ func main() {
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
-	cacheRepository := &data.cacheRepository{DB: &redis_conn}
+	cacheRepository := &data.CacheRepository{DB: &redis_conn}
 
 	// Get the mux router object
 	router := routers.InitRoutes(

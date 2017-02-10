@@ -8,6 +8,7 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/context"
 	"strconv"
 )
 
@@ -54,7 +55,8 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			)
 			return
 		}
-		SendJSONResponse(w, r, j)
+		rUrl := r.URL.Path+"?"+r.URL.RawQuery
+		context.Set(r, rUrl, j)
 	}
 }
 
@@ -80,7 +82,8 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		SendJSONResponse(w, r, j)
+		rUrl := r.URL.Path+"?"+r.URL.RawQuery
+		context.Set(r, rUrl, j)
 	}
 }
 
@@ -106,7 +109,8 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.Res
 			)
 			return
 		}
-		SendJSONResponse(w, r, j)
+		rUrl := r.URL.Path+"?"+r.URL.RawQuery
+		context.Set(r, rUrl, j)
 	}
 }
 
@@ -142,6 +146,7 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.
 			)
 			return
 		}
-		SendJSONResponse(w, r, j)
+		rUrl := r.URL.Path+"?"+r.URL.RawQuery
+		context.Set(r, rUrl, j)
 	}
 }

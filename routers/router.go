@@ -18,16 +18,17 @@ func InitRoutes(
 	router = SetApplicationRoutes(router, applicationRepository)
 
 	apiRouter := mux.NewRouter().StrictSlash(false)
-	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository, cacheRepository)
-	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository, cacheRepository)
-	apiRouter = SetSearchRoutes(apiRouter, seriesRepository, cacheRepository)
-	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
+	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository)
+	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository)
+	apiRouter = SetSearchRoutes(apiRouter, seriesRepository)
+	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository)
 
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
-		negroni.HandlerFunc(controllers.CheckCache()),
+		negroni.HandlerFunc(controllers.CheckCache(cacheRepository)),
 		negroni.Wrap(apiRouter),
+		negroni.HandlerFunc(controllers.SendJSONResponse(cacheRepository)),
 	))
 	return router
 }
