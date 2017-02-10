@@ -7,7 +7,7 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/context"
+	"context"
 	"net/http"
 	"strconv"
 	"log"
@@ -36,7 +36,7 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := GetFullURL(r)
-		if payload, ok := context.GetOk(r, cKey); ok {
+		if payload := FromContext(r.Context()); payload != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(payload.([]byte))
@@ -50,6 +50,14 @@ func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.R
 			log.Printf("*** No data returned from context!")
 		}
 	}
+}
+
+func NewContext(ctx context.Context, payload []byte) context.Context {
+	return context.WithValue(ctx, cKey, payload)
+}
+
+func FromContext(ctx context.Context) []byte {
+	return ctx.Value(cKey).([]byte)
 }
 
 func GetFullURL(r *http.Request) string {
