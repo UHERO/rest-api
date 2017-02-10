@@ -56,7 +56,7 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			)
 			return
 		}
-		context.Set(r, 0, j)
+		context.Set(r, cKey, j)
 		log.Printf("DEBUG: GetCategory: payload is "+string(j))
 	}
 }
@@ -83,7 +83,7 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		context.Set(r, "foo", string(j))
+		context.Set(r, cKey, j)
 		log.Printf("DEBUG: GetCategories: payload is "+string(j))
 	}
 }
