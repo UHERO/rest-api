@@ -7,7 +7,6 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/routers"
-	"github.com/UHERO/rest-api/controllers"
 	"github.com/codegangsta/negroni"
 	"github.com/go-sql-driver/mysql"
 	"github.com/garyburd/redigo/redis"
@@ -46,9 +45,9 @@ func main() {
 
 	var redis_server, authpw string
 	if redis_url, present := os.LookupEnv("REDIS_URL"); present {
-		if u, ok := url.Parse(redis_url); ok {
+		if u, ok := url.Parse(redis_url); ok == nil {
 			redis_server = u.Host // includes port where specified
-			authpw = u.User.Password()
+			authpw, _ = u.User.Password()
 		}
 	}
 	if redis_server == "" {
@@ -58,15 +57,13 @@ func main() {
 	redis_conn, err := redis.Dial("tcp", redis_server)
 	if err != nil {
 		log.Printf("*** Cannot contact redis server at %s. No caching!", redis_server)
-	}
-	else if authpw != "" {
+	} else if authpw != "" {
 		if _, err = redis_conn.Do("AUTH", authpw); err != nil {
 			redis_conn.Close()
 			redis_conn = nil
 			log.Printf("*** Redis authentication failure. No caching!")
 		}
-	}
-	else {
+	} else {
 		defer redis_conn.Close()
 	}
 
@@ -74,7 +71,7 @@ func main() {
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
-	cacheRepository := &data.CacheRepository{DB: &redis_conn}
+	cacheRepository := &data.CacheRepository{DB: redis_conn}
 
 	// Get the mux router object
 	router := routers.InitRoutes(

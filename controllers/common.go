@@ -16,7 +16,7 @@ import (
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := r.URL.Path+"?"+r.URL.RawQuery
-		cached_val, err := c.GetCache(url)
+		cached_val, _ := c.GetCache(url)
 		if cached_val == nil {
 			log.Printf("DEBUG: Cache miss: "+url)
 			next(w, r)
@@ -35,10 +35,9 @@ func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.R
 		if payload, ok := context.GetOk(r, url); ok {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write(payload)
-			c.SetCache(url, payload)
-		}
-		else {
+			w.Write(payload.([]byte))
+			c.SetCache(url, payload.([]byte))
+		} else {
 			log.Printf("*** No data returned from database!")
 		}
 	}
