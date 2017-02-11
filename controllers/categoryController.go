@@ -8,7 +8,7 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/context"
+	"context"
 	"strconv"
 	"log"
 )
@@ -56,7 +56,8 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			)
 			return
 		}
-		context.Set(r, cKey, j)
+		ctx := NewContext(context.Background(), j)
+		r = r.WithContext(ctx)
 		log.Printf("DEBUG: GetCategory: payload is "+string(j))
 	}
 }
@@ -83,8 +84,16 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		context.Set(r, cKey, j)
-		log.Printf("DEBUG: GetCategories: payload is "+string(j))
+		ctx := NewContext(context.Background(), j)
+		if ctx == nil {
+			log.Printf("DEBUG: at set point: ctx IS nil")
+		} else {
+			log.Printf("DEBUG: at set point: ctx NOT nil: %s", ctx)
+		}
+		*r = *(r.WithContext(ctx))
+		//foo := FromContext(r.Context())
+		log.Printf("DEBUG: at set point: r is %p", r)
+		//log.Printf("DEBUG: GetCategories: payload is "+string(j))
 	}
 }
 
@@ -110,9 +119,12 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.Res
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
-		log.Printf("DEBUG: GetCategoryRoots: rUrl is "+rUrl)
+		if (string(j) == "foo") {
+			log.Printf("bar")
+		}
+//		rUrl := r.URL.Path+"?"+r.URL.RawQuery
+//		context.Set(r, rUrl, j)
+//		log.Printf("DEBUG: GetCategoryRoots: rUrl is "+rUrl)
 	}
 }
 
@@ -148,7 +160,10 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		if (string(j) == "foo") {
+			log.Printf("bar")
+		}
+//		rUrl := r.URL.Path+"?"+r.URL.RawQuery
+//		context.Set(r, rUrl, j)
 	}
 }

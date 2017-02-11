@@ -36,11 +36,12 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := GetFullURL(r)
+		log.Printf("DEBUG: at get point: r is %p", r)
 		if payload := FromContext(r.Context()); payload != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write(payload.([]byte))
-			err := c.SetCache(url, payload.([]byte))
+			w.Write(payload)
+			err := c.SetCache(url, payload)
 			if err != nil {
 				log.Printf("DEBUG: Cache store FAILURE: "+url)
 			} else {
@@ -57,6 +58,13 @@ func NewContext(ctx context.Context, payload []byte) context.Context {
 }
 
 func FromContext(ctx context.Context) []byte {
+	if ctx == nil {
+		log.Printf("DEBUG: in FromCxt: ctx is nil")
+		return nil
+	} else {
+		log.Printf("DEBUG: in FromCxt: ctx NOT nil: %s", ctx)
+	}
+	log.Printf("the payload is "+ctx.Value(cKey).(string))
 	return ctx.Value(cKey).([]byte)
 }
 
@@ -88,8 +96,11 @@ func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.Re
 		)
 		return
 	}
-	rUrl := r.URL.Path+"?"+r.URL.RawQuery
-	context.Set(r, rUrl, j)
+	if (string(j) == "foo") {
+		log.Printf("bar")
+	}
+	//rUrl := r.URL.Path+"?"+r.URL.RawQuery
+	//context.Set(r, rUrl, j)
 }
 
 func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w http.ResponseWriter, r *http.Request) {
@@ -112,8 +123,11 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 		)
 		return
 	}
-	rUrl := r.URL.Path+"?"+r.URL.RawQuery
-	context.Set(r, rUrl, j)
+	if (string(j) == "foo") {
+		log.Printf("bar")
+	}
+//	rUrl := r.URL.Path+"?"+r.URL.RawQuery
+//	context.Set(r, rUrl, j)
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
