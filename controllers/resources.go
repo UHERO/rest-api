@@ -67,4 +67,9 @@ type (
 	SearchSummaryResource struct {
 		Data models.SearchSummary `json:"data"`
 	}
+
+	// POST - /feedback
+	FeedbackResource struct {
+		Data models.Feedback `json:"data"`
+	}
 )

@@ -181,8 +181,6 @@ type Feedback struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Feedback string `json:"feedback"`
-	Notes    string `json:"notes"`
-	Resolved bool   `json:"resolved"`
 }
 
 func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {
