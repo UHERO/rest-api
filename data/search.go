@@ -17,10 +17,10 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	FROM series LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	WHERE NOT series.restricted AND
-	((MATCH(series.name, series.description, series.dataPortalName)
-	AGAINST(? IN NATURAL LANGUAGE MODE))
-	OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%')) LIMIT 50;`, searchText, searchText)
+	WHERE NOT series.restricted
+	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	LIMIT 50;`, searchText, searchText)
 	if err != nil {
 		return
 	}
@@ -48,9 +48,8 @@ func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary mo
 	MIN(data_points.date) AS start_date, MAX(data_points.date) AS end_date
 	FROM series
  	LEFT JOIN data_points ON data_points.series_id = series.id
-	WHERE ((MATCH(series.name, series.description, series.dataPortalName)
-	AGAINST(? IN NATURAL LANGUAGE MODE))
-	OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	WHERE ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND data_points.current AND series.restricted = 0;`, searchText, searchText).Scan(
 		&observationStart,
 		&observationEnd,
