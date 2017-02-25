@@ -38,10 +38,9 @@ var transformations map[string]transformation = map[string]transformation{
 		Statement: `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
 				FROM (SELECT value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
-				FROM data_points WHERE series_id = ? AND current = 1) AS t1
+				      FROM data_points WHERE series_id = ? AND current = 1) AS t1
 				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
-				FROM data_points WHERE series_id = ? and current = 1) AS t2
-				ON (t1.last_year = t2.date);`,
+				           FROM data_points WHERE series_id = ? and current = 1) AS t2 ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
 		Label:            "pc1",
 	},
@@ -49,10 +48,9 @@ var transformations map[string]transformation = map[string]transformation{
 		Statement: `SELECT t1.date, (t1.value - t2.last_value)/series.units AS yoy,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
 				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
-				FROM data_points WHERE series_id = ? AND current = 1) AS t1
+				      FROM data_points WHERE series_id = ? AND current = 1) AS t1
 				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
-				FROM data_points WHERE series_id = ? and current = 1) AS t2
-				ON (t1.last_year = t2.date)
+				           FROM data_points WHERE series_id = ? and current = 1) AS t2 ON (t1.last_year = t2.date)
 				LEFT JOIN series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "pc1",
@@ -61,14 +59,13 @@ var transformations map[string]transformation = map[string]transformation{
 		Statement: `SELECT t1.date, (t1.ytd - t2.last_ytd)/series.units AS ytd,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
       FROM (SELECT date, value, series_id, pseudo_history, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
-            @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
-          FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-          WHERE series_id = ? AND current = 1 ORDER BY date) AS t1
+              @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
+            FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
+            WHERE series_id = ? AND current = 1 ORDER BY date) AS t1
       LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
-            @year := year(date), pseudo_history
-          FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-          WHERE series_id = ? AND current = 1 ORDER BY date) AS t2
-      ON (t1.last_year = t2.date)
+                   @year := year(date), pseudo_history
+                 FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
+                 WHERE series_id = ? AND current = 1 ORDER BY date) AS t2 ON (t1.last_year = t2.date)
       LEFT JOIN series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
@@ -77,27 +74,26 @@ var transformations map[string]transformation = map[string]transformation{
 		Statement: `SELECT t1.date, (t1.ytd/t2.last_ytd - 1)*100 AS ytd,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
       FROM (SELECT date, value, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
-            @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year, pseudo_history
-          FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-          WHERE series_id = ? AND current = 1 ORDER BY date) AS t1
+              @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year, pseudo_history
+            FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
+            WHERE series_id = ? AND current = 1 ORDER BY date) AS t1
       LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
-            @year := year(date), pseudo_history
-          FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-          WHERE series_id = ? AND current = 1 ORDER BY date) AS t2
-      ON (t1.last_year = t2.date);`,
+                   @year := year(date), pseudo_history
+                 FROM data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
+                 WHERE series_id = ? AND current = 1 ORDER BY date) AS t2 ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
 }
 
-var seriesPrefix = `SELECT series.id, series.name, series.description, frequency, seasonally_adjusted,
+var seriesPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	data_list_measurements.indent,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
+	FROM series LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	JOIN measurements ON measurements.id = series.measurement_id
 	JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
@@ -106,7 +102,7 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
-var siblingsPrefix = `SELECT series.id, series.name, series.description, frequency, seasonally_adjusted,
+var siblingsPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -117,7 +113,8 @@ var siblingsPrefix = `SELECT series.id, series.name, series.description, frequen
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN series ON series.measurement_id = measure.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%') WHERE NOT series.restricted`
+	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
+	WHERE NOT series.restricted`
 
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	categoryId int64,
@@ -298,7 +295,8 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	FROM categories
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
-	WHERE categories.id = ? AND series.restricted = 0 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
+	WHERE categories.id = ? AND series.restricted = 0
+	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
 	}
