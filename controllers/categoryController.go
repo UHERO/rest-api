@@ -8,7 +8,6 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
-	"context"
 	"strconv"
 	"log"
 )
@@ -56,14 +55,14 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			)
 			return
 		}
-		ctx := NewContext(context.Background(), j)
-		r = r.WithContext(ctx)
-		log.Printf("DEBUG: GetCategory: payload is "+string(j))
+		SetContext(r, j)
+		//log.Printf("DEBUG: GetCategory: payload is "+string(j))
 	}
 }
 
 func GetCategories(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("DEBUG: at entry GetCats: r=%p", r)
 		categories, err := categoryRepository.GetAllCategories()
 		if err != nil {
 			common.DisplayAppError(
@@ -84,15 +83,15 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		ctx := NewContext(context.Background(), j)
-		if ctx == nil {
+		//ctx := NewContext(r, j)
+		/* if ctx == nil {
 			log.Printf("DEBUG: at set point: ctx IS nil")
 		} else {
 			log.Printf("DEBUG: at set point: ctx NOT nil: %s", ctx)
-		}
-		*r = *(r.WithContext(ctx))
-		//foo := FromContext(r.Context())
-		log.Printf("DEBUG: at set point: r is %p", r)
+		} */
+		//*r = *(r.WithContext(ctx))
+		//log.Printf("DEBUG: at set point: r is %p", r)
+		SetContext(r, j)
 		//log.Printf("DEBUG: GetCategories: payload is "+string(j))
 	}
 }

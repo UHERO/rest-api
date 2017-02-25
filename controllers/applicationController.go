@@ -57,6 +57,7 @@ func CreateApplication(applicationRepository data.Repository) func(http.Response
 
 func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		log.Printf("DEBUG: at entry ValidApiKey: r=%p", r)
 		authString := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authString, authPrefix) {
 			common.DisplayAppError(
@@ -97,6 +98,7 @@ func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.Re
 }
 
 func CORSOptionsHandler(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	log.Printf("DEBUG: at entry CORSOptsHandler: r=%p", r)
 	if r.Method == http.MethodOptions {
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Header().Add("Access-Control-Allow-Credentials", "true")

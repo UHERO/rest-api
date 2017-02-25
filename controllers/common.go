@@ -7,7 +7,7 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
-	"context"
+	"github.com/gorilla/context"
 	"net/http"
 	"strconv"
 	"log"
@@ -15,14 +15,15 @@ import (
 
 // Following for use by gorilla/context
 type contextKey int
-const cKey contextKey = 0
+const cKey contextKey = 3
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		log.Printf("DEBUG: at entry CheckCache: r=%p", r)
 		url := GetFullURL(r)
 		cached_val, _ := c.GetCache(url)
 		if cached_val == nil {
-			log.Printf("DEBUG: Cache miss: "+url)
+			log.Printf("DEBUG: Cache miss: url=%s", url)
 			next(w, r)
 			return
 		}
@@ -35,26 +36,33 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 
 func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		log.Printf("DEBUG: at entry SendJSONResp: r is %p", r)
 		url := GetFullURL(r)
-		log.Printf("DEBUG: at get point: r is %p", r)
-		if payload := FromContext(r.Context()); payload != nil {
+		//if payload := FromContext(r.Context()); payload != nil { // }
+		if payload, ok := context.GetOk(r, cKey); ok {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write(payload)
-			err := c.SetCache(url, payload)
+			w.Write(payload.([]byte))
+			err := c.SetCache(url, payload.([]byte))
 			if err != nil {
-				log.Printf("DEBUG: Cache store FAILURE: "+url)
+				log.Printf("DEBUG: Cache store FAILURE: %s", url)
 			} else {
-				log.Printf("DEBUG: Stored in cache: "+url)
+				log.Printf("DEBUG: Stored in cache: %s", url)
 			}
 		} else {
 			log.Printf("*** No data returned from context!")
 		}
+		next(w, r)
 	}
 }
 
-func NewContext(ctx context.Context, payload []byte) context.Context {
-	return context.WithValue(ctx, cKey, payload)
+func SetContext(r *http.Request, payload []byte) {
+	context.Set(r, cKey, payload)
+	return
+}
+/*
+func NewContext(r *http.Request, payload []byte) context.Context {
+	return context.WithValue(r.Context(), cKey, payload)
 }
 
 func FromContext(ctx context.Context) []byte {
@@ -62,12 +70,12 @@ func FromContext(ctx context.Context) []byte {
 		log.Printf("DEBUG: in FromCxt: ctx is nil")
 		return nil
 	} else {
-		log.Printf("DEBUG: in FromCxt: ctx NOT nil: %s", ctx)
+		//log.Printf("DEBUG: in FromCxt: ctx NOT nil: %s", ctx)
 	}
-	log.Printf("the payload is "+ctx.Value(cKey).(string))
+	//log.Printf("the payload is "+ctx.Value(cKey).(string))
 	return ctx.Value(cKey).([]byte)
 }
-
+*/
 func GetFullURL(r *http.Request) string {
 	path := r.URL.Path
 	if r.URL.RawQuery != "" {
