@@ -44,8 +44,7 @@ func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary mo
 	searchSummary.SearchText = searchText
 
 	var observationStart, observationEnd models.NullTime
-	err = r.DB.QueryRow(`SELECT
-	MIN(data_points.date) AS start_date, MAX(data_points.date) AS end_date
+	err = r.DB.QueryRow(`SELECT MIN(data_points.date) AS start_date, MAX(data_points.date) AS end_date
 	FROM series
  	LEFT JOIN data_points ON data_points.series_id = series.id
 	WHERE ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
