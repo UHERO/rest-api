@@ -14,7 +14,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	NULL,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
+	FROM series LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE NOT series.restricted AND
@@ -155,10 +155,9 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	LEFT JOIN geographies ON handle LIKE ?
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	WHERE NOT series.restricted AND
-	((MATCH(series.name, series.description, series.dataPortalName)
-	AGAINST(? IN NATURAL LANGUAGE MODE))
-	OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	WHERE NOT series.restricted
+	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`,
 		geo,
 		geo,
@@ -202,10 +201,9 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	LEFT JOIN geographies ON handle LIKE ?
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	WHERE NOT series.restricted AND
-	((MATCH(series.name, series.description, series.dataPortalName)
-	AGAINST(? IN NATURAL LANGUAGE MODE))
-	OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	WHERE NOT series.restricted
+	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`,
 		geo,
 		geo,

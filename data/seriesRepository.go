@@ -93,7 +93,8 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	data_list_measurements.indent,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
+	FROM series
+	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	JOIN measurements ON measurements.id = series.measurement_id
 	JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
@@ -417,8 +418,9 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	seriesId int64,
 ) (frequencyList []models.FrequencyResult, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
-	FROM series JOIN (SELECT name FROM series where id = ?) as original_series
-	WHERE series.name LIKE CONCAT(TRIM(TRAILING 'NS' FROM left(original_series.name, locate("@", original_series.name))), '%')
+	FROM series
+	JOIN (SELECT name FROM series where id = ?) as original_series
+	WHERE series.name LIKE CONCAT(TRIM(TRAILING 'NS' FROM LEFT(original_series.name, LOCATE("@", original_series.name))), '%')
 	AND NOT series.restricted
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
@@ -441,13 +443,14 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 }
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
-	row := r.DB.QueryRow(`SELECT series.id, name, series.description, frequency, seasonally_adjusted,
+	row := r.DB.QueryRow(`SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON name LIKE CONCAT('%@', handle, '.%')
+	FROM series
+	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE series.id = ? AND NOT series.restricted;`, seriesId)
@@ -474,8 +477,8 @@ func (r *SeriesRepository) GetSeriesObservations(
 	YOY, YTD := YOYPercentChange, YTDPercentChange
 
 	err = r.DB.QueryRow(`SELECT measurements.percent
-	FROM series LEFT JOIN measurements
-	ON measurements.id = series.measurement_id
+	FROM series
+	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	WHERE series.id = ? AND NOT series.restricted`, seriesId).Scan(&percent)
 	if err != nil {
 		return
