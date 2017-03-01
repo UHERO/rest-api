@@ -6,7 +6,6 @@ import (
 
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
-	"github.com/gorilla/context"
 )
 
 func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
@@ -102,7 +101,7 @@ func GetSeriesById(seriesRepository *data.SeriesRepository) func(http.ResponseWr
 			return
 		}
 		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		//context.Set(r, rUrl, j)
 	}
 }
 
@@ -177,7 +176,7 @@ func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository) func(htt
 			return
 		}
 		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		//context.Set(r, rUrl, j)
 	}
 }
 
@@ -208,7 +207,7 @@ func GetFreqByCategoryId(seriesRepository *data.SeriesRepository) func(http.Resp
 			return
 		}
 		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		//context.Set(r, rUrl, j)
 	}
 }
 
@@ -239,6 +238,6 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository) func(http.Re
 			return
 		}
 		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		//context.Set(r, rUrl, j)
 	}
 }

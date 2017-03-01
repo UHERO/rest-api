@@ -8,7 +8,6 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/context"
 )
 
 func GetSeriesBySearchText(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
@@ -61,7 +60,7 @@ func GetSearchSummary(searchRepository *data.SeriesRepository) func(http.Respons
 			return
 		}
 		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		//context.Set(r, rUrl, j)
 	}
 }
 

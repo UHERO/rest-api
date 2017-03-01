@@ -8,7 +8,6 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/context"
 	"strconv"
 )
 
@@ -35,7 +34,7 @@ func GetGeographies(geographyRepository *data.GeographyRepository) func(http.Res
 			return
 		}
 		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		//context.Set(r, rUrl, j)
 	}
 }
 
@@ -82,7 +81,7 @@ func GetGeographiesByCategory(geographyRepository *data.GeographyRepository) fun
 			return
 		}
 		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		//context.Set(r, rUrl, j)
 	}
 }
 
@@ -129,6 +128,6 @@ func GetSibllingGeographiesBySeriesId(geographyRepository *data.GeographyReposit
 			return
 		}
 		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		context.Set(r, rUrl, j)
+		//context.Set(r, rUrl, j)
 	}
 }

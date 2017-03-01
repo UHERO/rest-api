@@ -7,7 +7,7 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/context"
+	"context"
 	"net/http"
 	"strconv"
 	"log"
