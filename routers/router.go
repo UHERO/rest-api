@@ -12,6 +12,7 @@ func InitRoutes(
 	categoryRepository *data.CategoryRepository,
 	seriesRepository *data.SeriesRepository,
 	geographyRepository *data.GeographyRepository,
+	feedbackRepository *data.FeedbackRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
 	router := mux.NewRouter().StrictSlash(false)
@@ -22,6 +23,7 @@ func InitRoutes(
 	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository)
 	apiRouter = SetSearchRoutes(apiRouter, seriesRepository)
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository)
+	apiRouter = SetFeedbackRoutes(apiRouter, feedbackRepository)
 
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),

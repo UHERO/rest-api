@@ -18,7 +18,6 @@ const authPrefix = "Bearer "
 func CreateApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dataResource ApplicationResource
-		// Decode the incoming Task json
 		err := json.NewDecoder(r.Body).Decode(&dataResource)
 		if err != nil {
 			common.DisplayAppError(
@@ -32,19 +31,30 @@ func CreateApplication(applicationRepository data.Repository) func(http.Response
 		application := &dataResource.Data
 		appClaims, ok := common.FromContext(r.Context())
 		if ok != true {
-			panic(errors.New("cannot get value from context"))
+			common.DisplayAppError(
+				w,
+				err,
+				"Authorization Failure",
+				401,
+			)
+			return
 		}
 		log.Printf("username: %s", appClaims.Username)
 		_, err = applicationRepository.CreateApplication(appClaims.Username, application)
 		if err != nil {
-			panic(err)
+			common.DisplayAppError(
+				w,
+				err,
+				"Application creation failure",
+				500,
+			)
 		}
 		j, err := json.Marshal(ApplicationResource{Data: *application})
 		if err != nil {
 			common.DisplayAppError(
 				w,
 				err,
-				"An unexpected error has occurred",
+				"An unexpected error has occurred.",
 				500,
 			)
 			return
