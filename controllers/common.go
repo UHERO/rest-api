@@ -13,9 +13,8 @@ import (
 	"log"
 )
 
-// Following for use by gorilla/context
-type contextKey int
-const cKey contextKey = 3
+type noodleKey int
+const cKey noodleKey = 42
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -37,13 +36,12 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		log.Printf("DEBUG: at entry SendJSONResp: r is %p", r)
-		url := GetFullURL(r)
-		//if payload := FromContext(r.Context()); payload != nil { // }
-		if payload, ok := context.GetOk(r, cKey); ok {
+		if payload := FromContext(r.Context()); string(payload) != "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write(payload.([]byte))
-			err := c.SetCache(url, payload.([]byte))
+			w.Write(payload)
+			url := GetFullRelativeURL(r)
+			err := c.SetCache(url, payload)
 			if err != nil {
 				log.Printf("DEBUG: Cache store FAILURE: %s", url)
 			} else {
@@ -57,12 +55,9 @@ func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.R
 }
 
 func SetContext(r *http.Request, payload []byte) {
-	context.Set(r, cKey, payload)
+	nr := r.WithContext(context.WithValue(r.Context(), cKey, payload))
+	*r = *nr
 	return
-}
-/*
-func NewContext(r *http.Request, payload []byte) context.Context {
-	return context.WithValue(r.Context(), cKey, payload)
 }
 
 func FromContext(ctx context.Context) []byte {
@@ -70,13 +65,13 @@ func FromContext(ctx context.Context) []byte {
 		log.Printf("DEBUG: in FromCxt: ctx is nil")
 		return nil
 	} else {
-		//log.Printf("DEBUG: in FromCxt: ctx NOT nil: %s", ctx)
+		log.Printf("DEBUG: in FromCxt: ctx NOT nil: %v", ctx)
 	}
 	//log.Printf("the payload is "+ctx.Value(cKey).(string))
 	return ctx.Value(cKey).([]byte)
 }
-*/
-func GetFullURL(r *http.Request) string {
+
+func GetFullRelativeURL(r *http.Request) string {
 	path := r.URL.Path
 	if r.URL.RawQuery != "" {
 		path += "?"+r.URL.RawQuery

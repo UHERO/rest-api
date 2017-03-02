@@ -59,8 +59,7 @@ func GetSearchSummary(searchRepository *data.SeriesRepository) func(http.Respons
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		//context.Set(r, rUrl, j)
+		SetContext(r, j)
 	}
 }
 

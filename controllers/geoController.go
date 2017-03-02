@@ -33,8 +33,7 @@ func GetGeographies(geographyRepository *data.GeographyRepository) func(http.Res
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		//context.Set(r, rUrl, j)
+		SetContext(r, j)
 	}
 }
 
@@ -80,8 +79,7 @@ func GetGeographiesByCategory(geographyRepository *data.GeographyRepository) fun
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		//context.Set(r, rUrl, j)
+		SetContext(r, j)
 	}
 }
 
@@ -127,7 +125,6 @@ func GetSibllingGeographiesBySeriesId(geographyRepository *data.GeographyReposit
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		//context.Set(r, rUrl, j)
+		SetContext(r, j)
 	}
 }

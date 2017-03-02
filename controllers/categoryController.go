@@ -56,7 +56,6 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			return
 		}
 		SetContext(r, j)
-		//log.Printf("DEBUG: GetCategory: payload is "+string(j))
 	}
 }
 
@@ -83,16 +82,7 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		//ctx := NewContext(r, j)
-		/* if ctx == nil {
-			log.Printf("DEBUG: at set point: ctx IS nil")
-		} else {
-			log.Printf("DEBUG: at set point: ctx NOT nil: %s", ctx)
-		} */
-		//*r = *(r.WithContext(ctx))
-		//log.Printf("DEBUG: at set point: r is %p", r)
 		SetContext(r, j)
-		//log.Printf("DEBUG: GetCategories: payload is "+string(j))
 	}
 }
 
@@ -121,9 +111,6 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.Res
 		if (string(j) == "foo") {
 			log.Printf("bar")
 		}
-//		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-//		context.Set(r, rUrl, j)
-//		log.Printf("DEBUG: GetCategoryRoots: rUrl is "+rUrl)
 	}
 }
 

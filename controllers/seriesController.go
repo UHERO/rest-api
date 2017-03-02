@@ -100,8 +100,7 @@ func GetSeriesById(seriesRepository *data.SeriesRepository) func(http.ResponseWr
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		//context.Set(r, rUrl, j)
+		SetContext(r, j)
 	}
 }
 
@@ -175,8 +174,7 @@ func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository) func(htt
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		//context.Set(r, rUrl, j)
+		SetContext(r, j)
 	}
 }
 
@@ -206,8 +204,7 @@ func GetFreqByCategoryId(seriesRepository *data.SeriesRepository) func(http.Resp
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		//context.Set(r, rUrl, j)
+		SetContext(r, j)
 	}
 }
 
@@ -237,7 +234,6 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository) func(http.Re
 			)
 			return
 		}
-		rUrl := r.URL.Path+"?"+r.URL.RawQuery
-		//context.Set(r, rUrl, j)
+		SetContext(r, j)
 	}
 }
