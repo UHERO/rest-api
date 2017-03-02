@@ -13,20 +13,19 @@ import (
 	"log"
 )
 
-type noodleKey int
-const cKey noodleKey = 42
+type contextKey int
+const cKey contextKey = 42
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		log.Printf("DEBUG: at entry CheckCache: r=%p", r)
 		url := GetFullRelativeURL(r)
 		cached_val, _ := c.GetCache(url)
 		if cached_val == nil {
-			log.Printf("DEBUG: Cache miss: url=%s", url)
+			//log.Printf("DEBUG: Cache miss: url=%s", url)
 			next(w, r)
 			return
 		}
-		log.Printf("DEBUG: Cache HIT: "+url)
+		//log.Printf("DEBUG: Cache HIT: "+url)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(cached_val)
@@ -35,7 +34,6 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 
 func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		log.Printf("DEBUG: at entry SendJSONResp: r is %p", r)
 		if payload := FromContext(r.Context()); string(payload) != "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -45,10 +43,10 @@ func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.R
 			if err != nil {
 				log.Printf("DEBUG: Cache store FAILURE: %s", url)
 			} else {
-				log.Printf("DEBUG: Stored in cache: %s", url)
+				//log.Printf("DEBUG: Stored in cache: %s", url)
 			}
 		} else {
-			log.Printf("*** No data returned from context!")
+			//log.Printf("*** No data returned from context!")
 		}
 		next(w, r)
 	}
@@ -64,10 +62,7 @@ func FromContext(ctx context.Context) []byte {
 	if ctx == nil {
 		log.Printf("DEBUG: in FromCxt: ctx is nil")
 		return nil
-	} else {
-		log.Printf("DEBUG: in FromCxt: ctx NOT nil")
 	}
-	//log.Printf("the payload is "+ctx.Value(cKey).(string))
 	return ctx.Value(cKey).([]byte)
 }
 
@@ -99,11 +94,7 @@ func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.Re
 		)
 		return
 	}
-	if (string(j) == "foo") {
-		log.Printf("bar")
-	}
-	//rUrl := r.URL.Path+"?"+r.URL.RawQuery
-	//context.Set(r, rUrl, j)
+	SetContext(r, j)
 }
 
 func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w http.ResponseWriter, r *http.Request) {
@@ -126,11 +117,7 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 		)
 		return
 	}
-	if (string(j) == "foo") {
-		log.Printf("bar")
-	}
-//	rUrl := r.URL.Path+"?"+r.URL.RawQuery
-//	context.Set(r, rUrl, j)
+	SetContext(r, j)
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
