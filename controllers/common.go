@@ -19,7 +19,7 @@ const cKey noodleKey = 42
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		log.Printf("DEBUG: at entry CheckCache: r=%p", r)
-		url := GetFullURL(r)
+		url := GetFullRelativeURL(r)
 		cached_val, _ := c.GetCache(url)
 		if cached_val == nil {
 			log.Printf("DEBUG: Cache miss: url=%s", url)
@@ -65,7 +65,7 @@ func FromContext(ctx context.Context) []byte {
 		log.Printf("DEBUG: in FromCxt: ctx is nil")
 		return nil
 	} else {
-		log.Printf("DEBUG: in FromCxt: ctx NOT nil: %v", ctx)
+		log.Printf("DEBUG: in FromCxt: ctx NOT nil")
 	}
 	//log.Printf("the payload is "+ctx.Value(cKey).(string))
 	return ctx.Value(cKey).([]byte)
