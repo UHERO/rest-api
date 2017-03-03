@@ -99,7 +99,7 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	WHERE categories.id = ? AND NOT series.restricted`
+	WHERE categories.id = ? AND NOT series.restricted AND NOT series.quarantined`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
@@ -115,7 +115,7 @@ var siblingsPrefix = `SELECT series.id, series.name, series.description, frequen
 	LEFT JOIN series ON series.measurement_id = measure.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
-	WHERE NOT series.restricted`
+	WHERE NOT series.restricted AND NOT series.quarantined`
 
 func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	categoryId int64,
@@ -296,7 +296,7 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	FROM categories
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
-	WHERE categories.id = ? AND series.restricted = 0
+	WHERE categories.id = ? AND NOT series.restricted AND NOT series.quarantined
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
@@ -421,7 +421,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	FROM series
 	JOIN (SELECT name FROM series where id = ?) as original_series
 	WHERE series.name LIKE CONCAT(TRIM(TRAILING 'NS' FROM LEFT(original_series.name, LOCATE("@", original_series.name))), '%')
-	AND NOT series.restricted
+	AND NOT series.restricted AND NOT series.quarantined
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
 		return
@@ -453,7 +453,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	WHERE series.id = ? AND NOT series.restricted;`, seriesId)
+	WHERE series.id = ? AND NOT series.restricted AND NOT series.quarantined;`, seriesId)
 	dataPortalSeries, err = getNextSeriesFromRow(row)
 	if err != nil {
 		return
@@ -479,7 +479,7 @@ func (r *SeriesRepository) GetSeriesObservations(
 	err = r.DB.QueryRow(`SELECT measurements.percent
 	FROM series
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
-	WHERE series.id = ? AND NOT series.restricted`, seriesId).Scan(&percent)
+	WHERE series.id = ? AND NOT series.restricted AND NOT series.quarantined`, seriesId).Scan(&percent)
 	if err != nil {
 		return
 	}
