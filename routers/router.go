@@ -29,8 +29,8 @@ func InitRoutes(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
 		negroni.HandlerFunc(controllers.CheckCache(cacheRepository)),
-		negroni.Wrap(apiRouter),
 		negroni.HandlerFunc(controllers.SendJSONResponse(cacheRepository)),
+		negroni.Wrap(apiRouter),
 	))
 	return router
 }

@@ -34,6 +34,7 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 
 func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		next(w, r)
 		if payload := FromContext(r.Context()); string(payload) != "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -48,7 +49,6 @@ func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.R
 		} else {
 			//log.Printf("*** No data returned from context!")
 		}
-		next(w, r)
 	}
 }
 
