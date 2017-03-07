@@ -29,13 +29,13 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 	}
 }
 
-func WriteResponse(w http.ResponseWriter, payload string) {
+func WriteResponse(w http.ResponseWriter, payload []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(payload)
 }
 
-func SetCache(r *http.Request, c *data.CacheRepository, payload string) {
+func SetCache(r *http.Request, c *data.CacheRepository, payload []byte) {
 	url := GetFullRelativeURL(r)
 	err := c.SetCache(url, payload)
 	if err != nil {
