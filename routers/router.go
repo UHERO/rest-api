@@ -30,7 +30,6 @@ func InitRoutes(
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
 		negroni.HandlerFunc(controllers.CheckCache(cacheRepository)),
 		negroni.Wrap(apiRouter),
-		negroni.HandlerFunc(controllers.SendJSONResponse(cacheRepository)),
 	))
 	return router
 }

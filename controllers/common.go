@@ -20,35 +20,29 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := GetFullRelativeURL(r)
 		cached_val, _ := c.GetCache(url)
-		if cached_val == nil {
-			//log.Printf("DEBUG: Cache miss: url=%s", url)
-			next(w, r)
+		if cached_val != nil {
+			log.Printf("DEBUG: Cache HIT: "+url)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(cached_val)
 			return
 		}
-		//log.Printf("DEBUG: Cache HIT: "+url)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(cached_val)
-	}
-}
-
-func SendJSONResponse(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
-	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		log.Printf("DEBUG: Cache miss: url=%s", url)
+		next(w, r)
 		if payload := FromContext(r.Context()); string(payload) != "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(payload)
-			url := GetFullRelativeURL(r)
 			err := c.SetCache(url, payload)
 			if err != nil {
 				log.Printf("DEBUG: Cache store FAILURE: %s", url)
 			} else {
-				//log.Printf("DEBUG: Stored in cache: %s", url)
+				log.Printf("DEBUG: Stored in cache: %s", url)
 			}
 		} else {
-			//log.Printf("*** No data returned from context!")
+			log.Printf("*** No data returned from context!")
 		}
-		next(w, r)
+		return
 	}
 }
 
