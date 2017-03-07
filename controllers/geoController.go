@@ -33,7 +33,8 @@ func GetGeographies(geographyRepository *data.GeographyRepository, c *data.Cache
 			)
 			return
 		}
-		WriteResponseAndSetCache(w, r, c, j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
 
@@ -79,7 +80,8 @@ func GetGeographiesByCategory(geographyRepository *data.GeographyRepository, c *
 			)
 			return
 		}
-		WriteResponseAndSetCache(w, r, c, j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
 
@@ -125,6 +127,7 @@ func GetSibllingGeographiesBySeriesId(geographyRepository *data.GeographyReposit
 			)
 			return
 		}
-		WriteResponseAndSetCache(w, r, c, j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }

@@ -59,7 +59,8 @@ func GetSearchSummary(searchRepository *data.SeriesRepository, c *data.CacheRepo
 			)
 			return
 		}
-		WriteResponseAndSetCache(w, r, c, j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
 

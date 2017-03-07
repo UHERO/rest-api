@@ -7,9 +7,9 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 	"strconv"
-	"log"
 )
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
@@ -17,7 +17,7 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 		url := GetFullRelativeURL(r)
 		cached_val, _ := c.GetCache(url)
 		if cached_val != nil {
-			log.Printf("DEBUG: Cache HIT: "+url)
+			log.Printf("DEBUG: Cache HIT: " + url)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(cached_val)
@@ -29,26 +29,28 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 	}
 }
 
-func WriteResponseAndSetCache(w http.ResponseWriter, r *http.Request, c *data.CacheRepository, payload []byte) {
+func WriteResponse(w http.ResponseWriter, payload string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(payload)
+}
+
+func SetCache(r *http.Request, c *data.CacheRepository, payload string) {
 	url := GetFullRelativeURL(r)
 	err := c.SetCache(url, payload)
 	if err != nil {
 		log.Printf("DEBUG: Cache store FAILURE: %s", url)
-	} else {
-		log.Printf("DEBUG: Stored in cache: %s", url)
+		return
 	}
-	return
+	log.Printf("DEBUG: Stored in cache: %s", url)
 }
 
 func GetFullRelativeURL(r *http.Request) string {
 	path := r.URL.Path
-	if r.URL.RawQuery != "" {
-		path += "?"+r.URL.RawQuery
+	if r.URL.RawQuery == "" {
+		return path
 	}
-	return path
+	return path + "?" + r.URL.RawQuery
 }
 
 func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter, r *http.Request, c *data.CacheRepository) {
@@ -71,7 +73,8 @@ func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.Re
 		)
 		return
 	}
-	WriteResponseAndSetCache(w, r, c, j)
+	WriteResponse(w, j)
+	SetCache(r, c, j)
 }
 
 func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w http.ResponseWriter, r *http.Request, c *data.CacheRepository) {
@@ -94,7 +97,8 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 		)
 		return
 	}
-	WriteResponseAndSetCache(w, r, c, j)
+	WriteResponse(w, j)
+	SetCache(r, c, j)
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
@@ -248,4 +252,3 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 	}
 	return
 }
-

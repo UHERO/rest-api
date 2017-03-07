@@ -16,8 +16,8 @@ func TestCreateFeedback(t *testing.T) {
 	mock.ExpectPrepare("INSERT INTO user_feedbacks").ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
 
 	feedback := models.Feedback{
-		Name: "Peter Piper",
-		Email: "picked@pickle.com",
+		Name:     "Peter Piper",
+		Email:    "picked@pickle.com",
 		Feedback: "Awesome website",
 	}
 

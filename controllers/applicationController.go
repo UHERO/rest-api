@@ -3,12 +3,12 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
-	"log"
-	"net/http"
-	"strconv"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
+	"log"
+	"net/http"
+	"strconv"
 	"strings"
 )
 

@@ -27,7 +27,7 @@ const (
 
 var transformations map[string]transformation = map[string]transformation{
 	Levels: { // untransformed value
-		Statement:        `SELECT date, value/units, (pseudo_history = b'1')
+		Statement: `SELECT date, value/units, (pseudo_history = b'1')
 		FROM data_points
 		LEFT JOIN series ON data_points.series_id = series.id
 		WHERE series_id = ? and current = 1;`,
