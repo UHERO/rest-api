@@ -17,13 +17,13 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 		url := GetFullRelativeURL(r)
 		cached_val, _ := c.GetCache(url)
 		if cached_val != nil {
-			log.Printf("DEBUG: Cache HIT: " + url)
+			//log.Printf("DEBUG: Cache HIT: " + url)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(cached_val)
 			return
 		}
-		log.Printf("DEBUG: Cache miss: url=%s", url)
+		//log.Printf("DEBUG: Cache miss: url=%s", url)
 		next(w, r)
 		return
 	}
@@ -39,10 +39,10 @@ func SetCache(r *http.Request, c *data.CacheRepository, payload []byte) {
 	url := GetFullRelativeURL(r)
 	err := c.SetCache(url, payload)
 	if err != nil {
-		log.Printf("DEBUG: Cache store FAILURE: %s", url)
+		log.Printf("Cache store FAILURE: %s", url)
 		return
 	}
-	log.Printf("DEBUG: Stored in cache: %s", url)
+	//log.Printf("DEBUG: Stored in cache: %s", url)
 }
 
 func GetFullRelativeURL(r *http.Request) string {
