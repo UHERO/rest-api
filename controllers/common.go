@@ -57,7 +57,11 @@ func FromContext(ctx context.Context) []byte {
 		log.Printf("DEBUG: in FromCxt: ctx is nil")
 		return nil
 	}
-	return ctx.Value(cKey).([]byte)
+	val := ctx.Value(cKey)
+	if val == nil {
+		val = make([]uint8, 0)
+	}
+	return val.([]byte)
 }
 
 func GetFullRelativeURL(r *http.Request) string {
