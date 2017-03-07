@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-func GetCategory(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategory(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {
@@ -54,11 +54,11 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			)
 			return
 		}
-		SetContext(r, j)
+		WriteResponseAndSetCache(w, r, c, j)
 	}
 }
 
-func GetCategories(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategories(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		categories, err := categoryRepository.GetAllCategories()
 		if err != nil {
@@ -80,11 +80,11 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		SetContext(r, j)
+		WriteResponseAndSetCache(w, r, c, j)
 	}
 }
 
-func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategoryRoots(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		categories, err := categoryRepository.GetCategoryRoots()
 		if err != nil {
@@ -106,11 +106,11 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.Res
 			)
 			return
 		}
-		SetContext(r, j)
+		WriteResponseAndSetCache(w, r, c, j)
 	}
 }
 
-func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategoriesByName(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["searchText"]
 		if !ok {
@@ -142,6 +142,6 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.
 			)
 			return
 		}
-		SetContext(r, j)
+		WriteResponseAndSetCache(w, r, c, j)
 	}
 }

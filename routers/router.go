@@ -19,10 +19,10 @@ func InitRoutes(
 	router = SetApplicationRoutes(router, applicationRepository)
 
 	apiRouter := mux.NewRouter().StrictSlash(false)
-	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository)
-	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository)
-	apiRouter = SetSearchRoutes(apiRouter, seriesRepository)
-	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository)
+	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository, cacheRepository)
+	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository, cacheRepository)
+	apiRouter = SetSearchRoutes(apiRouter, seriesRepository, cacheRepository)
+	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
 	apiRouter = SetFeedbackRoutes(apiRouter, feedbackRepository)
 
 	router.PathPrefix("/v1").Handler(negroni.New(

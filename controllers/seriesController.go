@@ -8,73 +8,73 @@ import (
 	"github.com/UHERO/rest-api/data"
 )
 
-func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesByCategoryId(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategory(id)
-		returnSeriesList(seriesList, err, w, r)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetInflatedSeriesByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetInflatedSeriesByCategoryId(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetInflatedSeriesByCategory(id)
-		returnInflatedSeriesList(seriesList, err, w, r)
+		returnInflatedSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetSeriesByCategoryIdAndGeoHandle(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesByCategoryIdAndGeoHandle(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, geoHandle, ok := getIdAndGeo(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryAndGeo(id, geoHandle)
-		returnSeriesList(seriesList, err, w, r)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetSeriesByCategoryIdAndFreq(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesByCategoryIdAndFreq(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, freq, ok := getIdAndFreq(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryAndFreq(id, freq)
-		returnSeriesList(seriesList, err, w, r)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetSeriesByCategoryIdGeoHandleAndFreq(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesByCategoryIdGeoHandleAndFreq(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, geoHandle, freq, ok := getIdGeoAndFreq(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesByCategoryGeoAndFreq(id, geoHandle, freq)
-		returnSeriesList(seriesList, err, w, r)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetInflatedSeriesByCategoryIdGeoAndFreq(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetInflatedSeriesByCategoryIdGeoAndFreq(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, geoHandle, freq, ok := getIdGeoAndFreq(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetInflatedSeriesByCategoryGeoAndFreq(id, geoHandle, freq)
-		returnInflatedSeriesList(seriesList, err, w, r)
+		returnInflatedSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetSeriesById(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesById(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
@@ -100,55 +100,55 @@ func GetSeriesById(seriesRepository *data.SeriesRepository) func(http.ResponseWr
 			)
 			return
 		}
-		SetContext(r, j)
+		WriteResponseAndSetCache(w, r, c, j)
 	}
 }
 
-func GetSeriesSiblingsById(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesSiblingsById(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesSiblingsById(id)
-		returnSeriesList(seriesList, err, w, r)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetSeriesSiblingsByIdAndFreq(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesSiblingsByIdAndFreq(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, freq, ok := getIdAndFreq(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdAndFreq(id, freq)
-		returnSeriesList(seriesList, err, w, r)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetSeriesSiblingsByIdAndGeo(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesSiblingsByIdAndGeo(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, geo, ok := getIdAndGeo(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdAndGeo(id, geo)
-		returnSeriesList(seriesList, err, w, r)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetSeriesSiblingsByIdGeoAndFreq(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesSiblingsByIdGeoAndFreq(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, geo, freq, ok := getIdGeoAndFreq(w, r)
 		if !ok {
 			return
 		}
 		seriesList, err := seriesRepository.GetSeriesSiblingsByIdGeoAndFreq(id, geo, freq)
-		returnSeriesList(seriesList, err, w, r)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
@@ -174,11 +174,11 @@ func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository) func(htt
 			)
 			return
 		}
-		SetContext(r, j)
+		WriteResponseAndSetCache(w, r, c, j)
 	}
 }
 
-func GetFreqByCategoryId(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetFreqByCategoryId(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
@@ -204,11 +204,11 @@ func GetFreqByCategoryId(seriesRepository *data.SeriesRepository) func(http.Resp
 			)
 			return
 		}
-		SetContext(r, j)
+		WriteResponseAndSetCache(w, r, c, j)
 	}
 }
 
-func GetSeriesObservations(seriesRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesObservations(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
@@ -234,6 +234,6 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository) func(http.Re
 			)
 			return
 		}
-		SetContext(r, j)
+		WriteResponseAndSetCache(w, r, c, j)
 	}
 }

@@ -7,14 +7,10 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
-	"context"
 	"net/http"
 	"strconv"
 	"log"
 )
-
-type contextKey int
-const cKey contextKey = 42
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -29,39 +25,22 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 		}
 		log.Printf("DEBUG: Cache miss: url=%s", url)
 		next(w, r)
-		if payload := FromContext(r.Context()); string(payload) != "" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			w.Write(payload)
-			err := c.SetCache(url, payload)
-			if err != nil {
-				log.Printf("DEBUG: Cache store FAILURE: %s", url)
-			} else {
-				log.Printf("DEBUG: Stored in cache: %s", url)
-			}
-		} else {
-			log.Printf("*** No data returned from context!")
-		}
 		return
 	}
 }
 
-func SetContext(r *http.Request, payload []byte) {
-	nr := r.WithContext(context.WithValue(r.Context(), cKey, payload))
-	*r = *nr
+func WriteResponseAndSetCache(w http.ResponseWriter, r *http.Request, c *data.CacheRepository, payload []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(payload)
+	url := GetFullRelativeURL(r)
+	err := c.SetCache(url, payload)
+	if err != nil {
+		log.Printf("DEBUG: Cache store FAILURE: %s", url)
+	} else {
+		log.Printf("DEBUG: Stored in cache: %s", url)
+	}
 	return
-}
-
-func FromContext(ctx context.Context) []byte {
-	if ctx == nil {
-		log.Printf("DEBUG: in FromCxt: ctx is nil")
-		return nil
-	}
-	val := ctx.Value(cKey)
-	if val == nil {
-		val = make([]uint8, 0)
-	}
-	return val.([]byte)
 }
 
 func GetFullRelativeURL(r *http.Request) string {
@@ -72,7 +51,7 @@ func GetFullRelativeURL(r *http.Request) string {
 	return path
 }
 
-func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter, r *http.Request) {
+func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter, r *http.Request, c *data.CacheRepository) {
 	if err != nil {
 		common.DisplayAppError(
 			w,
@@ -92,10 +71,10 @@ func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.Re
 		)
 		return
 	}
-	SetContext(r, j)
+	WriteResponseAndSetCache(w, r, c, j)
 }
 
-func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w http.ResponseWriter, r *http.Request) {
+func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w http.ResponseWriter, r *http.Request, c *data.CacheRepository) {
 	if err != nil {
 		common.DisplayAppError(
 			w,
@@ -115,7 +94,7 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 		)
 		return
 	}
-	SetContext(r, j)
+	WriteResponseAndSetCache(w, r, c, j)
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {

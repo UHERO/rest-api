@@ -9,12 +9,13 @@ import (
 func SetGeographyRoutes(
 	router *mux.Router,
 	geoRepository *data.GeographyRepository,
+	cacheRepository *data.CacheRepository,
 ) *mux.Router {
-	router.HandleFunc("/v1/geo", controllers.GetGeographies(geoRepository)).Methods("GET")
-	router.HandleFunc("/v1/category/geo", controllers.GetGeographiesByCategory(geoRepository)).Methods("GET").Queries(
+	router.HandleFunc("/v1/geo", controllers.GetGeographies(geoRepository, cacheRepository)).Methods("GET")
+	router.HandleFunc("/v1/category/geo", controllers.GetGeographiesByCategory(geoRepository, cacheRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
-	router.HandleFunc("/v1/series/siblings/geo", controllers.GetSibllingGeographiesBySeriesId(geoRepository)).Methods("GET").Queries(
+	router.HandleFunc("/v1/series/siblings/geo", controllers.GetSibllingGeographiesBySeriesId(geoRepository, cacheRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
 	return router
