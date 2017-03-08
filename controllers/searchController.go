@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func GetSeriesBySearchText(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesBySearchText(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := getSearchTextFromRequest(r)
 		if !ok {
@@ -23,11 +23,11 @@ func GetSeriesBySearchText(searchRepository *data.SeriesRepository) func(http.Re
 			return
 		}
 		seriesList, err := searchRepository.GetSeriesBySearchText(searchText)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetSearchSummary(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSearchSummary(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := getSearchTextFromRequest(r)
 		if !ok {
@@ -59,13 +59,12 @@ func GetSearchSummary(searchRepository *data.SeriesRepository) func(http.Respons
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
 
-func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := getSearchTextFromRequest(r)
 		if !ok {
@@ -98,11 +97,11 @@ func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository) func(h
 			return
 		}
 		seriesList, err := searchRepository.GetSearchResultsByGeoAndFreq(searchText, geo, freq)
-		returnSeriesList(seriesList, err, w)
+		returnSeriesList(seriesList, err, w, r, c)
 	}
 }
 
-func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository) func(http.ResponseWriter, *http.Request) {
+func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := getSearchTextFromRequest(r)
 		if !ok {
@@ -135,7 +134,7 @@ func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository
 			return
 		}
 		seriesList, err := searchRepository.GetInflatedSearchResultsByGeoAndFreq(searchText, geo, freq)
-		returnInflatedSeriesList(seriesList, err, w)
+		returnInflatedSeriesList(seriesList, err, w, r, c)
 	}
 }
 

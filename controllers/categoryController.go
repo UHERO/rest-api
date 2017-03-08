@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-func GetCategory(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategory(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {
@@ -54,13 +54,12 @@ func GetCategory(categoryRepository *data.CategoryRepository) func(http.Response
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
 
-func GetCategories(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategories(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		categories, err := categoryRepository.GetAllCategories()
 		if err != nil {
@@ -82,13 +81,12 @@ func GetCategories(categoryRepository *data.CategoryRepository) func(http.Respon
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
 
-func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategoryRoots(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		categories, err := categoryRepository.GetCategoryRoots()
 		if err != nil {
@@ -110,13 +108,12 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository) func(http.Res
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
 
-func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategoriesByName(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["searchText"]
 		if !ok {
@@ -148,8 +145,7 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository) func(http.
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }

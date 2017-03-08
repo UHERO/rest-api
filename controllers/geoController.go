@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-func GetGeographies(geographyRepository *data.GeographyRepository) func(http.ResponseWriter, *http.Request) {
+func GetGeographies(geographyRepository *data.GeographyRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		geographies, err := geographyRepository.GetAllGeographies()
 		if err != nil {
@@ -33,13 +33,12 @@ func GetGeographies(geographyRepository *data.GeographyRepository) func(http.Res
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
 
-func GetGeographiesByCategory(geographyRepository *data.GeographyRepository) func(http.ResponseWriter, *http.Request) {
+func GetGeographiesByCategory(geographyRepository *data.GeographyRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {
@@ -81,13 +80,12 @@ func GetGeographiesByCategory(geographyRepository *data.GeographyRepository) fun
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
 
-func GetSibllingGeographiesBySeriesId(geographyRepository *data.GeographyRepository) func(http.ResponseWriter, *http.Request) {
+func GetSibllingGeographiesBySeriesId(geographyRepository *data.GeographyRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {
@@ -129,8 +127,7 @@ func GetSibllingGeographiesBySeriesId(geographyRepository *data.GeographyReposit
 			)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(j)
+		WriteResponse(w, j)
+		SetCache(r, c, j)
 	}
 }
