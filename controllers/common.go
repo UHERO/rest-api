@@ -19,9 +19,7 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 			cached_val, _ := c.GetCache(url)
 			if cached_val != nil {
 				//log.Printf("DEBUG: Cache HIT: " + url)
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				w.Write(cached_val)
+				WriteResponse(w, cached_val)
 				return
 			}
 			//log.Printf("DEBUG: Cache miss: url=%s", url)
