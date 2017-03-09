@@ -12,7 +12,7 @@ type CacheRepository struct {
 func (r *CacheRepository) GetCache(key string) ([]byte, error) {
 	cval, err := r.DB.Do("GET", key)
 	if err != nil {
-		log.Print("*** Connection failure to Redis!")
+		log.Printf("Redis error on GET: %v", err)
 		return nil, err
 	}
 	if cval == nil {
@@ -24,7 +24,7 @@ func (r *CacheRepository) GetCache(key string) ([]byte, error) {
 func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
 	resp, err := r.DB.Do("SET", key, value)
 	if err != nil {
-		log.Print("*** Connection failure to Redis!")
+		log.Printf("Redis error on SET: %v", err)
 		return
 	}
 	if resp != "OK" {
