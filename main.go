@@ -63,7 +63,9 @@ func main() {
 			redis_conn = nil
 			log.Printf("*** Redis authentication failure. No caching!")
 		}
-	} else {
+	}
+	if redis_conn != nil {
+		log.Printf("Redis connection to %s established", redis_server)
 		defer redis_conn.Close()
 	}
 
