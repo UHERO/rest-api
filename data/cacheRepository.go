@@ -14,11 +14,11 @@ type CacheRepository struct {
 func (r *CacheRepository) ConnectCache() bool {
 	r.DisconnectCache()
 
-	redis_conn, err := redis.Dial("tcp", r.server)
+	redis_conn, err := redis.Dial("tcp", r.Server)
 	if err != nil {
-		log.Printf("*** Cannot contact redis server at %s. No caching!", r.server)
-	} else if r.authpw != "" {
-		if _, err = redis_conn.Do("AUTH", r.authpw); err != nil {
+		log.Printf("*** Cannot contact redis server at %s. No caching!", r.Server)
+	} else if r.Authpw != "" {
+		if _, err = redis_conn.Do("AUTH", r.Authpw); err != nil {
 			redis_conn.Close()
 			redis_conn = nil
 			log.Print("*** Redis authentication failure. No caching!")
@@ -26,7 +26,7 @@ func (r *CacheRepository) ConnectCache() bool {
 	}
 	r.DB = redis_conn
 	if r.DB != nil {
-		log.Printf("Redis connection to %s established", r.server)
+		log.Printf("Redis connection to %s established", r.Server)
 		return true
 	}
 	return false
