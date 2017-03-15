@@ -60,7 +60,7 @@ func main() {
 	seriesRepository := &data.SeriesRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{DB: db}
-	cacheRepository := &data.CacheRepository{server: redis_server, authpw: authpw}
+	cacheRepository := &data.CacheRepository{Server: redis_server, Authpw: authpw}
 
 	if cacheRepository.ConnectCache() {
 		defer cacheRepository.DisconnectCache()

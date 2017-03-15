@@ -7,8 +7,8 @@ import (
 
 type CacheRepository struct {
 	DB	redis.Conn
-	server	string
-	authpw	string
+	Server	string
+	Authpw	string
 }
 
 func (r *CacheRepository) ConnectCache() bool {
@@ -35,7 +35,7 @@ func (r *CacheRepository) ConnectCache() bool {
 func (r *CacheRepository) GetCache(key string) ([]byte, error) {
 	cval, err := r.DB.Do("GET", key)
 	if err != nil {
-		log.Printf("Redis error on GET: %v", err)
+		log.Printf("Redis error on GET: %v. Retrying.", err)
 		if r.ConnectCache() {
 			return r.GetCache(key)
 		}
@@ -50,7 +50,7 @@ func (r *CacheRepository) GetCache(key string) ([]byte, error) {
 func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
 	resp, err := r.DB.Do("SET", key, value)
 	if err != nil {
-		log.Printf("Redis error on SET: %v", err)
+		log.Printf("Redis error on SET: %v. Retrying.", err)
 		if r.ConnectCache() {
 			return r.SetCache(key, value)
 		}
@@ -58,7 +58,7 @@ func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
 	}
 	if resp != "OK" {
 		var other_err redis.Error = "Did not get OK from redis SET"
-		log.Printf(string(other_err))
+		log.Print(string(other_err))
 		err = other_err
 	}
 	return
