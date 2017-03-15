@@ -70,6 +70,7 @@ func main() {
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
+	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{DB: db}
 	cacheRepository := &data.CacheRepository{DB: redis_conn}
@@ -79,6 +80,7 @@ func main() {
 		applicationRepository,
 		categoryRepository,
 		seriesRepository,
+		measurementRepository,
 		geographyRepository,
 		feedbackRepository,
 		cacheRepository,

@@ -127,6 +127,11 @@ type Series struct {
 	Indent             sql.NullString
 }
 
+type Measurement struct {
+	Id	int64	`json:"id"`
+	Name	string	`json:"name"`
+}
+
 type DataPortalSeries struct {
 	Id                   int64                   `json:"id"`
 	Name                 string                  `json:"name"`

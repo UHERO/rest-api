@@ -10,6 +10,7 @@ func SetCategoryRoutes(
 	router *mux.Router,
 	categoryRepository *data.CategoryRepository,
 	seriesRepository *data.SeriesRepository,
+	measurementRepository *data.MeasurementRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
 	router.HandleFunc("/v1/category", controllers.GetCategory(categoryRepository, cacheRepository)).Methods("GET").Queries(
@@ -52,5 +53,6 @@ func SetCategoryRoutes(
 		"expand", "true",
 	)
 	router.HandleFunc("/v1/category/series", controllers.GetSeriesByCategoryId(seriesRepository, cacheRepository)).Methods("GET").Queries("id", "{id:[0-9]+}")
+	router.HandleFunc("/v1/category/measurements", controllers.GetMeasurementByCategoryId(measurementRepository, cacheRepository)).Methods("GET").Queries("id", "{id:[0-9]+}")
 	return router
 }
