@@ -51,22 +51,8 @@ func main() {
 		}
 	}
 	if redis_server == "" {
-		log.Printf("Valid REDIS_URL var not found; using redis @ localhost:6379")
+		log.Print("Valid REDIS_URL var not found; using redis @ localhost:6379")
 		redis_server = "localhost:6379"
-	}
-	redis_conn, err := redis.Dial("tcp", redis_server)
-	if err != nil {
-		log.Printf("*** Cannot contact redis server at %s. No caching!", redis_server)
-	} else if authpw != "" {
-		if _, err = redis_conn.Do("AUTH", authpw); err != nil {
-			redis_conn.Close()
-			redis_conn = nil
-			log.Printf("*** Redis authentication failure. No caching!")
-		}
-	}
-	if redis_conn != nil {
-		log.Printf("Redis connection to %s established", redis_server)
-		defer redis_conn.Close()
 	}
 
 	applicationRepository := &data.ApplicationRepository{DB: db}
@@ -74,8 +60,11 @@ func main() {
 	seriesRepository := &data.SeriesRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{DB: db}
-	cacheRepository := &data.CacheRepository{DB: redis_conn}
+	cacheRepository := &data.CacheRepository{server: redis_server, authpw: authpw}
 
+	if cacheRepository.ConnectCache() {
+		defer cacheRepository.DisconnectCache()
+	}
 	// Get the mux router object
 	router := routers.InitRoutes(
 		applicationRepository,
