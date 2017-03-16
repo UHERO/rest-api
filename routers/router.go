@@ -11,6 +11,7 @@ func InitRoutes(
 	applicationRepository *data.ApplicationRepository,
 	categoryRepository *data.CategoryRepository,
 	seriesRepository *data.SeriesRepository,
+	measurementRepository *data.MeasurementRepository,
 	geographyRepository *data.GeographyRepository,
 	feedbackRepository *data.FeedbackRepository,
 	cacheRepository *data.CacheRepository,
@@ -19,8 +20,9 @@ func InitRoutes(
 	router = SetApplicationRoutes(router, applicationRepository)
 
 	apiRouter := mux.NewRouter().StrictSlash(false)
-	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository, cacheRepository)
+	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository, measurementRepository, cacheRepository)
 	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository, cacheRepository)
+	apiRouter = SetMeasurementRoutes(apiRouter, seriesRepository, cacheRepository)
 	apiRouter = SetSearchRoutes(apiRouter, seriesRepository, cacheRepository)
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
 	apiRouter = SetFeedbackRoutes(apiRouter, feedbackRepository)

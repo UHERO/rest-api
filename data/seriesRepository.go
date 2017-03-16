@@ -17,6 +17,13 @@ type transformation struct {
 	Label            string
 }
 
+type GroupType int
+
+const (
+	Category GroupType = iota
+	Measurement
+)
+
 const (
 	Levels           = "lvl"
 	YOYPercentChange = "pc1"
@@ -100,6 +107,18 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	WHERE categories.id = ? AND NOT series.restricted AND NOT series.quarantined`
+var measurementSeriesPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
+	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
+	NULL,
+	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	FROM measurements
+	LEFT JOIN series ON series.measurement_id = measurements.id
+	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
+	LEFT JOIN sources ON sources.id = series.source_id
+	WHERE measurements.id = ? AND NOT series.restricted AND NOT series.quarantined`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
@@ -117,13 +136,20 @@ var siblingsPrefix = `SELECT series.id, series.name, series.description, frequen
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	WHERE NOT series.restricted AND NOT series.quarantined`
 
-func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
-	categoryId int64,
+func (r *SeriesRepository) GetSeriesByGroupAndFreq(
+	groupId int64,
 	freq string,
+	groupType GroupType,
 ) (seriesList []models.DataPortalSeries, err error) {
+	prefix := seriesPrefix
+	sort := sortStmt
+	if groupType == Measurement {
+		prefix = measurementSeriesPrefix
+		sort = ";"
+	}
 	rows, err := r.DB.Query(
-		strings.Join([]string{seriesPrefix, freqFilter, sortStmt}, ""),
-		categoryId,
+		strings.Join([]string{prefix, freqFilter, sort}, ""),
+		groupId,
 		freq,
 	)
 	if err != nil {
@@ -145,14 +171,21 @@ func (r *SeriesRepository) GetSeriesByCategoryAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
-	categoryId int64,
+func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
+	groupId int64,
 	geoHandle string,
 	freq string,
+	groupType GroupType,
 ) (seriesList []models.DataPortalSeries, err error) {
+	prefix := seriesPrefix
+	sort := sortStmt
+	if groupType == Measurement {
+		prefix = measurementSeriesPrefix
+		sort = ";"
+	}
 	rows, err := r.DB.Query(
-		strings.Join([]string{seriesPrefix, geoFilter, freqFilter, sortStmt}, ""),
-		categoryId,
+		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
+		groupId,
 		geoHandle,
 		freq,
 	)
@@ -175,14 +208,21 @@ func (r *SeriesRepository) GetSeriesByCategoryGeoAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetInflatedSeriesByCategoryGeoAndFreq(
-	categoryId int64,
+func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
+	groupId int64,
 	geoHandle string,
 	freq string,
+	groupType GroupType,
 ) (seriesList []models.InflatedSeries, err error) {
+	prefix := seriesPrefix
+	sort := sortStmt
+	if groupType == Measurement {
+		prefix = measurementSeriesPrefix
+		sort = ";"
+	}
 	rows, err := r.DB.Query(
-		strings.Join([]string{seriesPrefix, geoFilter, freqFilter, sortStmt}, ""),
-		categoryId,
+		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
+		groupId,
 		geoHandle,
 		freq,
 	)
@@ -210,13 +250,20 @@ func (r *SeriesRepository) GetInflatedSeriesByCategoryGeoAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
-	categoryId int64,
+func (r *SeriesRepository) GetSeriesByGroupAndGeo(
+	groupId int64,
 	geoHandle string,
+	groupType GroupType,
 ) (seriesList []models.DataPortalSeries, err error) {
+	prefix := seriesPrefix
+	sort := sortStmt
+	if groupType == Measurement {
+		prefix = measurementSeriesPrefix
+		sort = ";"
+	}
 	rows, err := r.DB.Query(
-		strings.Join([]string{seriesPrefix, geoFilter, sortStmt}, ""),
-		categoryId,
+		strings.Join([]string{prefix, geoFilter, sort}, ""),
+		groupId,
 		geoHandle,
 	)
 	if err != nil {
@@ -238,10 +285,19 @@ func (r *SeriesRepository) GetSeriesByCategoryAndGeo(
 	return
 }
 
-func (r *SeriesRepository) GetInflatedSeriesByCategory(categoryId int64) (seriesList []models.InflatedSeries, err error) {
+func (r *SeriesRepository) GetInflatedSeriesByGroup(
+	groupId int64,
+	groupType GroupType,
+) (seriesList []models.InflatedSeries, err error) {
+	prefix := seriesPrefix
+	sort := sortStmt
+	if groupType == Measurement {
+		prefix = measurementSeriesPrefix
+		sort = ";"
+	}
 	rows, err := r.DB.Query(
-		strings.Join([]string{seriesPrefix, sortStmt}, ""),
-		categoryId,
+		strings.Join([]string{prefix, sort}, ""),
+		groupId,
 	)
 	if err != nil {
 		return
@@ -267,10 +323,19 @@ func (r *SeriesRepository) GetInflatedSeriesByCategory(categoryId int64) (series
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByCategory(categoryId int64) (seriesList []models.DataPortalSeries, err error) {
+func (r *SeriesRepository) GetSeriesByGroup(
+	groupId int64,
+	groupType GroupType,
+) (seriesList []models.DataPortalSeries, err error) {
+	prefix := seriesPrefix
+	sort := sortStmt
+	if groupType == Measurement {
+		prefix = measurementSeriesPrefix
+		sort = ";"
+	}
 	rows, err := r.DB.Query(
-		strings.Join([]string{seriesPrefix, sortStmt}, ""),
-		categoryId,
+		strings.Join([]string{prefix, sort}, ""),
+		groupId,
 	)
 	if err != nil {
 		return

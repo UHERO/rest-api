@@ -35,6 +35,11 @@ type (
 		Data []models.Category `json:"data"`
 	}
 
+	// GET - /category/measurements
+	MeasurementListResource struct {
+		Data []models.Measurement `json:"data"`
+	}
+
 	// GET - /category/series
 	SeriesListResource struct {
 		Data []models.DataPortalSeries `json:"data"`

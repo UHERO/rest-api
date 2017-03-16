@@ -151,6 +151,38 @@ paths:
           schema:
             $ref: "#/definitions/Error"
       x-swagger-router-controller: "Categories"
+  /category/measurements:
+    get:
+      tags:
+      - "Categories"
+      summmary: "Measurements in this Category"
+      description: "A list of measurements in the given category\n"
+      operactionId: "categoryMeasurementsGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Category ID"
+        required: true
+        type: "number"
+      responses:
+        200:
+          description: "An array of measurements"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Measurement"
+          examples:
+            application/json:
+              data:
+              - id: 39
+                name: "Consumer Price Index"
+              - id: 167
+                name: "Employment"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Categories"
   /category/series:
     get:
       tags:
@@ -353,6 +385,122 @@ paths:
           schema:
             $ref: "#/definitions/Error"
       x-swagger-router-controller: "Geography"
+  /measurement/series:
+    get:
+      tags:
+      - "Measurements"
+      summary: "Series in this Measurement"
+      description: "A list of series in the given Measurement\n"
+      operationId: "measurementSeriesGET"
+      parameters:
+      - name: "id"
+        in: "query"
+        description: "Measurement ID"
+        required: true
+        type: "number"
+      - name: "freq"
+        in: "query"
+        description: "Frequency"
+        required: false
+        type: "string"
+        default: "A"
+        enum:
+        - "A"
+        - "Q"
+        - "M"
+        - "W"
+        - "D"
+      - name: "geo"
+        in: "query"
+        description: "Geography (FIPS)"
+        required: false
+        type: "string"
+        default: "15000"
+      - name: "expand"
+        in: "query"
+        description: "Include Series Observations (adds a seriesObservations property)"
+        required: false
+        type: "boolean"
+      responses:
+        200:
+          description: "An array of series"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Series"
+          examples:
+            application/json:
+              data:
+              - id: "E_NF@HI.A"
+                title: "NonFarm Jobs"
+                observationStart: "1958-01-01"
+                observationEnd: "2015-01-01"
+                frequency: "Annual"
+                frequencyShort: "A"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Not Seasonally Adjusted"
+                seasonalAdjustmentShort: "NSA"
+                source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
+                sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+                geography:
+                  fips: "15"
+                  name: "Hawaii"
+                  handle: "HI"
+              - id: "E_NF@HI.M"
+                title: "NonFarm Jobs"
+                observationStart: "1958-01-01"
+                observationEnd: "2016-06-01"
+                frequency: "Monthly"
+                frequencyShort: "M"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Seasonally Adjusted"
+                seasonalAdjustmentShort: "SA"
+                source: "U.S. Dept. of Labor, Bureau of Labor Statistics"
+                sourceLink: "http://data.bls.gov/cgi-bin/srgate"
+                indent: 1
+                geography:
+                  fips: "15"
+                  name: "Hawaii"
+                  handle: "HI"
+              - id: "VIS@HON.A"
+                title: "Total Visitor Arrivals"
+                observationStart: "1990-01-01"
+                observationEnd: "2015-01-01"
+                frequency: "Annual"
+                frequencyShort: "A"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Not Seasonally Adjusted"
+                seasonalAdjustmentShort: "NSA"
+                source: "Hawaii Dept. of Business, Economic Development and Tourism"
+                sourceLink: "http://www.hawaii.gov/dbedt/info/visitor-stats/"
+                geography:
+                  fips: "15003"
+                  name: "Honolulu"
+                  handle: "HON"
+              - id: "VIS@HON.M"
+                title: "Total Visitor Arrivals"
+                observationStart: "1990-01-01"
+                observationEnd: "2015-01-01"
+                frequency: "Monthly"
+                frequencyShort: "M"
+                units: "Thousands"
+                unitsShort: "Thou."
+                SeasonalAdjustment: "Not Seasonally Adjusted"
+                seasonalAdjustmentShort: "NSA"
+                source: "Hawaii Dept. of Business, Economic Development and Tourism"
+                sourceLink: "http://www.hawaii.gov/dbedt/info/visitor-stats/"
+                geography:
+                  fips: "15003"
+                  name: "Honolulu"
+                  handle: "HON"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "Measurements"
   /series:
     get:
       tags:
@@ -980,6 +1128,15 @@ definitions:
       label:
         type: "string"
         description: "Frequency Label"
+  Measurement:
+    type: "object"
+    properties:
+      id:
+        type: "number"
+        description: "Measurement ID"
+      name:
+        type: "string"
+        description: "Measurement Name"
   Error:
     type: "object"
     properties:
