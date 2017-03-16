@@ -3,12 +3,15 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/UHERO/rest-api/data"
-	"github.com/UHERO/rest-api/common"
 	"encoding/json"
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/data"
 )
 
-func GetMeasurementByCategoryId(measurementRepository *data.MeasurementRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetMeasurementByCategoryId(
+	measurementRepository *data.MeasurementRepository,
+	cacheRepository *data.CacheRepository,
+) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
@@ -35,7 +38,6 @@ func GetMeasurementByCategoryId(measurementRepository *data.MeasurementRepositor
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, c, j)
+		SetCache(r, cacheRepository, j)
 	}
 }
-

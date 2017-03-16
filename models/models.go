@@ -128,8 +128,8 @@ type Series struct {
 }
 
 type Measurement struct {
-	Id	int64	`json:"id"`
-	Name	string	`json:"name"`
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
 }
 
 type DataPortalSeries struct {
