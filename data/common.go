@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/UHERO/rest-api/models"
 	"sort"
+	"log"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -40,6 +41,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.SourceDescription,
 		&series.SourceLink,
 		&series.Indent,
+		&series.BaseYear,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -80,6 +82,10 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
 	}
+	log.Printf("BaseYear: %s", series.BaseYear.Int64)
+	if series.BaseYear.Valid {
+		dataPortalSeries.BaseYear = &series.BaseYear.Int64
+	}
 	if series.Indent.Valid {
 		dataPortalSeries.Indent = indentationLevel[series.Indent.String]
 	}
@@ -110,6 +116,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.Real,
 		&series.SourceDescription,
 		&series.SourceLink,
+		&series.BaseYear,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -149,6 +156,10 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
+	}
+	log.Printf("BaseYear: %s", series.BaseYear.Int64)
+	if series.BaseYear.Valid {
+		dataPortalSeries.BaseYear = &series.BaseYear.Int64
 	}
 	dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 	if geography.FIPS.Valid {
