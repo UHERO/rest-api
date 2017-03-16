@@ -5,6 +5,8 @@ import (
 	"errors"
 	"github.com/UHERO/rest-api/models"
 	"sort"
+	"strings"
+	"strconv"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -40,6 +42,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.SourceDescription,
 		&series.SourceLink,
 		&series.Indent,
+		&series.BaseYear,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -80,6 +83,13 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
 	}
+	if series.BaseYear.Valid {
+		dataPortalSeries.Title = formatWithYear(dataPortalSeries.Title, series.BaseYear.Int64)
+		dataPortalSeries.Description = formatWithYear(dataPortalSeries.Description, series.BaseYear.Int64)
+		dataPortalSeries.UnitsLabel = formatWithYear(dataPortalSeries.UnitsLabel, series.BaseYear.Int64)
+		dataPortalSeries.UnitsLabelShort = formatWithYear(dataPortalSeries.UnitsLabelShort, series.BaseYear.Int64)
+		dataPortalSeries.BaseYear = &series.BaseYear.Int64
+	}
 	if series.Indent.Valid {
 		dataPortalSeries.Indent = indentationLevel[series.Indent.String]
 	}
@@ -110,6 +120,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.Real,
 		&series.SourceDescription,
 		&series.SourceLink,
+		&series.BaseYear,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -149,6 +160,13 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
+	}
+	if series.BaseYear.Valid && series.BaseYear.Int64 > 0 {
+		dataPortalSeries.Title = formatWithYear(dataPortalSeries.Title, series.BaseYear.Int64)
+		dataPortalSeries.Description = formatWithYear(dataPortalSeries.Description, series.BaseYear.Int64)
+		dataPortalSeries.UnitsLabel = formatWithYear(dataPortalSeries.UnitsLabel, series.BaseYear.Int64)
+		dataPortalSeries.UnitsLabelShort = formatWithYear(dataPortalSeries.UnitsLabelShort, series.BaseYear.Int64)
+		dataPortalSeries.BaseYear = &series.BaseYear.Int64
 	}
 	dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 	if geography.FIPS.Valid {
@@ -225,4 +243,8 @@ func getFreqGeoCombinations(r *SeriesRepository, seriesId int64) (
 	}
 
 	return geoFreqsResult, freqGeosResult, err
+}
+
+func formatWithYear(formatString string, year int64) string {
+	return strings.Replace(formatString, "%Y", strconv.FormatInt(year, 10), -1)
 }

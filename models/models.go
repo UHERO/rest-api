@@ -122,6 +122,7 @@ type Series struct {
 	DataPortalName     sql.NullString
 	Percent            sql.NullBool
 	Real               sql.NullBool
+	BaseYear	   sql.NullInt64
 	SourceDescription  sql.NullString
 	SourceLink         sql.NullString
 	Indent             sql.NullString
@@ -145,6 +146,7 @@ type DataPortalSeries struct {
 	Geography            DataPortalGeography     `json:"geography,omitEmpty"`
 	Percent              *bool                   `json:"percent,omitempty"`
 	Real                 *bool                   `json:"real,omitempty"`
+	BaseYear	     *int64		     `json:"base_year,omitempty"`
 	SourceDescription    string                  `json:"source_description,omitempty"`
 	SourceLink           string                  `json:"source_link,omitempty"`
 	Indent               int                     `json:"indent,omitempty"`
