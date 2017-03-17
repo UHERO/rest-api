@@ -55,7 +55,7 @@ func GetCategory(categoryRepository *data.CategoryRepository, c *data.CacheRepos
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, c, j)
+		WriteCache(r, c, j)
 	}
 }
 
@@ -82,7 +82,7 @@ func GetCategories(categoryRepository *data.CategoryRepository, c *data.CacheRep
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, c, j)
+		WriteCache(r, c, j)
 	}
 }
 
@@ -109,7 +109,7 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository, c *data.Cache
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, c, j)
+		WriteCache(r, c, j)
 	}
 }
 
@@ -146,6 +146,6 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository, c *data.Ca
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, c, j)
+		WriteCache(r, c, j)
 	}
 }

@@ -38,6 +38,6 @@ func GetMeasurementByCategoryId(
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, cacheRepository, j)
+		WriteCache(r, cacheRepository, j)
 	}
 }

@@ -33,7 +33,7 @@ func WriteResponse(w http.ResponseWriter, payload []byte) {
 	w.Write(payload)
 }
 
-func SetCache(r *http.Request, c *data.CacheRepository, payload []byte) {
+func WriteCache(r *http.Request, c *data.CacheRepository, payload []byte) {
 	if c.DB == nil {
 		return
 	}
@@ -75,7 +75,7 @@ func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.Re
 		return
 	}
 	WriteResponse(w, j)
-	SetCache(r, c, j)
+	WriteCache(r, c, j)
 }
 
 func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w http.ResponseWriter, r *http.Request, c *data.CacheRepository) {
@@ -99,7 +99,7 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 		return
 	}
 	WriteResponse(w, j)
-	SetCache(r, c, j)
+	WriteCache(r, c, j)
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
