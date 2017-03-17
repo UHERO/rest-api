@@ -60,11 +60,9 @@ func main() {
 	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{DB: db}
-	cacheRepository := &data.CacheRepository{Server: redis_server, Authpw: authpw}
+	cacheRepository := &data.CacheRepository{DB: nil, Server: redis_server, Authpw: authpw}
+	defer cacheRepository.DisconnectCache()
 
-	if cacheRepository.ConnectCache() {
-		defer cacheRepository.DisconnectCache()
-	}
 	// Get the mux router object
 	router := routers.InitRoutes(
 		applicationRepository,

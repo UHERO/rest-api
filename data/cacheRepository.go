@@ -11,7 +11,7 @@ type CacheRepository struct {
 	Authpw	string
 }
 
-func (r *CacheRepository) ConnectCache() bool {
+func (r *CacheRepository) ConnectCache() (bool, error) {
 	r.DisconnectCache()
 
 	redis_conn, err := redis.Dial("tcp", r.Server)
@@ -27,32 +27,43 @@ func (r *CacheRepository) ConnectCache() bool {
 	r.DB = redis_conn
 	if r.DB != nil {
 		log.Printf("Redis connection to %s established", r.Server)
-		return true
+		return true, nil
 	}
-	return false
+	return false, err
 }
 
-func (r *CacheRepository) GetCache(key string) ([]byte, error) {
-	cval, err := r.DB.Do("GET", key)
+func (r *CacheRepository) GetCache(key string, iteration int) ([]byte, error) {
+	if r.DB == nil {
+		if connected, err := r.ConnectCache(); !connected {
+			return nil, err
+		}
+	}
+	cached_val, err := r.DB.Do("GET", key)
 	if err != nil {
-		log.Printf("Redis error on GET: %v. Retrying.", err)
-		if r.ConnectCache() {
-			return r.GetCache(key)
+		log.Printf("Redis error on GET: %v", err)
+		if iteration < 5 {
+			log.Print("Retrying connection...")
+			if connected, _ := r.ConnectCache(); connected {
+				return r.GetCache(key, iteration + 1)
+			}
 		}
 		return nil, err
 	}
-	if cval == nil {
+	if cached_val == nil {
 		return nil, err
 	}
-	return cval.([]byte), err
+	return cached_val.([]byte), err
 }
 
-func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
+func (r *CacheRepository) SetCache(key string, value []byte, iteration int) (err error) {
 	resp, err := r.DB.Do("SET", key, value)
 	if err != nil {
-		log.Printf("Redis error on SET: %v. Retrying.", err)
-		if r.ConnectCache() {
-			return r.SetCache(key, value)
+		log.Printf("Redis error on SET: %v", err)
+		if iteration < 5 {
+			log.Print("Retrying connection...")
+			if connected, _ := r.ConnectCache(); connected {
+				return r.SetCache(key, value, iteration + 1)
+			}
 		}
 		return
 	}
