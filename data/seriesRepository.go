@@ -5,6 +5,7 @@ import (
 	"github.com/UHERO/rest-api/models"
 	"strings"
 	"time"
+	"fmt"
 )
 
 type SeriesRepository struct {
@@ -106,7 +107,9 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	WHERE categories.id = ? AND NOT series.restricted AND NOT series.quarantined`
+	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	WHERE categories.id = ? AND NOT series.restricted
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var measurementSeriesPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
@@ -118,7 +121,9 @@ var measurementSeriesPrefix = `SELECT series.id, series.name, series.description
 	LEFT JOIN series ON series.measurement_id = measurements.id
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN sources ON sources.id = series.source_id
-	WHERE measurements.id = ? AND NOT series.restricted AND NOT series.quarantined`
+	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	WHERE measurements.id = ? AND NOT series.restricted
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
@@ -134,7 +139,9 @@ var siblingsPrefix = `SELECT series.id, series.name, series.description, frequen
 	LEFT JOIN series ON series.measurement_id = measure.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
-	WHERE NOT series.restricted AND NOT series.quarantined`
+	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	WHERE NOT series.restricted
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 
 func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
@@ -361,7 +368,9 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	FROM categories
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
-	WHERE categories.id = ? AND NOT series.restricted AND NOT series.quarantined
+	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	WHERE categories.id = ? AND NOT series.restricted
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
@@ -485,8 +494,10 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series
 	JOIN (SELECT name FROM series where id = ?) as original_series
+	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.name LIKE CONCAT(TRIM(TRAILING 'NS' FROM LEFT(original_series.name, LOCATE("@", original_series.name))), '%')
-	AND NOT series.restricted AND NOT series.quarantined
+	AND NOT series.restricted
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
 		return
@@ -519,7 +530,10 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	WHERE series.id = ? AND NOT series.restricted AND NOT series.quarantined;`, seriesId)
+	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	WHERE series.id = ? AND NOT series.restricted
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
+	fmt.Println("getting to hear")
 	dataPortalSeries, err = getNextSeriesFromRow(row)
 	if err != nil {
 		return
@@ -545,7 +559,9 @@ func (r *SeriesRepository) GetSeriesObservations(
 	err = r.DB.QueryRow(`SELECT measurements.percent
 	FROM series
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
-	WHERE series.id = ? AND NOT series.restricted AND NOT series.quarantined`, seriesId).Scan(&percent)
+	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	WHERE series.id = ? AND NOT series.restricted
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&percent)
 	if err != nil {
 		return
 	}

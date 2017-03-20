@@ -46,7 +46,10 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 FROM categories
   LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
   LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
-WHERE categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]') AND NOT series.restricted AND NOT series.quarantined) AS category_handles
+  LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+WHERE categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]') AND NOT series.restricted AND
+(feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
+) AS category_handles
 LEFT JOIN geographies ON geographies.handle LIKE category_handles.handle WHERE geographies.handle IS NOT NULL;`,
 		categoryId,
 		categoryId,
@@ -85,8 +88,10 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 		    FROM
 		      (SELECT series.name AS name
 				FROM series JOIN (SELECT name FROM series where id = ?) as original_series
+				LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 				WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-				AND NOT series.restricted AND NOT series.quarantined)
+				AND NOT series.restricted
+				AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined))
 				AS catnames) AS catgeo
 			LEFT JOIN geographies ON catgeo.chandle LIKE geographies.handle;`, seriesId)
 	if err != nil {
