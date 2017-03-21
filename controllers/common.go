@@ -14,18 +14,14 @@ import (
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		if c.DB != nil {
-			url := GetFullRelativeURL(r)
-			cached_val, _ := c.GetCache(url)
-			if cached_val != nil {
-				//log.Printf("DEBUG: Cache HIT: " + url)
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				w.Write(cached_val)
-				return
-			}
-			//log.Printf("DEBUG: Cache miss: url=%s", url)
+		url := GetFullRelativeURL(r)
+		cached_val, _ := c.GetCache(url, 0)
+		if cached_val != nil {
+			//log.Printf("DEBUG: Cache HIT: " + url)
+			WriteResponse(w, cached_val)
+			return
 		}
+		//log.Printf("DEBUG: Cache miss: url=%s", url)
 		next(w, r)
 		return
 	}
@@ -42,7 +38,7 @@ func SetCache(r *http.Request, c *data.CacheRepository, payload []byte) {
 		return
 	}
 	url := GetFullRelativeURL(r)
-	err := c.SetCache(url, payload)
+	err := c.SetCache(url, payload, 0)
 	if err != nil {
 		log.Printf("Cache store FAILURE: %s", url)
 		return

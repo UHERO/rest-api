@@ -8,7 +8,6 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/routers"
 	"github.com/codegangsta/negroni"
-	"github.com/garyburd/redigo/redis"
 	"github.com/go-sql-driver/mysql"
 	"log"
 	"net"
@@ -51,20 +50,8 @@ func main() {
 		}
 	}
 	if redis_server == "" {
-		log.Printf("Valid REDIS_URL var not found; using redis @ localhost:6379")
+		log.Print("Valid REDIS_URL var not found; using redis @ localhost:6379")
 		redis_server = "localhost:6379"
-	}
-	redis_conn, err := redis.Dial("tcp", redis_server)
-	if err != nil {
-		log.Printf("*** Cannot contact redis server at %s. No caching!", redis_server)
-	} else if authpw != "" {
-		if _, err = redis_conn.Do("AUTH", authpw); err != nil {
-			redis_conn.Close()
-			redis_conn = nil
-			log.Printf("*** Redis authentication failure. No caching!")
-		}
-	} else {
-		defer redis_conn.Close()
 	}
 
 	applicationRepository := &data.ApplicationRepository{DB: db}
@@ -73,7 +60,8 @@ func main() {
 	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{DB: db}
-	cacheRepository := &data.CacheRepository{DB: redis_conn}
+	cacheRepository := &data.CacheRepository{DB: nil, Server: redis_server, Authpw: authpw}
+	defer cacheRepository.DisconnectCache()
 
 	// Get the mux router object
 	router := routers.InitRoutes(
