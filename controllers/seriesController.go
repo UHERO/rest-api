@@ -125,7 +125,7 @@ func GetSeriesById(seriesRepository *data.SeriesRepository, cacheRepository *dat
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, cacheRepository, j)
+		WriteCache(r, cacheRepository, j)
 	}
 }
 
@@ -200,7 +200,7 @@ func GetSeriesSiblingsFreqById(seriesRepository *data.SeriesRepository, cacheRep
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, cacheRepository, j)
+		WriteCache(r, cacheRepository, j)
 	}
 }
 
@@ -231,7 +231,7 @@ func GetFreqByCategoryId(seriesRepository *data.SeriesRepository, cacheRepositor
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, cacheRepository, j)
+		WriteCache(r, cacheRepository, j)
 	}
 }
 
@@ -262,6 +262,6 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository, cacheReposit
 			return
 		}
 		WriteResponse(w, j)
-		SetCache(r, cacheRepository, j)
+		WriteCache(r, cacheRepository, j)
 	}
 }
