@@ -69,12 +69,12 @@ func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary mo
 
 	rows, err := r.DB.Query(`SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
 FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(s.name, LOCATE('@', s.name) + 1), '.', 1)) as geo, MAX(RIGHT(s.name, 1)) as freq
-      FROM (SELECT name FROM series
+      FROM (SELECT series.name FROM series
 			  LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 			WHERE NOT restricted
 					AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-					AND (MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-                                 OR LOWER(CONCAT(name, description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%')) AS s
+					AND (MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+                                 OR LOWER(CONCAT(series.name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%')) AS s
 GROUP BY SUBSTR(s.name, LOCATE('@', s.name) + 1) ORDER BY COUNT(*) DESC) as geofreq
 LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchText)
 	if err != nil {
