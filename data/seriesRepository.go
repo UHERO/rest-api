@@ -5,7 +5,6 @@ import (
 	"github.com/UHERO/rest-api/models"
 	"strings"
 	"time"
-	"fmt"
 )
 
 type SeriesRepository struct {
@@ -99,7 +98,7 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
-	data_list_measurements.indent, series.base_year,
+	data_list_measurements.indent, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
@@ -115,7 +114,7 @@ var measurementSeriesPrefix = `SELECT series.id, series.name, series.description
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
-	NULL, series.base_year,
+	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM measurements
 	LEFT JOIN series ON series.measurement_id = measurements.id
@@ -132,7 +131,7 @@ var siblingsPrefix = `SELECT series.id, series.name, series.description, frequen
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
-	NULL, series.base_year,
+	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM (SELECT measurement_id FROM series where id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
@@ -524,7 +523,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
 	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
-	series.base_year,
+	series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
@@ -533,7 +532,6 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
-	fmt.Println("getting to hear")
 	dataPortalSeries, err = getNextSeriesFromRow(row)
 	if err != nil {
 		return
