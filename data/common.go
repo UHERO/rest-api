@@ -2,7 +2,6 @@ package data
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/UHERO/rest-api/models"
 	"sort"
 	"strings"
@@ -43,6 +42,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.SourceLink,
 		&series.Indent,
 		&series.BaseYear,
+		&series.Decimals,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
@@ -83,6 +83,9 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
 	}
+	if series.Decimals.Valid {
+		dataPortalSeries.Decimals = &series.Decimals.Int64
+	}
 	if series.BaseYear.Valid {
 		dataPortalSeries.Title = formatWithYear(dataPortalSeries.Title, series.BaseYear.Int64)
 		dataPortalSeries.Description = formatWithYear(dataPortalSeries.Description, series.BaseYear.Int64)
@@ -121,12 +124,13 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.SourceDescription,
 		&series.SourceLink,
 		&series.BaseYear,
+		&series.Decimals,
 		&geography.FIPS,
 		&geography.Handle,
 		&geography.Name,
 	)
 	if err != nil {
-		return dataPortalSeries, errors.New("Series restricted or does not exist.")
+		return dataPortalSeries, err
 	}
 	dataPortalSeries = models.DataPortalSeries{
 		Id:             series.Id,
@@ -160,6 +164,9 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
+	}
+	if series.Decimals.Valid {
+		dataPortalSeries.Decimals = &series.Decimals.Int64
 	}
 	if series.BaseYear.Valid && series.BaseYear.Int64 > 0 {
 		dataPortalSeries.Title = formatWithYear(dataPortalSeries.Title, series.BaseYear.Int64)
