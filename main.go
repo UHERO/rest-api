@@ -8,6 +8,7 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/routers"
 	"github.com/codegangsta/negroni"
+	"github.com/garyburd/redigo/redis"
 	"github.com/go-sql-driver/mysql"
 	"log"
 	"net"
@@ -15,7 +16,6 @@ import (
 	"net/url"
 	"os"
 	"time"
-	"github.com/garyburd/redigo/redis"
 )
 
 func main() {
@@ -56,10 +56,10 @@ func main() {
 		redis_server = "localhost:6379"
 	}
 	pool := &redis.Pool{
-		MaxIdle: 10,
-		MaxActive: 50,
+		MaxIdle:     10,
+		MaxActive:   50,
 		IdleTimeout: 240 * time.Second,
-		Dial: func () (redis.Conn, error) {
+		Dial: func() (redis.Conn, error) {
 			c, err := redis.Dial("tcp", redis_server)
 			if err != nil {
 				log.Printf("*** Cannot contact redis server at %s. No caching!", redis_server)
@@ -90,7 +90,7 @@ func main() {
 	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{DB: db}
-	cacheRepository := &data.CacheRepository{Pool: pool}
+	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * 10} //TTL in seconds
 
 	// Get the mux router object
 	router := routers.InitRoutes(
