@@ -34,9 +34,6 @@ func WriteResponse(w http.ResponseWriter, payload []byte) {
 }
 
 func WriteCache(r *http.Request, c *data.CacheRepository, payload []byte) {
-	if c.DB == nil {
-		return
-	}
 	url := GetFullRelativeURL(r)
 	err := c.SetCache(url, payload, 0)
 	if err != nil {
