@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"time"
+	"github.com/garyburd/redigo/redis"
 )
 
 func main() {
@@ -42,9 +43,10 @@ func main() {
 		log.Fatal("Start MySQL Server!")
 	}
 
+	// Set up Redis
 	var redis_server, authpw string
-	if redis_url, present := os.LookupEnv("REDIS_URL"); present {
-		if u, ok := url.Parse(redis_url); ok == nil {
+	if redis_url, ok := os.LookupEnv("REDIS_URL"); ok {
+		if u, err := url.Parse(redis_url); err == nil {
 			redis_server = u.Host // includes port where specified
 			authpw, _ = u.User.Password()
 		}
@@ -53,6 +55,34 @@ func main() {
 		log.Print("Valid REDIS_URL var not found; using redis @ localhost:6379")
 		redis_server = "localhost:6379"
 	}
+	pool := &redis.Pool{
+		MaxIdle: 10,
+		MaxActive: 50,
+		IdleTimeout: 240 * time.Second,
+		Dial: func () (redis.Conn, error) {
+			c, err := redis.Dial("tcp", redis_server)
+			if err != nil {
+				log.Printf("*** Cannot contact redis server at %s. No caching!", redis_server)
+				return nil, err
+			}
+			if authpw != "" {
+				if _, err = c.Do("AUTH", authpw); err != nil {
+					c.Close()
+					log.Print("*** Redis authentication failure. No caching!")
+					return nil, err
+				}
+			}
+			log.Printf("Redis connection to %s established", redis_server)
+			return c, nil
+		},
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			if time.Since(t) < time.Minute {
+				return nil
+			}
+			_, err := c.Do("PING")
+			return err
+		},
+	}
 
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
@@ -60,8 +90,7 @@ func main() {
 	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{DB: db}
-	cacheRepository := &data.CacheRepository{DB: nil, Server: redis_server, Authpw: authpw}
-	defer cacheRepository.DisconnectCache()
+	cacheRepository := &data.CacheRepository{Pool: pool}
 
 	// Get the mux router object
 	router := routers.InitRoutes(
