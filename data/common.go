@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"github.com/UHERO/rest-api/models"
 	"sort"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 var freqLabel map[string]string = map[string]string{
