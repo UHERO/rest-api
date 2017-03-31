@@ -126,6 +126,7 @@ type Series struct {
 	BaseYear           sql.NullInt64
 	SourceDescription  sql.NullString
 	SourceLink         sql.NullString
+	SourceDetails      sql.NullString
 	Indent             sql.NullString
 }
 
@@ -151,6 +152,7 @@ type DataPortalSeries struct {
 	Decimals             *int64                  `json:"decimals,omitempty"`
 	SourceDescription    string                  `json:"source_description,omitempty"`
 	SourceLink           string                  `json:"source_link,omitempty"`
+	SourceDetails	     string			`json:source_details,omitempty`
 	Indent               int                     `json:"indent,omitempty"`
 	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
 	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`

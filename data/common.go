@@ -40,6 +40,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.Real,
 		&series.SourceDescription,
 		&series.SourceLink,
+		&series.SourceDetails,
 		&series.Indent,
 		&series.BaseYear,
 		&series.Decimals,
@@ -83,6 +84,9 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
 	}
+	if series.SourceDetails.Valid {
+		dataPortalSeries.SourceDetails = series.SourceDetails.String
+	}
 	if series.Decimals.Valid {
 		dataPortalSeries.Decimals = &series.Decimals.Int64
 	}
@@ -123,6 +127,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.Real,
 		&series.SourceDescription,
 		&series.SourceLink,
+		&series.SourceDetails,
 		&series.BaseYear,
 		&series.Decimals,
 		&geography.FIPS,
@@ -164,6 +169,9 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
+	}
+	if series.SourceDetails.Valid {
+		dataPortalSeries.SourceDetails = series.SourceDetails.String
 	}
 	if series.Decimals.Valid {
 		dataPortalSeries.Decimals = &series.Decimals.Int64
