@@ -11,12 +11,17 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
-	sources.description, COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
+	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
+	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
+	LEFT JOIN source_details ON source_details.id = series.source_detail_id
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
@@ -37,6 +42,8 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -80,8 +87,6 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 	if err != nil {
 		return
 	}
-	legacyGeoFreqs := map[string][]string{}
-	legacyFreqGeos := map[string][]string{}
 	geoFreqs := map[string][]models.FrequencyResult{}
 	geoByHandle := map[string]models.DataPortalGeography{}
 	freqGeos := map[string][]models.DataPortalGeography{}
@@ -117,9 +122,6 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 		// add to the geoFreqs and freqGeos maps
 		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
 		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
-
-		legacyGeoFreqs[geography.Handle] = append(legacyGeoFreqs[geography.Handle], frequency.Freq)
-		legacyFreqGeos[frequency.Freq] = append(legacyFreqGeos[frequency.Freq], geography.Handle)
 	}
 
 	geoFreqsResult := []models.GeographyFrequencies{}
@@ -141,10 +143,10 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 		}
 	}
 
-	searchSummary.GeoFreqs = legacyGeoFreqs
-	searchSummary.FreqGeos = legacyFreqGeos
 	searchSummary.GeographyFrequencies = &geoFreqsResult
 	searchSummary.FrequencyGeographies = &freqGeosResult
+	searchSummary.GeoFreqsDeprecated = &geoFreqsResult
+	searchSummary.FreqGeosDeprecated = &freqGeosResult
 	return
 }
 
@@ -187,6 +189,8 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -235,6 +239,8 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr
