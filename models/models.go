@@ -20,8 +20,10 @@ type Category struct {
 	Name                 string                  `json:"name"`
 	ParentId             int64                   `json:"parentId,omitempty"`
 	DefaultGeoFreq       *GeoFreq                `json:"defaults,omitempty"`
-	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
-	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	GeoFreqsDeprecated   *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
+	GeographyFrequencies *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
+	FreqGeosDeprecated   *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	FrequencyGeographies *[]FrequencyGeographies `json:"freqGeos,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
 	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
@@ -49,10 +51,10 @@ type CategoryWithAncestry struct {
 type SearchSummary struct {
 	SearchText           string                  `json:"q"`
 	DefaultGeoFreq       *GeographyFrequency     `json:"defaults,omitempty"`
-	GeoFreqs             map[string][]string     `json:"geoFreqs,omitempty"`
-	FreqGeos             map[string][]string     `json:"freqGeos,omitempty"`
-	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
-	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	GeoFreqsDeprecated   *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
+	FreqGeosDeprecated   *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	GeographyFrequencies *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
+	FrequencyGeographies *[]FrequencyGeographies `json:"freqGeos,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart"`
 	ObservationEnd       *time.Time              `json:"observationEnd"`
 }
@@ -136,26 +138,31 @@ type Measurement struct {
 }
 
 type DataPortalSeries struct {
-	Id                   int64                   `json:"id"`
-	Name                 string                  `json:"name"`
-	Title                string                  `json:"title,omitempty"`
-	Description          string                  `json:"description,omitempty"`
-	Frequency            string                  `json:"frequency,omitempty"`
-	FrequencyShort       string                  `json:"frequencyShort,omitempty"`
-	SeasonallyAdjusted   *bool                   `json:"seasonallyAdjusted,omitempty"`
-	UnitsLabel           string                  `json:"unitsLabel,omitEmpty"`
-	UnitsLabelShort      string                  `json:"unitsLabelShort,omitEmpty"`
-	Geography            DataPortalGeography     `json:"geography,omitEmpty"`
-	Percent              *bool                   `json:"percent,omitempty"`
-	Real                 *bool                   `json:"real,omitempty"`
-	BaseYear             *int64                  `json:"base_year,omitempty"`
-	Decimals             *int64                  `json:"decimals,omitempty"`
-	SourceDescription    string                  `json:"source_description,omitempty"`
-	SourceLink           string                  `json:"source_link,omitempty"`
-	SourceDetails	     string			`json:source_details,omitempty`
-	Indent               int                     `json:"indent,omitempty"`
-	GeographyFrequencies *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
-	FrequencyGeographies *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	Id                          int64                   `json:"id"`
+	Name                        string                  `json:"name"`
+	Title                       string                  `json:"title,omitempty"`
+	Description                 string                  `json:"description,omitempty"`
+	Frequency                   string                  `json:"frequency,omitempty"`
+	FrequencyShort              string                  `json:"frequencyShort,omitempty"`
+	SeasonallyAdjusted          *bool                   `json:"seasonallyAdjusted,omitempty"`
+	UnitsLabel                  string                  `json:"unitsLabel,omitEmpty"`
+	UnitsLabelShort             string                  `json:"unitsLabelShort,omitEmpty"`
+	Geography                   DataPortalGeography     `json:"geography,omitEmpty"`
+	Percent                     *bool                   `json:"percent,omitempty"`
+	Real                        *bool                   `json:"real,omitempty"`
+	BaseYear                    *int64                  `json:"baseYear,omitempty"`
+	BaseYearDeprecated          *int64                  `json:"base_year,omitempty"`
+	Decimals                    *int64                  `json:"decimals,omitempty"`
+	SourceDescription           string                  `json:"sourceDescription,omitempty"`
+	SourceLink                  string                  `json:"sourceLink,omitempty"`
+	SourceDescriptionDeprecated string                  `json:"source_description,omitempty"`
+	SourceLinkDeprecated        string                  `json:"source_link,omitempty"`
+	SourceDetails               string                  `json:"sourceDetails,omitempty"`
+	Indent                      int                     `json:"indent,omitempty"`
+	GeographyFrequencies        *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
+	FrequencyGeographies        *[]FrequencyGeographies `json:"freqGeos,omitempty"`
+	GeoFreqsDeprecated          *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
+	FreqGeosDeprecated          *[]FrequencyGeographies `json:"freq_geos,omitempty"`
 }
 
 type InflatedSeries struct {

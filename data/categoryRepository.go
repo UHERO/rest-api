@@ -179,6 +179,8 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
 
 	dataPortalCategory.GeographyFrequencies = &geoFreqsResult
 	dataPortalCategory.FrequencyGeographies = &freqGeosResult
+	dataPortalCategory.GeoFreqsDeprecated = &geoFreqsResult
+	dataPortalCategory.FreqGeosDeprecated = &freqGeosResult
 	return dataPortalCategory, err
 }
 

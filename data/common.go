@@ -80,9 +80,11 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	}
 	if series.SourceDescription.Valid {
 		dataPortalSeries.SourceDescription = series.SourceDescription.String
+		dataPortalSeries.SourceDescriptionDeprecated = series.SourceDescription.String
 	}
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
+		dataPortalSeries.SourceLinkDeprecated = series.SourceLink.String
 	}
 	if series.SourceDetails.Valid {
 		dataPortalSeries.SourceDetails = series.SourceDetails.String
@@ -96,6 +98,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		dataPortalSeries.UnitsLabel = formatWithYear(dataPortalSeries.UnitsLabel, series.BaseYear.Int64)
 		dataPortalSeries.UnitsLabelShort = formatWithYear(dataPortalSeries.UnitsLabelShort, series.BaseYear.Int64)
 		dataPortalSeries.BaseYear = &series.BaseYear.Int64
+		dataPortalSeries.BaseYearDeprecated = &series.BaseYear.Int64
 	}
 	if series.Indent.Valid {
 		dataPortalSeries.Indent = indentationLevel[series.Indent.String]
@@ -166,9 +169,11 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.SourceDescription.Valid {
 		dataPortalSeries.SourceDescription = series.SourceDescription.String
+		dataPortalSeries.SourceDescriptionDeprecated = series.SourceDescription.String
 	}
 	if series.SourceLink.Valid {
 		dataPortalSeries.SourceLink = series.SourceLink.String
+		dataPortalSeries.SourceLinkDeprecated = series.SourceLink.String
 	}
 	if series.SourceDetails.Valid {
 		dataPortalSeries.SourceDetails = series.SourceDetails.String
@@ -182,6 +187,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		dataPortalSeries.UnitsLabel = formatWithYear(dataPortalSeries.UnitsLabel, series.BaseYear.Int64)
 		dataPortalSeries.UnitsLabelShort = formatWithYear(dataPortalSeries.UnitsLabelShort, series.BaseYear.Int64)
 		dataPortalSeries.BaseYear = &series.BaseYear.Int64
+		dataPortalSeries.BaseYearDeprecated = &series.BaseYear.Int64
 	}
 	dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 	if geography.FIPS.Valid {
