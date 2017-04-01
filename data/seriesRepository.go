@@ -104,13 +104,13 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
-	JOIN measurements ON measurements.id = series.measurement_id
-	JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
-	JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
+	LEFT JOIN measurements ON measurements.id = series.measurement_id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON sources.id = measurements.source_id
+	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON source_details.id = measurements.source_detail_id
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
@@ -127,9 +127,9 @@ var measurementSeriesPrefix = `SELECT series.id, series.name, series.description
 	LEFT JOIN series ON series.measurement_id = measurements.id
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON sources.id = measurements.source_id
+	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON source_details.id = measurements.source_detail_id
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE measurements.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
@@ -149,9 +149,9 @@ var siblingsPrefix = `SELECT series.id, series.name, series.description, frequen
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN series ON series.measurement_id = measure.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON sources.id = measurements.source_id
+	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON source_details.id = measurements.source_detail_id
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
@@ -187,6 +187,8 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -224,6 +226,8 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -261,6 +265,8 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr
@@ -301,6 +307,8 @@ func (r *SeriesRepository) GetSeriesByGroupAndGeo(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -334,6 +342,8 @@ func (r *SeriesRepository) GetInflatedSeriesByGroup(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr
@@ -372,6 +382,8 @@ func (r *SeriesRepository) GetSeriesByGroup(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -422,6 +434,8 @@ func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []m
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -446,6 +460,8 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -470,6 +486,8 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -497,6 +515,8 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 		}
 		dataPortalSeries.GeographyFrequencies = &geoFreqs
 		dataPortalSeries.FrequencyGeographies = &freqGeos
+		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -546,9 +566,9 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN measurements ON measurements.id = series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON sources.id = measurements.source_id
+	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON source_details.id = measurements.source_detail_id
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
@@ -562,6 +582,8 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	}
 	dataPortalSeries.GeographyFrequencies = &geoFreqs
 	dataPortalSeries.FrequencyGeographies = &freqGeos
+	dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
+	dataPortalSeries.FreqGeosDeprecated = &freqGeos
 	return
 }
 
