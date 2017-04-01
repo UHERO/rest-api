@@ -104,7 +104,8 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
-	LEFT JOIN measurements ON measurements.id = series.measurement_id
+	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
+	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -124,7 +125,8 @@ var measurementSeriesPrefix = `SELECT series.id, series.name, series.description
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM measurements
-	LEFT JOIN series ON series.measurement_id = measurements.id
+	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
+	LEFT JOIN series ON series.id = measurement_series.series_id
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
@@ -147,7 +149,8 @@ var siblingsPrefix = `SELECT series.id, series.name, series.description, frequen
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM (SELECT measurement_id FROM series where id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
-	LEFT JOIN series ON series.measurement_id = measure.measurement_id
+	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
+	LEFT JOIN series ON series.id = measurement_series.series_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
@@ -393,7 +396,8 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM categories
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-	LEFT JOIN series ON series.measurement_id = data_list_measurements.measurement_id
+	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+	LEFT JOIN series ON series.id = measurement_series.series_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
@@ -564,7 +568,8 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
-	LEFT JOIN measurements ON measurements.id = series.measurement_id
+	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
+	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
@@ -598,7 +603,8 @@ func (r *SeriesRepository) GetSeriesObservations(
 
 	err = r.DB.QueryRow(`SELECT measurements.percent
 	FROM series
-	LEFT JOIN measurements ON measurements.id = series.measurement_id
+	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
+	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&percent)
