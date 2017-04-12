@@ -208,9 +208,11 @@ func getFreqGeoCombinations(r *SeriesRepository, seriesId int64) (
 	rows, err := r.DB.Query(`SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
 	FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(name, LOCATE('@', name) + 1), '.', 1)) as geo,
 		   MAX(RIGHT(name, 1)) as freq
-	FROM (SELECT series.name AS name FROM
-		series
-		WHERE series.measurement_id = (SELECT measurement_id FROM series WHERE id = ?)) AS s
+	FROM (SELECT series.name
+		FROM measurement_series
+		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
+		LEFT JOIN series ON series.id = ms.series_id
+		WHERE measurement_series.series_id = ?) AS s
 	GROUP BY SUBSTR(name, LOCATE('@', name) + 1) ORDER BY COUNT(*) DESC) as geofreq
 	LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, seriesId)
 	if err != nil {
