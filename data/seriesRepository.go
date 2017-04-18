@@ -147,7 +147,7 @@ var siblingsPrefix = `SELECT series.id, series.name, series.description, frequen
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM (SELECT measurement_id FROM series where id = ?) as measure
+	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
