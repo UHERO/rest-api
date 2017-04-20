@@ -33,6 +33,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.Description,
 		&series.Frequency,
 		&series.SeasonallyAdjusted,
+		&series.SeasonalAdjustment,
 		&series.UnitsLabel,
 		&series.UnitsLabelShort,
 		&series.DataPortalName,
@@ -65,6 +66,9 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	}
 	if series.SeasonallyAdjusted.Valid && series.Name[len(series.Name)-1:] != "A" {
 		dataPortalSeries.SeasonallyAdjusted = &series.SeasonallyAdjusted.Bool
+	}
+	if series.SeasonalAdjustment.Valid {
+		dataPortalSeries.SeasonalAdjustment = series.SeasonalAdjustment.String
 	}
 	if series.UnitsLabel.Valid {
 		dataPortalSeries.UnitsLabel = series.UnitsLabel.String
@@ -123,6 +127,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.Description,
 		&series.Frequency,
 		&series.SeasonallyAdjusted,
+		&series.SeasonalAdjustment,
 		&series.UnitsLabel,
 		&series.UnitsLabelShort,
 		&series.DataPortalName,
@@ -154,6 +159,9 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.SeasonallyAdjusted.Valid && series.Name[len(series.Name)-1:] != "A" {
 		dataPortalSeries.SeasonallyAdjusted = &series.SeasonallyAdjusted.Bool
+	}
+	if series.SeasonalAdjustment.Valid {
+		dataPortalSeries.SeasonalAdjustment = series.SeasonalAdjustment.String
 	}
 	if series.UnitsLabel.Valid {
 		dataPortalSeries.UnitsLabel = series.UnitsLabel.String

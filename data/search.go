@@ -8,6 +8,7 @@ import (
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -153,6 +154,7 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 
 func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -209,6 +211,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	freq string,
 ) (seriesList []models.InflatedSeries, err error) {
 	rows, err := r.DB.Query(`SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
