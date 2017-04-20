@@ -93,9 +93,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
  	LEFT JOIN series ON series.id = measurement_series.series_id
  	LEFT JOIN data_points ON data_points.series_id = series.id
- 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ? AND data_points.current AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	GROUP BY categories.id;`, id).Scan(
 		&category.Id,
 		&category.Name,
@@ -123,9 +121,7 @@ FROM (SELECT series.name AS name FROM categories
 LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 LEFT JOIN series ON series.id = measurement_series.series_id
-LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 WHERE categories.id = ? AND NOT series.restricted
-AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 ) AS s
 GROUP BY SUBSTR(name, LOCATE('@', name) + 1) ORDER BY COUNT(*) DESC) as geofreq
 LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
