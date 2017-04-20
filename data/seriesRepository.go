@@ -94,6 +94,7 @@ var transformations map[string]transformation = map[string]transformation{
 }
 
 var seriesPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -116,6 +117,7 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	WHERE categories.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var measurementSeriesPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -139,6 +141,7 @@ var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
 var siblingsPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -558,6 +561,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row := r.DB.QueryRow(`SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
