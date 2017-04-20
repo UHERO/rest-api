@@ -188,9 +188,9 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
 
 func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
 	fuzzyString := "%" + name + "%"
-	rows, err := r.DB.Query("SELECT id, name, ancestry FROM categories
+	rows, err := r.DB.Query(`SELECT id, name, ancestry FROM categories
 							 WHERE LOWER(name) LIKE ? AND NOT hidden
-							 ORDER BY `list_order`;", fuzzyString)
+							 ORDER BY list_order;`, fuzzyString)
 	if err != nil {
 		return
 	}
@@ -215,9 +215,9 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 }
 
 func (r *CategoryRepository) GetChildrenOf(id int64) (categories []models.Category, err error) {
-	rows, err := r.DB.Query("SELECT id, name, parent_id FROM categories
+	rows, err := r.DB.Query(`SELECT id, name, parent_id FROM categories
 							 WHERE parent_id = ? AND NOT hidden
-							 ORDER BY `list_order`;", id)
+							 ORDER BY list_order;`, id)
 	if err != nil {
 		return
 	}
