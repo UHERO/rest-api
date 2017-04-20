@@ -92,8 +92,10 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
  	LEFT JOIN series ON series.id = measurement_series.series_id
  	LEFT JOIN data_points ON data_points.series_id = series.id
-	WHERE categories.id = ? AND NOT categories.hidden
-	AND data_points.current AND NOT series.restricted
+	WHERE categories.id = ?
+	AND NOT categories.hidden
+	AND NOT series.restricted
+	AND data_points.current
 	GROUP BY categories.id;`, id).Scan(
 		&category.Id,
 		&category.Name,
