@@ -14,11 +14,10 @@ type CategoryRepository struct {
 }
 
 func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`
-SELECT id, name, ancestry, default_handle, default_freq
-FROM categories
-ORDER BY categories.list_order;
-	`)
+	rows, err := r.DB.Query(`SELECT id, name, ancestry, default_handle, default_freq
+							 FROM categories
+							 WHERE NOT hidden
+							 ORDER BY categories.list_order;`)
 	if err != nil {
 		return
 	}
@@ -65,7 +64,7 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 }
 
 func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
-	rows, err := r.DB.Query("SELECT id, name FROM categories WHERE ancestry IS NULL ORDER BY `list_order`;")
+	rows, err := r.DB.Query("SELECT id, name FROM categories WHERE ancestry IS NULL AND NOT hidden ORDER BY `list_order`;")
 	if err != nil {
 		return
 	}
@@ -93,7 +92,8 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
  	LEFT JOIN series ON series.id = measurement_series.series_id
  	LEFT JOIN data_points ON data_points.series_id = series.id
-	WHERE categories.id = ? AND data_points.current AND NOT series.restricted
+	WHERE categories.id = ? AND NOT categories.hidden
+	AND data_points.current AND NOT series.restricted
 	GROUP BY categories.id;`, id).Scan(
 		&category.Id,
 		&category.Name,
@@ -114,16 +114,18 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
 	}
 
-	rows, err := r.DB.Query(`SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
+	rows, err := r.DB.Query(`
+SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
 FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(name, LOCATE('@', name) + 1), '.', 1)) as geo,
-       MAX(RIGHT(name, 1)) as freq
-FROM (SELECT series.name AS name FROM categories
-LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-LEFT JOIN series ON series.id = measurement_series.series_id
-WHERE categories.id = ? AND NOT series.restricted
-) AS s
-GROUP BY SUBSTR(name, LOCATE('@', name) + 1) ORDER BY COUNT(*) DESC) as geofreq
+			 MAX(RIGHT(name, 1)) as freq
+	  FROM (SELECT series.name AS name FROM categories
+			LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+			LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+			LEFT JOIN series ON series.id = measurement_series.series_id
+			WHERE categories.id = ?
+			AND NOT categories.hidden
+			AND NOT series.restricted) AS s
+	  GROUP BY SUBSTR(name, LOCATE('@', name) + 1) ORDER BY COUNT(*) DESC) AS geofreq
 LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
 	if err != nil {
 		return dataPortalCategory, err
@@ -184,7 +186,9 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
 
 func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
 	fuzzyString := "%" + name + "%"
-	rows, err := r.DB.Query("SELECT id, name, ancestry FROM categories WHERE LOWER(name) LIKE ? ORDER BY `list_order`;", fuzzyString)
+	rows, err := r.DB.Query("SELECT id, name, ancestry FROM categories
+							 WHERE LOWER(name) LIKE ? AND NOT hidden
+							 ORDER BY `list_order`;", fuzzyString)
 	if err != nil {
 		return
 	}
@@ -209,7 +213,9 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 }
 
 func (r *CategoryRepository) GetChildrenOf(id int64) (categories []models.Category, err error) {
-	rows, err := r.DB.Query("SELECT id, name, parent_id FROM categories WHERE parent_id = ? ORDER BY `list_order;`", id)
+	rows, err := r.DB.Query("SELECT id, name, parent_id FROM categories
+							 WHERE parent_id = ? AND NOT hidden
+							 ORDER BY `list_order`;", id)
 	if err != nil {
 		return
 	}
