@@ -114,7 +114,9 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
-	WHERE categories.id = ? AND NOT series.restricted
+	WHERE categories.id = ?
+	AND NOT categories.hidden
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var measurementSeriesPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
 	series.seasonal_adjustment,
@@ -402,7 +404,9 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 	LEFT JOIN series ON series.id = measurement_series.series_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
-	WHERE categories.id = ? AND NOT series.restricted
+	WHERE categories.id = ?
+	AND NOT categories.hidden
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
