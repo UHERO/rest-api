@@ -93,7 +93,7 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 }
 
-var seriesPrefix = `SELECT DISTINCT
+var seriesPrefix = `SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
