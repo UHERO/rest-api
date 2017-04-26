@@ -7,8 +7,8 @@ import (
 )
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
-	series.seasonal_adjustment,
+	rows, err := r.DB.Query(`SELECT DISTINCT
+	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -17,7 +17,8 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
-	FROM series LEFT JOIN geographies ON series.name LIKE CONCAT('%@', handle, '.%')
+	FROM series
+	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -153,8 +154,8 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 }
 
 func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
-	series.seasonal_adjustment,
+	rows, err := r.DB.Query(`SELECT DISTINCT
+	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -164,7 +165,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
 	FROM series
-	LEFT JOIN geographies ON handle LIKE ?
+	LEFT JOIN geographies ON geographies.handle LIKE ?
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -210,8 +211,8 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	geo string,
 	freq string,
 ) (seriesList []models.InflatedSeries, err error) {
-	rows, err := r.DB.Query(`SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
-	series.seasonal_adjustment,
+	rows, err := r.DB.Query(`SELECT DISTINCT
+	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -221,7 +222,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
 	FROM series
-	LEFT JOIN geographies ON handle LIKE ?
+	LEFT JOIN geographies ON geographies.handle LIKE ?
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
