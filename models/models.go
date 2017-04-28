@@ -119,6 +119,7 @@ type Series struct {
 	Description        sql.NullString
 	Frequency          sql.NullString
 	SeasonallyAdjusted sql.NullBool
+	SeasonalAdjustment sql.NullString
 	UnitsLabel         sql.NullString
 	UnitsLabelShort    sql.NullString
 	DataPortalName     sql.NullString
@@ -145,6 +146,7 @@ type DataPortalSeries struct {
 	Frequency                   string                  `json:"frequency,omitempty"`
 	FrequencyShort              string                  `json:"frequencyShort,omitempty"`
 	SeasonallyAdjusted          *bool                   `json:"seasonallyAdjusted,omitempty"`
+	SeasonalAdjustment	    string		    `json:"seasonalAdjustment,omitempty"`
 	UnitsLabel                  string                  `json:"unitsLabel,omitEmpty"`
 	UnitsLabelShort             string                  `json:"unitsLabelShort,omitEmpty"`
 	Geography                   DataPortalGeography     `json:"geography,omitEmpty"`

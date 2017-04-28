@@ -94,6 +94,7 @@ var transformations map[string]transformation = map[string]transformation{
 }
 
 var seriesPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -113,9 +114,12 @@ var seriesPrefix = `SELECT series.id, series.name, series.description, frequency
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
-	WHERE categories.id = ? AND NOT series.restricted
+	WHERE categories.id = ?
+	AND NOT categories.hidden
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var measurementSeriesPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -139,6 +143,7 @@ var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
 var siblingsPrefix = `SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
@@ -399,7 +404,9 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 	LEFT JOIN series ON series.id = measurement_series.series_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
-	WHERE categories.id = ? AND NOT series.restricted
+	WHERE categories.id = ?
+	AND NOT categories.hidden
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
@@ -558,6 +565,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row := r.DB.QueryRow(`SELECT series.id, series.name, series.description, frequency, series.seasonally_adjusted,
+	series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
