@@ -55,10 +55,7 @@
 							"tests[\"Response contains data\"] = typeof(data) === 'object'",
 							"//tests[\"Response is null\"] = data === null",
 							"tests[\"Response is array\"] = Array.isArray(data)",
-							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
-							"//tests[\"Response data is object with name\"] = data.name !== undefined",
-							"//",
-							"//tests[\"Response has geo_freqs and freq_geos\"] = Array.isArray(data.geo_freqs)"
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined"
 						]
 					}
 				}
@@ -128,8 +125,7 @@
 							"//tests[\"Response is array\"] = Array.isArray(data)",
 							"//tests[\"Response has an element with name\"] = data[0].name !== undefined",
 							"tests[\"Response data is object with name\"] = data.name !== undefined",
-							"//",
-							"tests[\"Response has geo_freqs and freq_geos\"] = Array.isArray(data.geo_freqs) && Array.isArray(data.freq_geos)"
+							"tests[\"Response has geoFreqs and freqGeos\"] = Array.isArray(data.geoFreqs) && Array.isArray(data.freqGeos)"
 						]
 					}
 				}
