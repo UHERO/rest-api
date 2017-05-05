@@ -1,0 +1,517 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Category tests",
+		"_postman_id": "3fb3943b-5878-7b9c-033c-a95abcdd922d",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET all categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response array has length > 5\"] = data.length > 5",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "See all categories"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Top-level categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"//tests[\"Response data is object with name\"] = data.name !== undefined",
+							"//",
+							"//tests[\"Response has geo_freqs and freq_geos\"] = Array.isArray(data.geo_freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category?top_level=true",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Get all categories with no parent"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Non-top-level categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response array has length > 5\"] = data.length > 5",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category?top_level=false",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Get all categories WITH a parent"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Existing category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"//tests[\"Response is array\"] = Array.isArray(data)",
+							"//tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response data is object with name\"] = data.name !== undefined",
+							"//",
+							"tests[\"Response has geo_freqs and freq_geos\"] = Array.isArray(data.geo_freqs) && Array.isArray(data.freq_geos)"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category?id=16",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "See all categories"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Non-existing category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"//tests[\"Response is array\"] = Array.isArray(data)",
+							"//tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response data is object with empty name\"] = data.name === ''",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category?id=999",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "See all categories"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Categories by search text",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category?search_text=summary",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Get all categories with the word \"summary\" in the name"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Categories by search non-exist text",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is null\"] = data === null"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category?search_text=nosuchtext",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Get all categories with the word \"summary\" in the name"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category freq",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with freq\"] = data[0].freq !== undefined"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category/freq?id=16",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category geo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response has HON\"] = data[0].handle === 'HON'",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category/geo?id=22",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category measurements",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category/measurements?id=34",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response element has geoFreqs and freqGeos\"] = Array.isArray(data[0].geoFreqs) && Array.isArray(data[0].freqGeos)"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category/series?id=34",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id, expand",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response element has geoFreqs and freqGeos\"] = Array.isArray(data[0].geoFreqs) && Array.isArray(data[0].freqGeos)"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category/series?id=34&expand=true",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id/geo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response element has geoFreqs and freqGeos\"] = Array.isArray(data[0].geoFreqs) && Array.isArray(data[0].freqGeos)"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category/series?id=34&geo=HAW",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id/freq",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response element has geoFreqs and freqGeos\"] = Array.isArray(data[0].geoFreqs) && Array.isArray(data[0].freqGeos)"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category/series?id=34&freq=Q",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id/geo/freq",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response element has geoFreqs and freqGeos\"] = Array.isArray(data[0].geoFreqs) && Array.isArray(data[0].freqGeos)"
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "api.uhero.hawaii.edu/v1/category/series?id=34&geo=HI&freq=Q",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M=",
+						"description": ""
+					}
+				],
+				"body": {},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		}
+	]
+}
