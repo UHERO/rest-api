@@ -47,6 +47,15 @@ openssl genrsa -out app.rsa 1024
 openssl rsa -in app.rsa -pubout > app.rsa.pub
 ```
 
+## Testing the API
+
+End-to-end testing of the API can be accomplished using Postman. Test collections (JSON files) can be
+found in the `tests` directory. In Postman, click the *Import* button in the top left, and drop
+or select one of the test collections to upload. In the left sidebar area, select tab *Collections*.
+Choose a test collection to run, and click the expansion arrow. You should see a blue *Run* button.
+Clicking this will open Postman's Collection Runner. Select the collection to run, if it's not already
+highlighted, and click the blue *Start Test* button.
+
 ## Testing the UI
 
 The API developer portal requires polymer to build the assets in the `public` folder.
