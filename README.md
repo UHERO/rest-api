@@ -49,7 +49,7 @@ openssl rsa -in app.rsa -pubout > app.rsa.pub
 
 ## Testing the API
 
-End-to-end testing of the API can be accomplished using Postman (https://www.getpostman.com/).
+End-to-end testing of the API can be accomplished using [Postman](https://www.getpostman.com/ "Postman").
 Test collections (JSON files) can be
 found in the `tests` directory. In Postman, click the *Import* button in the top left, and drop
 or select one of the test collections to upload. In the left sidebar area, select tab *Collections*.
