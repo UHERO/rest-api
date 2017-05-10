@@ -56,13 +56,13 @@ func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary mo
 	searchSummary.SearchText = searchText
 
 	var observationStart, observationEnd models.NullTime
-	err = r.DB.QueryRow(`SELECT MIN(data_points.date) AS start_date, MAX(data_points.date) AS end_date
+	err = r.DB.QueryRow(`SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
 	FROM series
- 	LEFT JOIN data_points ON data_points.series_id = series.id
+ 	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
  	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	AND data_points.current AND NOT series.restricted
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, searchText, searchText).Scan(
 		&observationStart,
 		&observationEnd,
