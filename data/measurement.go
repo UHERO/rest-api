@@ -24,8 +24,7 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 		ORDER BY data_list_measurements.list_order;`,
 		categoryId,
 	)
-	var prefix sql.NullString
-	var postfix sql.NullString
+	var prefix, postfix sql.NullString
 	if err != nil {
 		return
 	}
