@@ -24,6 +24,8 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 		ORDER BY data_list_measurements.list_order;`,
 		categoryId,
 	)
+	var prefix sql.NullString
+	var postfix sql.NullString
 	if err != nil {
 		return
 	}
@@ -32,11 +34,17 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 		err = rows.Scan(
 			&measurement.Id,
 			&measurement.Name,
-			&measurement.TablePrefix,
-			&measurement.TablePostfix,
+			&prefix,
+			&postfix,
 		)
 		if err != nil {
 			return
+		}
+		if prefix.Valid {
+			measurement.TablePrefix = prefix.String
+		}
+		if postfix.Valid {
+			measurement.TablePostfix = postfix.String
 		}
 		measurementList = append(measurementList, measurement)
 	}
