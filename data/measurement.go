@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+
 	"github.com/UHERO/rest-api/models"
 )
 
@@ -13,7 +14,7 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 	measurementList []models.Measurement,
 	err error,
 ) {
-	rows, err := r.DB.Query(`SELECT measurements.id, measurements.data_portal_name
+	rows, err := r.DB.Query(`SELECT measurements.id, measurements.data_portal_name, measurements.table_prefix, measurements.table_postfix
 		FROM categories
 		LEFT JOIN data_list_measurements ON categories.data_list_id = data_list_measurements.data_list_id
 		LEFT JOIN measurements ON data_list_measurements.measurement_id = measurements.id
@@ -31,6 +32,8 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 		err = rows.Scan(
 			&measurement.Id,
 			&measurement.Name,
+			&measurement.TablePrefix,
+			&measurement.TablePostfix,
 		)
 		if err != nil {
 			return

@@ -134,8 +134,10 @@ type Series struct {
 }
 
 type Measurement struct {
-	Id   int64  `json:"id"`
-	Name string `json:"name"`
+	Id           int64  `json:"id"`
+	Name         string `json:"name"`
+	TablePrefix  string `json:"tablePrefix"`
+	TablePostfix string `json:"tablePostfix"`
 }
 
 type DataPortalSeries struct {
@@ -146,7 +148,7 @@ type DataPortalSeries struct {
 	Frequency                   string                  `json:"frequency,omitempty"`
 	FrequencyShort              string                  `json:"frequencyShort,omitempty"`
 	SeasonallyAdjusted          *bool                   `json:"seasonallyAdjusted,omitempty"`
-	SeasonalAdjustment	    string		    `json:"seasonalAdjustment,omitempty"`
+	SeasonalAdjustment          string                  `json:"seasonalAdjustment,omitempty"`
 	UnitsLabel                  string                  `json:"unitsLabel,omitEmpty"`
 	UnitsLabelShort             string                  `json:"unitsLabelShort,omitEmpty"`
 	Geography                   DataPortalGeography     `json:"geography,omitEmpty"`
