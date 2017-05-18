@@ -14,7 +14,7 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 	measurementList []models.Measurement,
 	err error,
 ) {
-	rows, err := r.DB.Query(`SELECT measurements.id, measurements.data_portal_name, measurements.table_prefix, measurements.table_postfix
+	rows, err := r.DB.Query(`SELECT measurements.id, measurements.data_portal_name
 		FROM categories
 		LEFT JOIN data_list_measurements ON categories.data_list_id = data_list_measurements.data_list_id
 		LEFT JOIN measurements ON data_list_measurements.measurement_id = measurements.id
@@ -24,7 +24,7 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 		ORDER BY data_list_measurements.list_order;`,
 		categoryId,
 	)
-	var prefix, postfix sql.NullString
+
 	if err != nil {
 		return
 	}
@@ -33,17 +33,9 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 		err = rows.Scan(
 			&measurement.Id,
 			&measurement.Name,
-			&prefix,
-			&postfix,
 		)
 		if err != nil {
 			return
-		}
-		if prefix.Valid {
-			measurement.TablePrefix = prefix.String
-		}
-		if postfix.Valid {
-			measurement.TablePostfix = postfix.String
 		}
 		measurementList = append(measurementList, measurement)
 	}

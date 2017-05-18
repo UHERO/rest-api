@@ -131,13 +131,13 @@ type Series struct {
 	SourceLink         sql.NullString
 	SourceDetails      sql.NullString
 	Indent             sql.NullString
+	TablePrefix        sql.NullString
+	TablePostfix       sql.NullString
 }
 
 type Measurement struct {
-	Id           int64  `json:"id"`
-	Name         string `json:"name"`
-	TablePrefix  string `json:"tablePrefix"`
-	TablePostfix string `json:"tablePostfix"`
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
 }
 
 type DataPortalSeries struct {
@@ -163,6 +163,8 @@ type DataPortalSeries struct {
 	SourceLinkDeprecated        string                  `json:"source_link,omitempty"`
 	SourceDetails               string                  `json:"sourceDetails,omitempty"`
 	Indent                      int                     `json:"indent,omitempty"`
+	TablePrefix                 string                  `json:"tablePrefix"`
+	TablePostfix                string                  `json:"tablePostfix"`
 	GeographyFrequencies        *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
 	FrequencyGeographies        *[]FrequencyGeographies `json:"freqGeos,omitempty"`
 	GeoFreqsDeprecated          *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
