@@ -2,10 +2,11 @@ package data
 
 import (
 	"database/sql"
-	"github.com/UHERO/rest-api/models"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/UHERO/rest-api/models"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -42,6 +43,8 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.SourceDescription,
 		&series.SourceLink,
 		&series.SourceDetails,
+		&series.TablePrefix,
+		&series.TablePostfix,
 		&series.Indent,
 		&series.BaseYear,
 		&series.Decimals,
@@ -93,6 +96,13 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if series.SourceDetails.Valid {
 		dataPortalSeries.SourceDetails = series.SourceDetails.String
 	}
+	if series.TablePrefix.Valid {
+		dataPortalSeries.TablePrefix = series.TablePrefix.String
+	}
+	if series.TablePostfix.Valid {
+		dataPortalSeries.TablePostfix = series.TablePostfix.String
+	}
+
 	if series.Decimals.Valid {
 		dataPortalSeries.Decimals = &series.Decimals.Int64
 	}
@@ -136,6 +146,8 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.SourceDescription,
 		&series.SourceLink,
 		&series.SourceDetails,
+		&series.TablePrefix,
+		&series.TablePostfix,
 		&series.BaseYear,
 		&series.Decimals,
 		&geography.FIPS,
@@ -185,6 +197,12 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.SourceDetails.Valid {
 		dataPortalSeries.SourceDetails = series.SourceDetails.String
+	}
+	if series.TablePrefix.Valid {
+		dataPortalSeries.TablePrefix = series.TablePrefix.String
+	}
+	if series.TablePostfix.Valid {
+		dataPortalSeries.TablePostfix = series.TablePostfix.String
 	}
 	if series.Decimals.Valid {
 		dataPortalSeries.Decimals = &series.Decimals.Int64

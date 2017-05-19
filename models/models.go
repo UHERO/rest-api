@@ -131,6 +131,8 @@ type Series struct {
 	SourceLink         sql.NullString
 	SourceDetails      sql.NullString
 	Indent             sql.NullString
+	TablePrefix        sql.NullString
+	TablePostfix       sql.NullString
 }
 
 type Measurement struct {
@@ -146,7 +148,7 @@ type DataPortalSeries struct {
 	Frequency                   string                  `json:"frequency,omitempty"`
 	FrequencyShort              string                  `json:"frequencyShort,omitempty"`
 	SeasonallyAdjusted          *bool                   `json:"seasonallyAdjusted,omitempty"`
-	SeasonalAdjustment	    string		    `json:"seasonalAdjustment,omitempty"`
+	SeasonalAdjustment          string                  `json:"seasonalAdjustment,omitempty"`
 	UnitsLabel                  string                  `json:"unitsLabel,omitEmpty"`
 	UnitsLabelShort             string                  `json:"unitsLabelShort,omitEmpty"`
 	Geography                   DataPortalGeography     `json:"geography,omitEmpty"`
@@ -161,6 +163,8 @@ type DataPortalSeries struct {
 	SourceLinkDeprecated        string                  `json:"source_link,omitempty"`
 	SourceDetails               string                  `json:"sourceDetails,omitempty"`
 	Indent                      int                     `json:"indent,omitempty"`
+	TablePrefix                 string                  `json:"tablePrefix"`
+	TablePostfix                string                  `json:"tablePostfix"`
 	GeographyFrequencies        *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
 	FrequencyGeographies        *[]FrequencyGeographies `json:"freqGeos,omitempty"`
 	GeoFreqsDeprecated          *[]GeographyFrequencies `json:"geo_freqs,omitempty"`

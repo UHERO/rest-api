@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+
 	"github.com/UHERO/rest-api/models"
 )
 
@@ -23,6 +24,7 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 		ORDER BY data_list_measurements.list_order;`,
 		categoryId,
 	)
+
 	if err != nil {
 		return
 	}
