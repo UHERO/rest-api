@@ -19,7 +19,8 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 		LEFT JOIN measurements ON data_list_measurements.measurement_id = measurements.id
 		WHERE categories.id = ?
 		AND NOT categories.hidden
-		AND measurements.id IS NOT NULL;`,
+		AND measurements.id IS NOT NULL
+		ORDER BY data_list_measurements.list_order;`,
 		categoryId,
 	)
 	if err != nil {
