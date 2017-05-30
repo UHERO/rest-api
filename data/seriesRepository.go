@@ -2,9 +2,10 @@ package data
 
 import (
 	"database/sql"
-	"github.com/UHERO/rest-api/models"
 	"strings"
 	"time"
+
+	"github.com/UHERO/rest-api/models"
 )
 
 type SeriesRepository struct {
@@ -101,6 +102,7 @@ var seriesPrefix = `SELECT
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
+	measurements.table_prefix, measurements.table_postfix,
 	data_list_measurements.indent, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
@@ -126,6 +128,7 @@ var measurementSeriesPrefix = `SELECT DISTINCT
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
+	measurements.table_prefix, measurements.table_postfix,
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM measurements
@@ -150,6 +153,7 @@ var siblingsPrefix = `SELECT DISTINCT
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
+	measurements.table_prefix, measurements.table_postfix,
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
@@ -572,6 +576,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
+	measurements.table_prefix, measurements.table_postfix,
 	series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series

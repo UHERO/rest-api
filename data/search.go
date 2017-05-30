@@ -1,9 +1,10 @@
 package data
 
 import (
-	"github.com/UHERO/rest-api/models"
 	"sort"
 	"time"
+
+	"github.com/UHERO/rest-api/models"
 )
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
@@ -15,6 +16,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
+	measurements.table_prefix, measurements.table_postfix,
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
@@ -162,6 +164,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
+	measurements.table_prefix, measurements.table_postfix,
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
 	FROM series
@@ -219,6 +222,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
+	measurements.table_prefix, measurements.table_postfix,
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
 	FROM series
