@@ -30,6 +30,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
+	AND series.name NOT LIKE 'DBEDT%'
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
@@ -63,7 +64,8 @@ func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary mo
 	FROM series
  	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
  	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
-	WHERE ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+	WHERE series.name NOT LIKE 'DBEDT%'
+	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, searchText, searchText).Scan(
@@ -85,6 +87,7 @@ FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(s.name, LOCATE('@', s.name) + 1), '.', 1
       FROM (SELECT series.name FROM series
 			  LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 			WHERE NOT restricted
+				AND series.name NOT LIKE 'DBEDT%'
 					AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 					AND (MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
                                  OR LOWER(CONCAT(series.name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%')) AS s
@@ -179,6 +182,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
+	AND series.name NOT LIKE 'DBEDT%'
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
@@ -238,6 +242,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
+	AND series.name NOT LIKE 'DBEDT%'
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
