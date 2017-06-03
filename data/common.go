@@ -45,6 +45,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.SourceDetails,
 		&series.TablePrefix,
 		&series.TablePostfix,
+		&series.MeasurementId,
 		&series.Indent,
 		&series.BaseYear,
 		&series.Decimals,
@@ -102,7 +103,9 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if series.TablePostfix.Valid {
 		dataPortalSeries.TablePostfix = series.TablePostfix.String
 	}
-
+	if series.MeasurementId.Valid {
+		dataPortalSeries.MeasurementId = series.MeasurementId.Int64
+	}
 	if series.Decimals.Valid {
 		dataPortalSeries.Decimals = &series.Decimals.Int64
 	}
@@ -148,6 +151,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.SourceDetails,
 		&series.TablePrefix,
 		&series.TablePostfix,
+		&series.MeasurementId,
 		&series.BaseYear,
 		&series.Decimals,
 		&geography.FIPS,
@@ -203,6 +207,9 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.TablePostfix.Valid {
 		dataPortalSeries.TablePostfix = series.TablePostfix.String
+	}
+	if series.MeasurementId.Valid {
+		dataPortalSeries.MeasurementId = series.MeasurementId.Int64
 	}
 	if series.Decimals.Valid {
 		dataPortalSeries.Decimals = &series.Decimals.Int64

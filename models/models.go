@@ -133,6 +133,7 @@ type Series struct {
 	Indent             sql.NullString
 	TablePrefix        sql.NullString
 	TablePostfix       sql.NullString
+	MeasurementId      sql.NullInt64
 }
 
 type Measurement struct {
@@ -145,6 +146,7 @@ type DataPortalSeries struct {
 	Name                        string                  `json:"name"`
 	Title                       string                  `json:"title,omitempty"`
 	Description                 string                  `json:"description,omitempty"`
+	MeasurementId               int64                   `json:"measurementId,omitempty"`
 	Frequency                   string                  `json:"frequency,omitempty"`
 	FrequencyShort              string                  `json:"frequencyShort,omitempty"`
 	SeasonallyAdjusted          *bool                   `json:"seasonallyAdjusted,omitempty"`
