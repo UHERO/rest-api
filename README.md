@@ -34,6 +34,8 @@ bootprint swagger mock-api/api/swagger.yaml public/docs
 * DB_PASSWORD
 * DB_HOST
 * SESSION_SECRET
+* JIRA_USER
+* JIRA_PASSWORD
 
 ### Session Secret
 * SESSION_SECRET example:
