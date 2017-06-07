@@ -3,7 +3,7 @@ package routers
 import (
 	"github.com/UHERO/rest-api/controllers"
 	"github.com/UHERO/rest-api/data"
-	"github.com/codegangsta/negroni"
+	"github.com/urfave/negroni"
 	"github.com/gorilla/mux"
 )
 
