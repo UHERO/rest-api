@@ -20,8 +20,8 @@ func (r *FeedbackRepository) CreateFeedback(feedback models.Feedback) (err error
 
 	res, err := jiraClient.Authentication.AcquireSessionCookie(os.Getenv("JIRA_USER"), os.Getenv("JIRA_PASSWORD"))
 	if err != nil || res == false {
-		fmt.Printf("JIRA Result: %v\n", res)
-		fmt.Printf("JIRA authentication error: %s", err)
+		log.Printf("JIRA Result: %v\n", res)
+		log.Printf("JIRA authentication error: %s", err)
 		return
 	}
 
@@ -50,10 +50,10 @@ func (r *FeedbackRepository) CreateFeedback(feedback models.Feedback) (err error
 	}
 	issue, _, err := jiraClient.Issue.Create(&i)
 	if err != nil {
-		fmt.Printf("JIRA issue not saved: %s", err)
+		log.Printf("JIRA issue not saved: %s", err)
 		return
 	}
 
-	fmt.Printf("JIRA issue saved: %s\n", issue)
+	log.Printf("JIRA issue saved: %s\n", issue)
 	return
 }
