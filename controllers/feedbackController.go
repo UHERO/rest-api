@@ -32,7 +32,7 @@ func CreateFeedback(feedbackRepository *data.FeedbackRepository) func(http.Respo
 			)
 			return
 		}
-		_, err = feedbackRepository.CreateFeedback(feedback)
+		err = feedbackRepository.CreateFeedback(feedback)
 		if err != nil {
 			common.DisplayAppError(
 				w,
