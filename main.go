@@ -40,7 +40,7 @@ func main() {
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("Start MySQL Server!")
+		log.Fatal("Cannot login to MySQL server")
 	}
 
 	// Set up Redis
