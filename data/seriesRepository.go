@@ -96,13 +96,16 @@ var transformations map[string]transformation = map[string]transformation{
 
 var seriesPrefix = `SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
+	series.unitsLabel,
+	series.unitsLabelShort,
+	series.dataPortalName,
+	measurements.percent,
+	measurements.real,
+	sources.description,
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
+	source_details.description,
+	measurements.table_prefix,
+	measurements.table_postfix,
 	measurements.id,
 	data_list_measurements.indent, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
@@ -113,9 +116,7 @@ var seriesPrefix = `SELECT
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
 	AND NOT categories.hidden
@@ -123,13 +124,16 @@ var seriesPrefix = `SELECT
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var measurementSeriesPrefix = `SELECT DISTINCT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
+	series.unitsLabel,
+	series.unitsLabelShort,
+	series.dataPortalName,
+	measurements.percent,
+	measurements.real,
+	sources.description,
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
+	source_details.description,
+	measurements.table_prefix,
+	measurements.table_postfix,
 	measurements.id,
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
@@ -138,9 +142,7 @@ var measurementSeriesPrefix = `SELECT DISTINCT
 	LEFT JOIN series ON series.id = measurement_series.series_id
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE measurements.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
@@ -149,13 +151,16 @@ var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var sortStmt = ` ORDER BY data_list_measurements.list_order;`
 var siblingsPrefix = `SELECT DISTINCT
         series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
+	series.unitsLabel,
+	series.unitsLabelShort,
+	series.dataPortalName,
+	measurements.percent,
+	measurements.real,
+	sources.description,
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
+	source_details.description,
+	measurements.table_prefix,
+	measurements.table_postfix,
 	measurements.id,
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
@@ -164,9 +169,7 @@ var siblingsPrefix = `SELECT DISTINCT
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
@@ -573,13 +576,16 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row := r.DB.QueryRow(`SELECT DISTINCT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
+	series.unitsLabel,
+	series.unitsLabelShort,
+	series.dataPortalName,
+	measurements.percent,
+	measurements.real,
+	sources.description,
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
+	source_details.description,
+	measurements.table_prefix,
+	measurements.table_postfix,
 	measurements.id,
 	series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
@@ -588,9 +594,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
