@@ -10,13 +10,16 @@ import (
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
+	series.unitsLabel,
+	series.unitsLabelShort,
+	series.dataPortalName,
+	measurements.percent,
+	measurements.real,
+	sources.description,
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
+	source_details.description,
+	measurements.table_prefix,
+	measurements.table_postfix,
 	measurements.id,
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
@@ -25,9 +28,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND series.name NOT LIKE 'DBEDT%'
@@ -162,13 +163,16 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, searchText, searchT
 func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
+	series.unitsLabel,
+	series.unitsLabelShort,
+	series.dataPortalName,
+	measurements.percent,
+	measurements.real,
+	sources.description,
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
+	source_details.description,
+	measurements.table_prefix,
+	measurements.table_postfix,
 	measurements.id,
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
@@ -177,9 +181,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND series.name NOT LIKE 'DBEDT%'
@@ -222,13 +224,16 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 ) (seriesList []models.InflatedSeries, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
+	series.unitsLabel,
+	series.unitsLabelShort,
+	series.dataPortalName,
+	measurements.percent,
+	measurements.real,
+	sources.description,
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(sources.link, '')),
+	source_details.description,
+	measurements.table_prefix,
+	measurements.table_postfix,
 	measurements.id,
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
@@ -237,9 +242,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND series.name NOT LIKE 'DBEDT%'
