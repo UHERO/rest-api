@@ -31,6 +31,7 @@ const (
 	YTDPercentChange = "ytdpc1"
 	YOYChange        = "ch1"
 	YTDChange        = "ytdch1"
+	Centered5MA = "c5ma"
 )
 
 var transformations map[string]transformation = map[string]transformation{
@@ -91,6 +92,15 @@ var transformations map[string]transformation = map[string]transformation{
                  WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date);`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
+	},
+	Centered5MA: { // centered, 5 year moving average
+		Statement: `SELECT t1.date, CASE WHEN count(*) = 5 THEN avg(t2.value) ELSE NULL END AS c5ma,
+			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
+			FROM (SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS t1
+			INNER JOIN public_data_points AS t2 ON t2.date BETWEEN DATE_SUB(t1.date, INTERVAL 2 YEAR) AND DATE_ADD(t1.date, INTERVAL 2 YEAR) WHERE series_id = ?
+			GROUP BY date, ph;`,
+		PlaceholderCount: 2,
+		Label: "c5ma",
 	},
 }
 
@@ -616,7 +626,7 @@ func (r *SeriesRepository) GetSeriesObservations(
 ) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
-	YOY, YTD := YOYPercentChange, YTDPercentChange
+	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, Centered5MA
 
 	err = r.DB.QueryRow(`SELECT measurements.percent
 	FROM series
@@ -645,8 +655,12 @@ func (r *SeriesRepository) GetSeriesObservations(
 	if err != nil {
 		return
 	}
+	c5maTransform, err := r.GetTransformation(C5MA, seriesId, &start, &end)
+	if err != nil {
+		return
+	}
 
-	seriesObservations.TransformationResults = []models.TransformationResult{lvlTransform, yoyTransform, ytdTransform}
+	seriesObservations.TransformationResults = []models.TransformationResult{lvlTransform, yoyTransform, ytdTransform, c5maTransform}
 	seriesObservations.ObservationStart = start
 	seriesObservations.ObservationEnd = end
 	return
