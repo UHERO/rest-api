@@ -31,7 +31,7 @@ const (
 	YTDPercentChange = "ytdpc1"
 	YOYChange        = "ch1"
 	YTDChange        = "ytdch1"
-	Centered5MA = "c5ma"
+	Centered5MA      = "c5ma"
 )
 
 var transformations map[string]transformation = map[string]transformation{
@@ -100,7 +100,7 @@ var transformations map[string]transformation = map[string]transformation{
 			INNER JOIN public_data_points AS t2 ON t2.date BETWEEN DATE_SUB(t1.date, INTERVAL 2 YEAR) AND DATE_ADD(t1.date, INTERVAL 2 YEAR) WHERE series_id = ?
 			GROUP BY date, ph;`,
 		PlaceholderCount: 2,
-		Label: "c5ma",
+		Label:            "c5ma",
 	},
 }
 
