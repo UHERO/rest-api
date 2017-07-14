@@ -7,7 +7,7 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/routers"
-	"github.com/codegangsta/negroni"
+	"github.com/urfave/negroni"
 	"github.com/garyburd/redigo/redis"
 	"github.com/go-sql-driver/mysql"
 	"log"
@@ -40,7 +40,7 @@ func main() {
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("Start MySQL Server!")
+		log.Fatal("Cannot login to MySQL server")
 	}
 
 	// Set up Redis
@@ -89,7 +89,7 @@ func main() {
 	seriesRepository := &data.SeriesRepository{DB: db}
 	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
-	feedbackRepository := &data.FeedbackRepository{DB: db}
+	feedbackRepository := &data.FeedbackRepository{}
 	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * 10} //TTL in seconds
 
 	// Get the mux router object

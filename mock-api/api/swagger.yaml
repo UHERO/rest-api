@@ -155,9 +155,9 @@ paths:
     get:
       tags:
       - "Categories"
-      summmary: "Measurements in this Category"
+      summary: "Measurements in this Category"
       description: "A list of measurements in the given category\n"
-      operactionId: "categoryMeasurementsGET"
+      operationId: "categoryMeasurementsGET"
       parameters:
       - name: "id"
         in: "query"

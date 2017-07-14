@@ -1,23 +1,59 @@
 package data
 
 import (
-	"database/sql"
 	"github.com/UHERO/rest-api/models"
+	"log"
+	"os"
+	"fmt"
+	"github.com/andygrunwald/go-jira"
 )
 
 type FeedbackRepository struct {
-	DB *sql.DB
 }
 
-func (r *FeedbackRepository) CreateFeedback(feedback models.Feedback) (numRows int64, err error) {
-	stmt, err := r.DB.Prepare(`INSERT INTO user_feedbacks(name, email, feedback, created_at, updated_at)
-	VALUES (?, ?, ?, NOW(), NOW());`)
+func (r *FeedbackRepository) CreateFeedback(feedback models.Feedback) (err error) {
+	jiraClient, err := jira.NewClient(nil, "https://uhero-analytics.atlassian.net")
 	if err != nil {
+		log.Printf("JIRA connection error: %s", err)
 		return
 	}
-	res, err := stmt.Exec(feedback.Name, feedback.Email, feedback.Feedback)
-	if err != nil {
+
+	res, err := jiraClient.Authentication.AcquireSessionCookie(os.Getenv("JIRA_USER"), os.Getenv("JIRA_PASSWORD"))
+	if err != nil || res == false {
+		log.Printf("JIRA Result: %v\n", res)
+		log.Printf("JIRA authentication error: %s", err)
 		return
 	}
-	return res.RowsAffected()
+
+	i := jira.Issue{
+		Fields: &jira.IssueFields{
+			Assignee: &jira.User{
+				Name: "admin",
+			},
+			Reporter: &jira.User{
+				Name: "admin",
+			},
+			Summary: "Data Portal Feedback",
+			Type: jira.IssueType{
+				Name: "Bug",
+			},
+			Project: jira.Project{
+				Key: "UA",
+			},
+			Description: fmt.Sprintf(
+				"name: %s email: %s feedback: %s",
+				feedback.Name,
+				feedback.Email,
+				feedback.Feedback,
+			),
+		},
+	}
+	issue, _, err := jiraClient.Issue.Create(&i)
+	if err != nil {
+		log.Printf("JIRA issue not saved: %s", err)
+		return
+	}
+
+	log.Printf("JIRA issue saved: %s\n", issue)
+	return
 }
