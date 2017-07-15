@@ -630,8 +630,6 @@ func (r *SeriesRepository) GetSeriesObservations(
 
 	err = r.DB.QueryRow(`SELECT series.percent
 	FROM series
-	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
-	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&percent)
