@@ -46,6 +46,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		&series.TablePrefix,
 		&series.TablePostfix,
 		&series.MeasurementId,
+		&series.MeasurementName,
 		&series.Indent,
 		&series.BaseYear,
 		&series.Decimals,
@@ -57,9 +58,10 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		return
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id:             series.Id,
-		Name:           series.Name,
-		FrequencyShort: series.Name[len(series.Name)-1:],
+		Id:              series.Id,
+		Name:            series.Name,
+		FrequencyShort:  series.Name[len(series.Name)-1:],
+		MeasurementName: series.MeasurementName,
 	}
 	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
 	if series.DataPortalName.Valid {
@@ -152,6 +154,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		&series.TablePrefix,
 		&series.TablePostfix,
 		&series.MeasurementId,
+		&series.MeasurementName,
 		&series.BaseYear,
 		&series.Decimals,
 		&geography.FIPS,
@@ -162,9 +165,10 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		return dataPortalSeries, err
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id:             series.Id,
-		Name:           series.Name,
-		FrequencyShort: series.Name[len(series.Name)-1:],
+		Id:              series.Id,
+		Name:            series.Name,
+		FrequencyShort:  series.Name[len(series.Name)-1:],
+		MeasurementName: series.MeasurementName,
 	}
 	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
 	if series.DataPortalName.Valid {
