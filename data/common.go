@@ -58,10 +58,9 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		return
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id:              series.Id,
-		Name:            series.Name,
-		FrequencyShort:  series.Name[len(series.Name)-1:],
-		MeasurementName: series.MeasurementName,
+		Id:             series.Id,
+		Name:           series.Name,
+		FrequencyShort: series.Name[len(series.Name)-1:],
 	}
 	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
 	if series.DataPortalName.Valid {
@@ -107,6 +106,9 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	}
 	if series.MeasurementId.Valid {
 		dataPortalSeries.MeasurementId = series.MeasurementId.Int64
+	}
+	if series.MeasurementName.Valid {
+		dataPortalSeries.MeasurementName = series.MeasurementName.String
 	}
 	if series.Decimals.Valid {
 		dataPortalSeries.Decimals = &series.Decimals.Int64
@@ -165,10 +167,9 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		return dataPortalSeries, err
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id:              series.Id,
-		Name:            series.Name,
-		FrequencyShort:  series.Name[len(series.Name)-1:],
-		MeasurementName: series.MeasurementName,
+		Id:             series.Id,
+		Name:           series.Name,
+		FrequencyShort: series.Name[len(series.Name)-1:],
 	}
 	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
 	if series.DataPortalName.Valid {
@@ -214,6 +215,9 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	}
 	if series.MeasurementId.Valid {
 		dataPortalSeries.MeasurementId = series.MeasurementId.Int64
+	}
+	if series.MeasurementName.Valid {
+		dataPortalSeries.MeasurementName = series.MeasurementName.String
 	}
 	if series.Decimals.Valid {
 		dataPortalSeries.Decimals = &series.Decimals.Int64
