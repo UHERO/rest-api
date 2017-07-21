@@ -134,7 +134,7 @@ type Series struct {
 	TablePrefix        sql.NullString
 	TablePostfix       sql.NullString
 	MeasurementId      sql.NullInt64
-	MeasurementName    string
+	MeasurementName    sql.NullString
 }
 
 type Measurement struct {
