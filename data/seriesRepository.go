@@ -26,12 +26,13 @@ const (
 )
 
 const (
-	Levels           = "lvl"
-	YOYPercentChange = "pc1"
-	YTDPercentChange = "ytdpc1"
-	YOYChange        = "ch1"
-	YTDChange        = "ytdch1"
-	Centered5MA      = "c5ma"
+	Levels            = "lvl"
+	YOYPercentChange  = "pc1"
+	YTDPercentChange  = "ytdpc1"
+	C5MAPercentChange = "c5mapc1"
+	YOYChange         = "ch1"
+	YTDChange         = "ytdch1"
+	C5MAChange        = "c5mach1"
 )
 
 var transformations map[string]transformation = map[string]transformation{
@@ -93,13 +94,33 @@ var transformations map[string]transformation = map[string]transformation{
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
-	Centered5MA: { // centered, 5 year moving average
-		Statement: `SELECT t1.date, CASE WHEN count(*) = 5 THEN avg(t2.value) ELSE NULL END AS c5ma,
+	C5MAPercentChange: { // c5ma percent change from 1 year ago
+		Statement: `SELECT t1.date, (t1.c5ma/t2.last_c5ma - 1)*100 AS c5ma, 
 			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
-			FROM (SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS t1
-			INNER JOIN public_data_points AS t2 ON t2.date BETWEEN DATE_SUB(t1.date, INTERVAL 2 YEAR) AND DATE_ADD(t1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-			GROUP BY date, ph;`,
-		PlaceholderCount: 2,
+			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
+				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
+				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
+				GROUP by series_id, date, last_year, pseudo_history) AS t1
+			LEFT JOIN (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS last_c5ma, pdp1.pseudo_history FROM
+				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
+				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
+				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date);`,
+		PlaceholderCount: 4,
+		Label:            "c5ma",
+	},
+	C5MAChange: { // cm5a change from 1 year ago
+		Statement: `SELECT t1.date, (t1.c5ma - t2.last_c5ma)/series.units AS c5ma, 
+			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
+			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
+				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
+				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
+				GROUP by series_id, date, last_year, pseudo_history) AS t1
+			LEFT JOIN (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS last_c5ma, pdp1.pseudo_history FROM
+				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
+				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
+				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
+				LEFT JOIN series ON t1.series_id = series.id;`,
+		PlaceholderCount: 4,
 		Label:            "c5ma",
 	},
 }
@@ -108,12 +129,12 @@ var seriesPrefix = `SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	measurements.table_prefix, measurements.table_postfix,
-	measurements.id,
+	measurements.id, measurements.data_portal_name,
 	data_list_measurements.indent, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
@@ -135,12 +156,12 @@ var measurementSeriesPrefix = `SELECT DISTINCT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	measurements.table_prefix, measurements.table_postfix,
-	measurements.id,
+	measurements.id, measurements.data_portal_name,
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM measurements
@@ -161,12 +182,12 @@ var siblingsPrefix = `SELECT DISTINCT
         series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	measurements.table_prefix, measurements.table_postfix,
-	measurements.id,
+	measurements.id, measurements.data_portal_name,
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
@@ -585,12 +606,12 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	measurements.table_prefix, measurements.table_postfix,
-	measurements.id,
+	measurements.id, measurements.data_portal_name,
 	series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
@@ -626,12 +647,10 @@ func (r *SeriesRepository) GetSeriesObservations(
 ) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
-	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, Centered5MA
+	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, C5MAPercentChange
 
-	err = r.DB.QueryRow(`SELECT measurements.percent
+	err = r.DB.QueryRow(`SELECT series.percent
 	FROM series
-	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
-	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&percent)
@@ -641,6 +660,7 @@ func (r *SeriesRepository) GetSeriesObservations(
 	if percent.Valid && percent.Bool {
 		YOY = YOYChange
 		YTD = YTDChange
+		C5MA = C5MAChange
 	}
 
 	lvlTransform, err := r.GetTransformation(Levels, seriesId, &start, &end)

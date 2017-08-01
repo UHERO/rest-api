@@ -12,12 +12,12 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	measurements.table_prefix, measurements.table_postfix,
-	measurements.id,
+	measurements.id, measurements.data_portal_name,
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
@@ -164,12 +164,12 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	measurements.table_prefix, measurements.table_postfix,
-	measurements.id,
+	measurements.id, measurements.data_portal_name,
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
 	FROM series
@@ -224,12 +224,12 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
 	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), measurements.percent, measurements.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
 	measurements.table_prefix, measurements.table_postfix,
-	measurements.id,
+	measurements.id, measurements.data_portal_name,
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
 	FROM series
