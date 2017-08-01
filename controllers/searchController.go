@@ -13,7 +13,7 @@ import (
 
 func GetSeriesBySearchText(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := getSearchTextFromRequest(r)
+		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -30,7 +30,7 @@ func GetSeriesBySearchText(searchRepository *data.SeriesRepository, c *data.Cach
 
 func GetSeriesBySearchTextAndUniverse(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := getSearchTextFromRequest(r)
+		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -40,7 +40,7 @@ func GetSeriesBySearchTextAndUniverse(searchRepository *data.SeriesRepository, c
 			)
 			return
 		}
-		universeText, ok := getUniverseTextFromRequest(r)
+		universeText, ok := mux.Vars(r)["universe_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -57,7 +57,7 @@ func GetSeriesBySearchTextAndUniverse(searchRepository *data.SeriesRepository, c
 
 func GetSearchSummary(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := getSearchTextFromRequest(r)
+		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -94,7 +94,7 @@ func GetSearchSummary(searchRepository *data.SeriesRepository, c *data.CacheRepo
 
 func GetSearchSummaryByUniverse(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := getSearchTextFromRequest(r)
+		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -104,7 +104,7 @@ func GetSearchSummaryByUniverse(searchRepository *data.SeriesRepository, c *data
 			)
 			return
 		}
-		universeText, ok := getUniverseTextFromRequest(r)
+		universeText, ok := mux.Vars(r)["universe_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -141,7 +141,7 @@ func GetSearchSummaryByUniverse(searchRepository *data.SeriesRepository, c *data
 
 func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := getSearchTextFromRequest(r)
+		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -178,7 +178,7 @@ func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository, c *dat
 
 func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := getSearchTextFromRequest(r)
+		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -215,7 +215,7 @@ func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository
 
 func GetInflatedSearchResultByGeoAndFreqAndUniverse(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := getSearchTextFromRequest(r)
+		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -225,7 +225,7 @@ func GetInflatedSearchResultByGeoAndFreqAndUniverse(searchRepository *data.Serie
 			)
 			return
 		}
-		universeText, ok := getUniverseTextFromRequest(r)
+		universeText, ok := mux.Vars(r)["universe_text"]
 		if !ok {
 			common.DisplayAppError(
 				w,
@@ -258,23 +258,4 @@ func GetInflatedSearchResultByGeoAndFreqAndUniverse(searchRepository *data.Serie
 		seriesList, err := searchRepository.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, universeText)
 		returnInflatedSeriesList(seriesList, err, w, r, c)
 	}
-}
-
-func getSearchTextFromRequest(r *http.Request) (searchText string, ok bool) {
-	searchText, ok = mux.Vars(r)["q"]
-	if ok {
-		return
-	}
-	searchText, ok = mux.Vars(r)["query"]
-	searchText, ok = mux.Vars(r)["search_text"]
-	return
-}
-
-func getUniverseTextFromRequest(r *http.Request) (universeText string, ok bool) {
-	universeText, ok = mux.Vars(r)["u"]
-	if ok {
-		return
-	}
-	universeText, ok = mux.Vars(r)["universe_text"]
-	return
 }

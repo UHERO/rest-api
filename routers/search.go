@@ -15,8 +15,20 @@ func SetSearchRoutes(
 	router.HandleFunc("/v1/series", controllers.GetSeriesBySearchText(searchRepository, cacheRepository)).Methods("GET").Queries(
 		"search_text", "{search_text:.+}",
 	)
+	// Ordering is important: More specific to less specific
+	router.HandleFunc("/v1/search", controllers.GetSearchSummaryByUniverse(searchRepository, cacheRepository)).Methods("GET").Queries(
+		"q", "{search_text:.+}",
+		"u", "{universe_text:.+}",
+	)
 	router.HandleFunc("/v1/search", controllers.GetSearchSummary(searchRepository, cacheRepository)).Methods("GET").Queries(
 		"q", "{search_text:.+}",
+	)
+	router.HandleFunc("/v1/search/series", controllers.GetInflatedSearchResultByGeoAndFreqAndUniverse(searchRepository, cacheRepository)).Methods("GET").Queries(
+		"q", "{search_text:.+}",
+		"geo", "{geo:[A-Za-z-0-9]+}",
+		"freq", "{freq:[ASQMWDasqmwd]}",
+		"u", "{universe_text:.+}",
+		"expand", "true",
 	)
 	router.HandleFunc("/v1/search/series", controllers.GetInflatedSearchResultByGeoAndFreq(searchRepository, cacheRepository)).Methods("GET").Queries(
 		"q", "{search_text:.+}",
@@ -29,23 +41,12 @@ func SetSearchRoutes(
 		"geo", "{geo:[A-Za-z-0-9]+}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
 	)
+	router.HandleFunc("/v1/search/series", controllers.GetSeriesBySearchTextAndUniverse(searchRepository, cacheRepository)).Methods("GET").Queries(
+		"q", "{search_text:.+}",
+		"u", "{universe_text:.+}",
+	)
 	router.HandleFunc("/v1/search/series", controllers.GetSeriesBySearchText(searchRepository, cacheRepository)).Methods("GET").Queries(
 		"q", "{search_text:.+}",
-	)
-	router.HandleFunc("/v1/search", controllers.GetSearchSummaryByUniverse(searchRepository, cacheRepository)).Methods("GET").Queries(
-		"query", "{search_text:.+}",
-		"u", "{universe_text:.+}",
-	)
-	router.HandleFunc("/v1/search/series", controllers.GetSeriesBySearchTextAndUniverse(searchRepository, cacheRepository)).Methods("GET").Queries(
-		"query", "{search_text:.+}",
-		"u", "{universe_text:.+}",
-	)
-	router.HandleFunc("/v1/search/series", controllers.GetInflatedSearchResultByGeoAndFreqAndUniverse(searchRepository, cacheRepository)).Methods("GET").Queries(
-		"query", "{search_text:.+}",
-		"geo", "{geo:[A-Za-z-0-9]+}",
-		"freq", "{freq:[ASQMWDasqmwd]}",
-		"u", "{universe_text:.+}",
-		"expand", "true",
 	)
 	return router
 }
