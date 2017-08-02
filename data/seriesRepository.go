@@ -127,14 +127,14 @@ var transformations map[string]transformation = map[string]transformation{
 
 var seriesPrefix = `SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
+	MAX(measurements.id), MAX(measurements.data_portal_name),
 	data_list_measurements.indent, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
@@ -152,16 +152,16 @@ var seriesPrefix = `SELECT
 	AND NOT categories.hidden
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
-var measurementSeriesPrefix = `SELECT DISTINCT
+var measurementSeriesPrefix = `SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
+	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM measurements
@@ -177,17 +177,17 @@ var measurementSeriesPrefix = `SELECT DISTINCT
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
-var sortStmt = ` ORDER BY data_list_measurements.list_order;`
-var siblingsPrefix = `SELECT DISTINCT
+var sortStmt = ` GROUP BY series.id ORDER BY data_list_measurements.list_order;`
+var siblingsPrefix = `SELECT
         series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
+	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure

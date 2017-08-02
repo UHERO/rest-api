@@ -8,16 +8,16 @@ import (
 )
 
 func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT DISTINCT
+	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
+	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
@@ -35,6 +35,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	GROUP BY series.id
 	LIMIT 50;`, universeText, searchText, searchText)
 	if err != nil {
 		return
@@ -58,16 +59,16 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 }
 
 func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT DISTINCT
+	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
+	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
@@ -84,6 +85,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	GROUP BY series.id
 	LIMIT 50;`, searchText, searchText)
 	if err != nil {
 		return
@@ -314,16 +316,16 @@ LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, universeText, searc
 }
 
 func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(`SELECT DISTINCT
+	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
+	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
 	FROM series
@@ -340,7 +342,9 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`,
+	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?))
+	GROUP BY series.id
+	LIMIT 50;`,
 		geo,
 		geo,
 		searchText,
@@ -374,16 +378,16 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	geo string,
 	freq string,
 ) (seriesList []models.InflatedSeries, err error) {
-	rows, err := r.DB.Query(`SELECT DISTINCT
+	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
+	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
 	FROM series
@@ -400,7 +404,9 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`,
+	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?))
+	GROUP BY series.id
+	LIMIT 50;`,
 		geo,
 		geo,
 		searchText,
@@ -442,14 +448,14 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 ) (seriesList []models.InflatedSeries, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(measurements.units_label, '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(measurements.units_label_short, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
+	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
+	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
+	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	fips, ?, display_name_short
 	FROM series
@@ -467,7 +473,9 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?)) LIMIT 50;`,
+	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?))
+	GROUP BY series.id
+	LIMIT 50;`,
 		geo,
 		geo,
 		universeText,
