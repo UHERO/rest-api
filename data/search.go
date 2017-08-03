@@ -35,7 +35,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	GROUP BY series.id
+	GROUP BY series.id, geographies.fips, geographies.display_name_short
 	LIMIT 50;`, universeText, searchText, searchText)
 	if err != nil {
 		return
@@ -85,7 +85,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	GROUP BY series.id
+	GROUP BY series.id, geographies.fips, geographies.display_name_short
 	LIMIT 50;`, searchText, searchText)
 	if err != nil {
 		return
@@ -405,7 +405,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?))
-	GROUP BY series.id
+	GROUP BY series.id, geographies.fips, geographies.display_name_short
 	LIMIT 50;`,
 		geo,
 		geo,
@@ -474,7 +474,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?))
-	GROUP BY series.id
+	GROUP BY series.id, geographies.fips, geographies.display_name_short
 	LIMIT 50;`,
 		geo,
 		geo,

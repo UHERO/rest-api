@@ -174,10 +174,11 @@ var measurementSeriesPrefix = `SELECT
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE measurements.id = ? AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
+	GROUP by series.id, geographies.fips, geographies.display_name_short`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
-var sortStmt = ` GROUP BY series.id ORDER BY data_list_measurements.list_order;`
+var sortStmt = ` GROUP by series.id, data_list_measurements.indent, geographies.fips, geographies.display_name_short, data_list_measurements.list_order ORDER BY data_list_measurements.list_order;`
 var siblingsPrefix = `SELECT
         series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
@@ -201,7 +202,8 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
+	GROUP by series.id, geographies.fips, geographies.display_name_short`
 
 func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
