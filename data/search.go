@@ -19,7 +19,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
 	FROM series
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -35,7 +35,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	GROUP BY series.id, geographies.fips, geographies.display_name_short
+	GROUP BY series.id
 	LIMIT 50;`, universeText, searchText, searchText)
 	if err != nil {
 		return
@@ -70,7 +70,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
 	FROM series
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -85,7 +85,7 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	GROUP BY series.id, geographies.fips, geographies.display_name_short
+	GROUP BY series.id
 	LIMIT 50;`, searchText, searchText)
 	if err != nil {
 		return
@@ -327,7 +327,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	fips, ?, display_name_short
+	MAX(fips), ?, MAX(display_name_short)
 	FROM series
 	LEFT JOIN geographies ON geographies.handle LIKE ?
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -389,7 +389,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	fips, ?, display_name_short
+	MAX(fips), ?, MAX(display_name_short)
 	FROM series
 	LEFT JOIN geographies ON geographies.handle LIKE ?
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -405,7 +405,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?))
-	GROUP BY series.id, geographies.fips, geographies.display_name_short
+	GROUP BY series.id
 	LIMIT 50;`,
 		geo,
 		geo,
@@ -457,7 +457,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	fips, ?, display_name_short
+	MAX(fips), ?, MAX(display_name_short)
 	FROM series
 	LEFT JOIN geographies ON geographies.handle LIKE ?
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -474,7 +474,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?))
-	GROUP BY series.id, geographies.fips, geographies.display_name_short
+	GROUP BY series.id
 	LIMIT 50;`,
 		geo,
 		geo,

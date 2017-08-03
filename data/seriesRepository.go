@@ -135,8 +135,8 @@ var seriesPrefix = `SELECT
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
-	data_list_measurements.indent, series.base_year, series.decimals,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	MAX(data_list_measurements.indent), series.base_year, series.decimals,
+	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
 	FROM series
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -163,7 +163,7 @@ var measurementSeriesPrefix = `SELECT
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
 	FROM measurements
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
@@ -174,11 +174,11 @@ var measurementSeriesPrefix = `SELECT
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE measurements.id = ? AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-	GROUP by series.id, geographies.fips, geographies.display_name_short`
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
-var sortStmt = ` GROUP by series.id, data_list_measurements.indent, geographies.fips, geographies.display_name_short, data_list_measurements.list_order ORDER BY data_list_measurements.list_order;`
+var measurementPostfix = ` GROUP BY series.id;`
+var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
 var siblingsPrefix = `SELECT
         series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
@@ -190,7 +190,7 @@ var siblingsPrefix = `SELECT
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
 	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
@@ -203,7 +203,7 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-	GROUP by series.id, geographies.fips, geographies.display_name_short`
+	GROUP BY series.id`
 
 func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
@@ -214,7 +214,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	sort := sortStmt
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
-		sort = ";"
+		sort = measurementPostfix
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, freqFilter, sort}, ""),
@@ -252,7 +252,7 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 	sort := sortStmt
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
-		sort = ";"
+		sort = measurementPostfix
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
@@ -291,7 +291,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	sort := sortStmt
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
-		sort = ";"
+		sort = measurementPostfix
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
@@ -334,7 +334,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndGeo(
 	sort := sortStmt
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
-		sort = ";"
+		sort = measurementPostfix
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, geoFilter, sort}, ""),
@@ -370,7 +370,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroup(
 	sort := sortStmt
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
-		sort = ";"
+		sort = measurementPostfix
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, sort}, ""),
@@ -410,7 +410,7 @@ func (r *SeriesRepository) GetSeriesByGroup(
 	sort := sortStmt
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
-		sort = ";"
+		sort = measurementPostfix
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, sort}, ""),
