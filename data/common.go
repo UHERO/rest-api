@@ -58,10 +58,10 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		return
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id:             series.Id,
-		Name:           series.Name,
-		FrequencyShort: series.Name[len(series.Name)-1:],
+		Id: series.Id,
+		Name: series.Name,
 	}
+	dataPortalSeries.FrequencyShort = dataPortalSeries.Name[len(dataPortalSeries.Name)-1:]
 	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
 	if series.DataPortalName.Valid {
 		dataPortalSeries.Title = series.DataPortalName.String
@@ -69,7 +69,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	if series.Description.Valid {
 		dataPortalSeries.Description = series.Description.String
 	}
-	if series.SeasonallyAdjusted.Valid && series.Name[len(series.Name)-1:] != "A" {
+	if series.SeasonallyAdjusted.Valid && dataPortalSeries.FrequencyShort != "A" {
 		dataPortalSeries.SeasonallyAdjusted = &series.SeasonallyAdjusted.Bool
 	}
 	if series.SeasonalAdjustment.Valid {
@@ -167,10 +167,10 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		return dataPortalSeries, err
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id:             series.Id,
-		Name:           series.Name,
-		FrequencyShort: series.Name[len(series.Name)-1:],
+		Id: series.Id,
+		Name: series.Name,
 	}
+	dataPortalSeries.FrequencyShort = dataPortalSeries.Name[len(dataPortalSeries.Name)-1:]
 	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]
 	if series.DataPortalName.Valid {
 		dataPortalSeries.Title = series.DataPortalName.String
@@ -178,7 +178,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 	if series.Description.Valid {
 		dataPortalSeries.Description = series.Description.String
 	}
-	if series.SeasonallyAdjusted.Valid && series.Name[len(series.Name)-1:] != "A" {
+	if series.SeasonallyAdjusted.Valid && dataPortalSeries.FrequencyShort != "A" {
 		dataPortalSeries.SeasonallyAdjusted = &series.SeasonallyAdjusted.Bool
 	}
 	if series.SeasonalAdjustment.Valid {
@@ -255,7 +255,7 @@ func getFreqGeoCombinations(r *SeriesRepository, seriesId int64) (
 		LEFT JOIN series ON series.id = ms.series_id
 		WHERE measurement_series.series_id = ?) AS s
 	GROUP BY SUBSTR(name, LOCATE('@', name) + 1) ORDER BY COUNT(*) DESC) as geofreq
-	LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, seriesId)
+	LEFT JOIN geographies ON geographies.handle = geofreq.geo WHERE geofreq.geo IS NOT NULL;`, seriesId)
 	if err != nil {
 		return nil, nil, err
 	}
