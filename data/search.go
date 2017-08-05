@@ -170,7 +170,12 @@ func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary mo
 	return
 }
 
-func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
+func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
+	searchText string,
+	geo string,
+	freq string,
+	universeText string,
+) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
@@ -192,7 +197,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.universe = 'UHERO'
+	WHERE series.universe = UPPER(?)
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
@@ -202,6 +207,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 	LIMIT 50;`,
 		geo,
 		geo,
+		universeText,
 		searchText,
 		searchText,
 		geo,
@@ -225,6 +231,11 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo s
 		dataPortalSeries.FreqGeosDeprecated = &freqGeos
 		seriesList = append(seriesList, dataPortalSeries)
 	}
+	return
+}
+
+func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
+	seriesList, err = r.GetSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
 	return
 }
 
@@ -297,11 +308,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	return
 }
 
-func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(
-	searchText string,
-	geo string,
-	freq string,
-) (seriesList []models.InflatedSeries, err error) {
+func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.InflatedSeries, err error) {
 	seriesList, err = r.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
 	return
 }
