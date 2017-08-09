@@ -10,8 +10,8 @@ import (
 func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
+	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
@@ -24,6 +24,8 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN units ON units.id = series.unit_id
+	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
@@ -178,8 +180,8 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
+	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
@@ -192,6 +194,8 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN geographies ON geographies.handle LIKE ?
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN units ON units.id = series.unit_id
+	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
@@ -247,8 +251,8 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 ) (seriesList []models.InflatedSeries, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(series.unitsLabel, ''), NULLIF(MAX(measurements.units_label), '')),
-	COALESCE(NULLIF(series.unitsLabelShort, ''), NULLIF(MAX(measurements.units_label_short), '')),
+	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
+	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
@@ -261,6 +265,8 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN geographies ON geographies.handle LIKE ?
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN units ON units.id = series.unit_id
+	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
