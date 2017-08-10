@@ -7,6 +7,15 @@ import (
 	"github.com/UHERO/rest-api/models"
 )
 
+var freqNames map[string]string = map[string]string{
+	"A": "year",
+	"Q": "quarter",
+	"M": "month",
+	"S": "semi",
+	"W": "week",
+	"D": "day",
+}
+
 func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
@@ -19,9 +28,9 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
+	MAX(geo.fips), MAX(geo.handle) AS shandle, MAX(geo.display_name_short)
 	FROM series
-	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
+	JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id
@@ -90,17 +99,17 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 		searchSummary.ObservationEnd = &observationEnd.Time
 	}
 
-	rows, err := r.DB.Query(`SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
-FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(s.name, LOCATE('@', s.name) + 1), '.', 1)) as geo, MAX(RIGHT(s.name, 1)) as freq
-      FROM (SELECT series.name FROM series
-			  LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-			WHERE series.universe = UPPER(?)
-			AND NOT restricted
-			AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-			AND ((MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-                           OR LOWER(CONCAT(series.name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))) AS s
-GROUP BY SUBSTR(s.name, LOCATE('@', s.name) + 1) ORDER BY COUNT(*) DESC) as geofreq
-LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, universeText, searchText, searchText)
+	rows, err := r.DB.Query(`
+	SELECT DISTINCT g.fips, g.display_name_short, g.handle AS geo, RIGHT(series.name, 1) as freq
+	FROM series
+	  JOIN geographies g on g.id = series.geography_id
+    	  LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
+	WHERE series.universe = UPPER(?)
+	AND NOT restricted
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT quarantined)
+	AND ((MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+	   OR LOWER(CONCAT(series.name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	ORDER BY 1,2,3,4;`, universeText, searchText, searchText)
 	if err != nil {
 		return
 	}
@@ -189,9 +198,9 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(fips), ?, MAX(display_name_short)
+	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name_short)
 	FROM series
-	LEFT JOIN geographies ON geographies.handle LIKE ?
+	JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id
@@ -202,20 +211,19 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = UPPER(?)
+	AND geo.handle = ?
+	AND series.frequency = ?
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?))
 	GROUP BY series.id
 	LIMIT 50;`,
-		geo,
-		geo,
 		universeText,
-		searchText,
-		searchText,
 		geo,
-		freq,
+		freqNames[freq],
+		searchText,
+		searchText,
 	)
 	if err != nil {
 		return
@@ -260,9 +268,9 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(fips), ?, MAX(display_name_short)
+	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name_short)
 	FROM series
-	LEFT JOIN geographies ON geographies.handle LIKE ?
+	JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id
@@ -273,20 +281,19 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = UPPER(?)
+	AND geo.handle = ?
+	AND series.frequency = ?
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	AND LOWER(series.name) LIKE CONCAT('%@', LOWER(?), '.', LOWER(?))
 	GROUP BY series.id
 	LIMIT 50;`,
-		geo,
-		geo,
 		universeText,
-		searchText,
-		searchText,
 		geo,
-		freq,
+		freqNames[freq],
+		searchText,
+		searchText,
 	)
 	if err != nil {
 		return

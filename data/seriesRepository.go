@@ -138,18 +138,18 @@ var seriesPrefix = `SELECT
 	MAX(data_list_measurements.indent), series.base_year, series.decimals,
 	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
 	FROM series
-	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
+	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
 	AND NOT categories.hidden
 	AND NOT series.restricted
@@ -169,17 +169,17 @@ var measurementSeriesPrefix = `SELECT
 	FROM measurements
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
-	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
+	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = measurements.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE measurements.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
-var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
+var geoFilter = ` AND geographies.handle = ? `
 var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
 var measurementPostfix = ` GROUP BY series.id;`
 var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
@@ -199,14 +199,14 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
+	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	GROUP BY series.id`
@@ -585,7 +585,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series
 	JOIN (SELECT name FROM series where id = ?) as original_series
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.name LIKE CONCAT(TRIM(TRAILING 'NS' FROM LEFT(original_series.name, LOCATE("@", original_series.name))), '%')
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
@@ -623,7 +623,6 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	series.base_year, series.decimals,
 	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
 	FROM series
-	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id
@@ -632,7 +631,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
 	dataPortalSeries, err = getNextSeriesFromRow(row)
@@ -661,7 +660,7 @@ func (r *SeriesRepository) GetSeriesObservations(
 
 	err = r.DB.QueryRow(`SELECT series.percent
 	FROM series
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&percent)
 	if err != nil {
