@@ -180,7 +180,7 @@ var measurementSeriesPrefix = `SELECT
 	WHERE measurements.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var geoFilter = ` AND geographies.handle = ? `
-var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
+var freqFilter = ` AND series.frequency = ? `
 var measurementPostfix = ` GROUP BY series.id;`
 var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
 var siblingsPrefix = `SELECT
@@ -225,7 +225,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, freqFilter, sort}, ""),
 		groupId,
-		freq,
+		freqDbNames[freq],
 	)
 	if err != nil {
 		return
@@ -264,7 +264,7 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
-		freq,
+		freqDbNames[freq],
 	)
 	if err != nil {
 		return
@@ -303,7 +303,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
-		freq,
+		freqDbNames[freq],
 	)
 	if err != nil {
 		return
@@ -502,7 +502,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 	seriesId int64,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, freqFilter}, ""), seriesId, freq)
+	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, freqFilter}, ""), seriesId, freqDbNames[freq])
 	if err != nil {
 		return
 	}
@@ -557,7 +557,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter}, ""),
-		seriesId, geo, freq)
+		seriesId, geo, freqDbNames[freq])
 	if err != nil {
 		return
 	}
@@ -584,9 +584,10 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 ) (frequencyList []models.FrequencyResult, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series
-	JOIN (SELECT name FROM series where id = ?) as original_series
+	JOIN (SELECT name FROM series WHERE series.universe = 'UHERO' AND id = ?) as original_series
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.name LIKE CONCAT(TRIM(TRAILING 'NS' FROM LEFT(original_series.name, LOCATE("@", original_series.name))), '%')
+	AND series.universe = 'UHERO'
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
