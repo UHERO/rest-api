@@ -7,15 +7,6 @@ import (
 	"github.com/UHERO/rest-api/models"
 )
 
-var freqNames map[string]string = map[string]string{
-	"A": "year",
-	"Q": "quarter",
-	"M": "month",
-	"S": "semi",
-	"W": "week",
-	"D": "day",
-}
-
 func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
@@ -221,7 +212,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	LIMIT 50;`,
 		universeText,
 		geo,
-		freqNames[freq],
+		freqDbNames[freq],
 		searchText,
 		searchText,
 	)
@@ -291,7 +282,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	LIMIT 50;`,
 		universeText,
 		geo,
-		freqNames[freq],
+		freqDbNames[freq],
 		searchText,
 		searchText,
 	)

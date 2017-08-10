@@ -136,7 +136,7 @@ var seriesPrefix = `SELECT
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	MAX(data_list_measurements.indent), series.base_year, series.decimals,
-	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
+	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name_short)
 	FROM series
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
@@ -165,7 +165,7 @@ var measurementSeriesPrefix = `SELECT
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
+	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name_short)
 	FROM measurements
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
@@ -194,7 +194,7 @@ var siblingsPrefix = `SELECT
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
+	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name_short)
 	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
@@ -449,7 +449,7 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 	LEFT JOIN series ON series.id = measurement_series.series_id
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
 	AND NOT categories.hidden
 	AND NOT series.restricted
@@ -621,8 +621,9 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	measurements.table_prefix, measurements.table_postfix,
 	measurements.id, measurements.data_portal_name,
 	series.base_year, series.decimals,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	geographies.fips, geographies.handle AS shandle, geographies.display_name_short
 	FROM series
+	JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id

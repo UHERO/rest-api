@@ -18,6 +18,15 @@ var freqLabel map[string]string = map[string]string{
 	"D": "Daily",
 }
 
+var freqDbNames map[string]string = map[string]string{
+	"A": "year",
+	"S": "semi",
+	"Q": "quarter",
+	"M": "month",
+	"W": "week",
+	"D": "day",
+}
+
 var indentationLevel map[string]int = map[string]int{
 	"indent0": 0,
 	"indent1": 1,
