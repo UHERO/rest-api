@@ -16,7 +16,8 @@ type CategoryRepository struct {
 func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
 	rows, err := r.DB.Query(`SELECT id, name, ancestry, default_handle, default_freq
 							 FROM categories
-							 WHERE NOT hidden
+							 WHERE universe = 'UHERO'
+							 AND NOT hidden
 							 ORDER BY categories.list_order;`)
 	if err != nil {
 		return
@@ -115,19 +116,16 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
 	}
 
-	rows, err := r.DB.Query(`
-SELECT geographies.fips, geographies.display_name_short, geofreq.geo, geofreq.freq
-FROM (SELECT MAX(SUBSTRING_INDEX(SUBSTR(name, LOCATE('@', name) + 1), '.', 1)) as geo,
-			 MAX(RIGHT(name, 1)) as freq
-	  FROM (SELECT series.name AS name FROM categories
-			LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-			LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-			LEFT JOIN series ON series.id = measurement_series.series_id
-			WHERE categories.id = ?
-			AND NOT categories.hidden
-			AND NOT series.restricted) AS s
-	  GROUP BY SUBSTR(name, LOCATE('@', name) + 1) ORDER BY COUNT(*) DESC) AS geofreq
-LEFT JOIN geographies ON geographies.handle = geofreq.geo;`, id)
+	rows, err := r.DB.Query(
+		`SELECT DISTINCT geo.fips, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
+		FROM categories
+		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+		LEFT JOIN series ON series.id = measurement_series.series_id
+		JOIN geographies AS geo ON geo.id = series.geography_id
+		WHERE categories.id = ?
+		AND NOT categories.hidden
+		AND NOT series.restricted;`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}

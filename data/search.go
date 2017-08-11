@@ -216,6 +216,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 		searchText,
 		searchText,
 	)
+
 	if err != nil {
 		return
 	}
