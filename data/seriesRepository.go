@@ -179,7 +179,7 @@ var measurementSeriesPrefix = `SELECT
 	LEFT JOIN feature_toggles ON feature_toggles.universe = measurements.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE measurements.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
-var geoFilter = ` AND geographies.handle = ? `
+var geoFilter = ` AND geographies.handle = UPPER(?) `
 var freqFilter = ` AND series.frequency = ? `
 var measurementPostfix = ` GROUP BY series.id;`
 var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
@@ -225,7 +225,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, freqFilter, sort}, ""),
 		groupId,
-		freqDbNames[freq],
+		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
 		return
@@ -264,7 +264,7 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
-		freqDbNames[freq],
+		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
 		return
@@ -303,7 +303,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
-		freqDbNames[freq],
+		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
 		return
@@ -502,7 +502,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 	seriesId int64,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, freqFilter}, ""), seriesId, freqDbNames[freq])
+	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, freqFilter}, ""), seriesId, freqDbNames[strings.ToUpper(freq)])
 	if err != nil {
 		return
 	}
@@ -557,7 +557,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter}, ""),
-		seriesId, geo, freqDbNames[freq])
+		seriesId, geo, freqDbNames[strings.ToUpper(freq)])
 	if err != nil {
 		return
 	}

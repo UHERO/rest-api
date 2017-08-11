@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/UHERO/rest-api/models"
+	"strings"
 )
 
 func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
@@ -212,7 +213,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	LIMIT 50;`,
 		universeText,
 		geo,
-		freqDbNames[freq],
+		freqDbNames[strings.ToUpper(freq)],
 		searchText,
 		searchText,
 	)
@@ -283,7 +284,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	LIMIT 50;`,
 		universeText,
 		geo,
-		freqDbNames[freq],
+		freqDbNames[strings.ToUpper(freq)],
 		searchText,
 		searchText,
 	)
