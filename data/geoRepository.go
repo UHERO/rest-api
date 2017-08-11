@@ -11,7 +11,7 @@ type GeographyRepository struct {
 }
 
 func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPortalGeography, err error) {
-	rows, err := r.DB.Query(`SELECT fips, display_name, handle FROM geographies;`)
+	rows, err := r.DB.Query(`SELECT fips, display_name, handle FROM geographies where universe = 'UHERO';`)
 	if err != nil {
 		return
 	}
