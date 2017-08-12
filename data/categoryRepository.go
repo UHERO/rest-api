@@ -122,7 +122,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 		LEFT JOIN series ON series.id = measurement_series.series_id
-		JOIN geographies AS geo ON geo.id = series.geography_id
+		JOIN geographies geo ON geo.id = series.geography_id
 		WHERE categories.id = ?
 		AND NOT categories.hidden
 		AND NOT series.restricted;`, id)

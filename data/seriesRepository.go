@@ -587,7 +587,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	JOIN (SELECT name FROM series WHERE id = ?) as original_series
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = 'UHERO'
-	AND TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1)) =
+	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
 	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)

@@ -260,7 +260,7 @@ func getFreqGeoCombinations(r *SeriesRepository, seriesId int64) (
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
-		JOIN geographies AS geo on geo.id = series.geography_id
+		JOIN geographies geo on geo.id = series.geography_id
 		WHERE measurement_series.series_id = ?;`, seriesId)
 	if err != nil {
 		return nil, nil, err
