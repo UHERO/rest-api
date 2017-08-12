@@ -584,10 +584,11 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 ) (frequencyList []models.FrequencyResult, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series
-	JOIN (SELECT name FROM series WHERE series.universe = 'UHERO' AND id = ?) as original_series
+	JOIN (SELECT name FROM series WHERE id = ?) as original_series
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.name LIKE CONCAT(TRIM(TRAILING 'NS' FROM LEFT(original_series.name, LOCATE("@", original_series.name))), '%')
-	AND series.universe = 'UHERO'
+	WHERE series.universe = 'UHERO'
+	AND TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1)) =
+	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
@@ -622,9 +623,9 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	measurements.table_prefix, measurements.table_postfix,
 	measurements.id, measurements.data_portal_name,
 	series.base_year, series.decimals,
-	geographies.fips, geographies.handle AS shandle, geographies.display_name_short
+	geo.fips, geo.handle AS shandle, geo.display_name_short
 	FROM series
-	JOIN geographies ON geographies.id = series.geography_id
+	JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id

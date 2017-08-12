@@ -92,9 +92,9 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	}
 
 	rows, err := r.DB.Query(`
-	SELECT DISTINCT g.fips, g.display_name_short, g.handle AS geo, RIGHT(series.name, 1) as freq
+	SELECT DISTINCT geo.fips, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
 	FROM series
-	  JOIN geographies g on g.id = series.geography_id
+	  JOIN geographies geo on geo.id = series.geography_id
     	  LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = UPPER(?)
 	AND NOT restricted
