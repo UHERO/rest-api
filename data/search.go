@@ -97,7 +97,7 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	  JOIN geographies geo on geo.id = series.geography_id
     	  LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = UPPER(?)
-	AND NOT restricted
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT quarantined)
 	AND ((MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	   OR LOWER(CONCAT(series.name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
