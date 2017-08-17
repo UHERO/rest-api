@@ -65,7 +65,11 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 }
 
 func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
-	rows, err := r.DB.Query("SELECT id, name FROM categories WHERE ancestry IS NULL AND NOT hidden ORDER BY `list_order`;")
+	rows, err := r.DB.Query(`SELECT id, name FROM categories
+				WHERE universe = 'UHERO'
+				AND ancestry IS NULL
+				AND NOT hidden
+				ORDER BY list_order;`)
 	if err != nil {
 		return
 	}
