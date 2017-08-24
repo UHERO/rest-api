@@ -60,20 +60,26 @@ type SearchSummary struct {
 }
 
 type Geography struct {
-	FIPS   sql.NullString `json:"fips"`
-	Name   sql.NullString `json:"name"`
-	Handle string         `json:"handle"`
+	FIPS             sql.NullString `json:"fips"`
+	Name             sql.NullString `json:"name"`
+	Handle           string         `json:"handle"`
+	ObservationStart NullTime
+	ObservationEnd   NullTime
 }
 
 type DataPortalGeography struct {
-	FIPS   string `json:"fips"`
-	Name   string `json:"name"`
-	Handle string `json:"handle"`
+	FIPS             string     `json:"fips"`
+	Name             string     `json:"name"`
+	Handle           string     `json:"handle"`
+	ObservationStart *time.Time `json:"observationStart,omitempty"`
+	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
 
 type FrequencyResult struct {
-	Freq  string `json:"freq"`
-	Label string `json:"label"`
+	Freq             string     `json:"freq"`
+	Label            string     `json:"label"`
+	ObservationStart *time.Time `json:"observationStart,omitempty"`
+	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
 
 // ByFrequency implements sort.Interface for []FrequencyResult based on

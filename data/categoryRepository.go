@@ -120,16 +120,19 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
 	}
 
-	rows, err := r.DB.Query(
-		`SELECT DISTINCT geo.fips, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
-		FROM categories
-		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-		LEFT JOIN series ON series.id = measurement_series.series_id
-		JOIN geographies geo ON geo.id = series.geography_id
-		WHERE categories.id = ?
-		AND NOT categories.hidden
-		AND NOT series.restricted;`, id)
+	rows, err := r.DB.Query(`SELECT ANY_VALUE(geographies.fips), ANY_VALUE(geographies.display_name_short),
+					ANY_VALUE(geographies.handle), ANY_VALUE(RIGHT(series.name, 1)),
+					MIN(public_data_points.date), MAX(public_data_points.date)
+			FROM categories
+			LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+			LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+			LEFT JOIN series ON series.id = measurement_series.series_id
+			LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+			LEFT JOIN geographies ON geographies.id = series.geography_id
+			WHERE categories.id = ?
+			AND NOT categories.hidden
+			AND NOT series.restricted
+			GROUP BY geographies.id, RIGHT(series.name, 1) ORDER BY COUNT(*) DESC;`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
@@ -145,8 +148,18 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			&scangeo.Name,
 			&scangeo.Handle,
 			&frequency.Freq,
+			&scangeo.ObservationStart,
+			&scangeo.ObservationEnd,
 		)
 		geography := models.DataPortalGeography{Handle: scangeo.Handle}
+		if scangeo.ObservationStart.Valid && scangeo.ObservationStart.Time.After(time.Time{}) {
+			geography.ObservationStart = &scangeo.ObservationStart.Time
+			frequency.ObservationStart = geography.ObservationStart
+		}
+		if scangeo.ObservationEnd.Valid && scangeo.ObservationEnd.Time.After(time.Time{}) {
+			geography.ObservationEnd = &scangeo.ObservationEnd.Time
+			frequency.ObservationEnd = geography.ObservationEnd
+		}
 		if scangeo.FIPS.Valid {
 			geography.FIPS = scangeo.FIPS.String
 		}
