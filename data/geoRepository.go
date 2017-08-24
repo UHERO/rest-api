@@ -44,7 +44,7 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 		LEFT JOIN series ON series.id = measurement_series.series_id
-		     JOIN geographies ON geographies.id = series.geography_id
+		LEFT JOIN geographies ON geographies.id = series.geography_id
 		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 		WHERE (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]'))
 		AND NOT categories.hidden
@@ -83,7 +83,7 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 		`SELECT DISTINCT geographies.fips, geographies.display_name_short, geographies.handle
 		FROM series
 		JOIN (SELECT name FROM series where id = ?) AS original_series
-		JOIN geographies ON geographies.id = series.geography_id
+		LEFT JOIN geographies ON geographies.id = series.geography_id
 		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 		WHERE series.universe = 'UHERO'
 		AND substring_index(series.name, '@', 1) = substring_index(original_series.name, '@', 1)

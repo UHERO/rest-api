@@ -625,7 +625,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	series.base_year, series.decimals,
 	geo.fips, geo.handle AS shandle, geo.display_name_short
 	FROM series
-	JOIN geographies geo ON geo.id = series.geography_id
+	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id

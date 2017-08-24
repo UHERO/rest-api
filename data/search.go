@@ -22,7 +22,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	NULL, series.base_year, series.decimals,
 	MAX(geo.fips), MAX(geo.handle) AS shandle, MAX(geo.display_name_short)
 	FROM series
-	JOIN geographies geo ON geo.id = series.geography_id
+	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id
@@ -94,7 +94,7 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	rows, err := r.DB.Query(`
 	SELECT DISTINCT geo.fips, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
 	FROM series
-	  JOIN geographies geo on geo.id = series.geography_id
+	  LEFT JOIN geographies geo on geo.id = series.geography_id
     	  LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = UPPER(?)
 	AND NOT series.restricted
@@ -192,7 +192,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	NULL, series.base_year, series.decimals,
 	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name_short)
 	FROM series
-	JOIN geographies geo ON geo.id = series.geography_id
+	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id
@@ -263,7 +263,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	NULL, series.base_year, series.decimals,
 	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name_short)
 	FROM series
-	JOIN geographies geo ON geo.id = series.geography_id
+	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id
