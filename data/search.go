@@ -75,12 +75,18 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	err = r.DB.QueryRow(`SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
 	FROM series
  	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
+	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
  	LEFT JOIN feature_toggles ON feature_toggles.universe = public_data_points.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE public_data_points.universe = UPPER(?)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
 	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, universeText, searchText, searchText).Scan(
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`,
+		universeText, searchText, searchText, searchText).Scan(
 		&observationStart,
 		&observationEnd,
 	)
@@ -97,14 +103,19 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	rows, err := r.DB.Query(`
 	SELECT DISTINCT geo.fips, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
 	FROM series
-	  LEFT JOIN geographies geo on geo.id = series.geography_id
-    	  LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN geographies geo on geo.id = series.geography_id
+	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
+	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = UPPER(?)
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT quarantined)
 	AND ((MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	   OR LOWER(CONCAT(series.name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	ORDER BY 1,2,3,4;`, universeText, searchText, searchText)
+	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
+	ORDER BY 1,2,3,4;`, universeText, searchText, searchText, searchText)
 	if err != nil {
 		return
 	}
