@@ -25,6 +25,8 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -36,9 +38,10 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
 	GROUP BY series.id
-	LIMIT 50;`, universeText, searchText, searchText)
+	LIMIT 50;`, universeText, searchText, searchText, searchText)
 	if err != nil {
 		return
 	}
@@ -195,6 +198,8 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -208,12 +213,14 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
 	GROUP BY series.id
 	LIMIT 50;`,
 		universeText,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
+		searchText,
 		searchText,
 		searchText,
 	)
@@ -266,6 +273,8 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -279,12 +288,14 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
 	GROUP BY series.id
 	LIMIT 50;`,
 		universeText,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
+		searchText,
 		searchText,
 		searchText,
 	)
