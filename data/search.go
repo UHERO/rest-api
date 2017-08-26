@@ -39,7 +39,10 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR LOWER(CONCAT(series.name,
+	  		COALESCE(series.description, ''),
+	  		COALESCE(series.dataPortalName, ''),
+	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	GROUP BY series.id
 	LIMIT 50;`, universeText, searchText, searchText, searchText)
 	if err != nil {
@@ -83,7 +86,10 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	WHERE public_data_points.universe = UPPER(?)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR LOWER(CONCAT(series.name,
+	  		COALESCE(series.description, ''),
+	  		COALESCE(series.dataPortalName, ''),
+	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`,
 		universeText, searchText, searchText, searchText).Scan(
@@ -114,7 +120,10 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT quarantined)
 	AND ((MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR LOWER(CONCAT(series.name,
+	  		COALESCE(series.description, ''),
+	  		COALESCE(series.dataPortalName, ''),
+	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	ORDER BY 1,2,3,4;`, universeText, searchText, searchText, searchText)
 	if err != nil {
 		return
@@ -225,7 +234,10 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR LOWER(CONCAT(series.name,
+	  		COALESCE(series.description, ''),
+	  		COALESCE(series.dataPortalName, ''),
+	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	GROUP BY series.id
 	LIMIT 50;`,
 		universeText,
@@ -300,7 +312,10 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName, categories.name)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR LOWER(CONCAT(series.name,
+	  		COALESCE(series.description, ''),
+	  		COALESCE(series.dataPortalName, ''),
+	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	GROUP BY series.id
 	LIMIT 50;`,
 		universeText,
