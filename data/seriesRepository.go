@@ -584,9 +584,9 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 ) (frequencyList []models.FrequencyResult, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series
-	JOIN (SELECT name FROM series WHERE id = ?) as original_series
+	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.universe = 'UHERO'
+	WHERE series.universe = original_series.universe
 	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
 	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
 	AND NOT series.restricted

@@ -16,8 +16,7 @@ type CategoryRepository struct {
 func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
 	rows, err := r.DB.Query(`SELECT id, name, ancestry, default_handle, default_freq
 							 FROM categories
-							 WHERE universe = 'UHERO'
-							 AND NOT hidden
+							 WHERE NOT hidden
 							 ORDER BY categories.list_order;`)
 	if err != nil {
 		return
@@ -66,8 +65,7 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 
 func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
 	rows, err := r.DB.Query(`SELECT id, name FROM categories
-				WHERE universe = 'UHERO'
-				AND ancestry IS NULL
+				WHERE ancestry IS NULL
 				AND NOT hidden
 				ORDER BY list_order;`)
 	if err != nil {
