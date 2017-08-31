@@ -64,7 +64,10 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 }
 
 func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
-	rows, err := r.DB.Query("SELECT id, name FROM categories WHERE ancestry IS NULL AND NOT hidden ORDER BY `list_order`;")
+	rows, err := r.DB.Query(`SELECT id, name FROM categories
+				WHERE ancestry IS NULL
+				AND NOT hidden
+				ORDER BY list_order;`)
 	if err != nil {
 		return
 	}
@@ -115,10 +118,10 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
 	}
 
-	rows, err := r.DB.Query(`SELECT ANY_VALUE(geographies.fips), ANY_VALUE(geographies.display_name),
-			ANY_VALUE(geographies.handle), ANY_VALUE(RIGHT(series.name, 1)),
-			MIN(public_data_points.date), MAX(public_data_points.date)
-	  FROM categories
+	rows, err := r.DB.Query(`SELECT ANY_VALUE(geographies.fips), ANY_VALUE(geographies.display_name_short),
+					ANY_VALUE(geographies.handle), ANY_VALUE(RIGHT(series.name, 1)),
+					MIN(public_data_points.date), MAX(public_data_points.date)
+			FROM categories
 			LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 			LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 			LEFT JOIN series ON series.id = measurement_series.series_id
@@ -127,7 +130,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			WHERE categories.id = ?
 			AND NOT categories.hidden
 			AND NOT series.restricted
-	  GROUP BY geographies.id, RIGHT(series.name, 1) ORDER BY COUNT(*) DESC;`, id)
+			GROUP BY geographies.id, RIGHT(series.name, 1) ORDER BY COUNT(*) DESC;`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
