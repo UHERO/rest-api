@@ -81,7 +81,7 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurement_series.measurement_id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
- 	LEFT JOIN feature_toggles ON feature_toggles.universe = public_data_points.universe AND feature_toggles.name = 'filter_by_quarantine'
+ 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE public_data_points.universe = UPPER(?)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
