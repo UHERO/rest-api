@@ -11,7 +11,7 @@ type GeographyRepository struct {
 }
 
 func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPortalGeography, err error) {
-	rows, err := r.DB.Query(`SELECT fips, display_name, handle FROM geographies where universe = 'UHERO';`)
+	rows, err := r.DB.Query(`SELECT fips, display_name, handle FROM geographies;`)
 	if err != nil {
 		return
 	}
@@ -82,10 +82,10 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 	rows, err := r.DB.Query(
 		`SELECT DISTINCT geographies.fips, geographies.display_name_short, geographies.handle
 		FROM series
-		JOIN (SELECT name FROM series where id = ?) AS original_series
+		JOIN (SELECT name, universe FROM series where id = ?) AS original_series
 		LEFT JOIN geographies ON geographies.id = series.geography_id
 		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-		WHERE series.universe = 'UHERO'
+		WHERE series.universe = original_series.universe
 		AND substring_index(series.name, '@', 1) = substring_index(original_series.name, '@', 1)
 		AND NOT series.restricted
 		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
