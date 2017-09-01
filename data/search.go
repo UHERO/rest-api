@@ -76,27 +76,27 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 
 	var observationStart, observationEnd models.NullTime
 	err = r.DB.QueryRow(`
-	SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
-	FROM public_data_points
-	JOIN series ON series.id = public_data_points.series_id
-	JOIN (
-		SELECT series_id FROM measurement_series where measurement_id in (
-			SELECT measurement_id FROM data_list_measurements where data_list_id in (
-				SELECT data_list_id FROM categories
-				WHERE universe = UPPER(?)
-				AND ((MATCH(name) AGAINST(? IN NATURAL LANGUAGE MODE))
-				OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
-			)
+	    SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
+	    FROM public_data_points
+	    JOIN series ON series.id = public_data_points.series_id
+	    JOIN (
+	      SELECT series_id FROM measurement_series where measurement_id in (
+		SELECT measurement_id FROM data_list_measurements where data_list_id in (
+		  SELECT data_list_id FROM categories
+		  WHERE universe = UPPER(?)
+		  AND ((MATCH(name) AGAINST(? IN NATURAL LANGUAGE MODE))
+		  OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
 		)
-		UNION
-		SELECT id FROM series
-		WHERE universe = UPPER(?)
-		AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-		OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
-	) AS s ON s.series_id = series.id
-	LEFT JOIN feature_toggles ft ON ft.universe = series.universe AND ft.name = 'filter_by_quarantine'
-	WHERE NOT series.restricted
-	AND (ft.status IS NULL OR NOT ft.status OR NOT series.quarantined)`,
+	      )
+	      UNION
+	      SELECT id FROM series
+	      WHERE universe = UPPER(?)
+	      AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+	      OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	    ) AS s ON s.series_id = series.id
+	    LEFT JOIN feature_toggles ft ON ft.universe = series.universe AND ft.name = 'filter_by_quarantine'
+	    WHERE NOT series.restricted
+	    AND (ft.status IS NULL OR NOT ft.status OR NOT series.quarantined)`,
 		universeText, searchText, searchText,
 		universeText, searchText, searchText).Scan(
 		&observationStart,
