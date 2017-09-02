@@ -136,20 +136,20 @@ var seriesPrefix = `SELECT
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	MAX(data_list_measurements.indent), series.base_year, series.decimals,
-	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
+	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name_short)
 	FROM series
-	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
+	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
 	AND NOT categories.hidden
 	AND NOT series.restricted
@@ -165,22 +165,22 @@ var measurementSeriesPrefix = `SELECT
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
+	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name_short)
 	FROM measurements
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
-	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
+	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = measurements.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE measurements.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
-var geoFilter = ` AND series.name LIKE CONCAT('%@', ? ,'.%') `
-var freqFilter = ` AND series.name LIKE CONCAT('%@%.', ?) `
+var geoFilter = ` AND geographies.handle = UPPER(?) `
+var freqFilter = ` AND series.frequency = ? `
 var measurementPostfix = ` GROUP BY series.id;`
 var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
 var siblingsPrefix = `SELECT
@@ -194,19 +194,19 @@ var siblingsPrefix = `SELECT
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(fips), SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, MAX(display_name_short)
+	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name_short)
 	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
+	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	GROUP BY series.id`
@@ -225,7 +225,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, freqFilter, sort}, ""),
 		groupId,
-		freq,
+		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
 		return
@@ -264,7 +264,7 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
-		freq,
+		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
 		return
@@ -303,7 +303,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
-		freq,
+		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
 		return
@@ -449,7 +449,7 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 	LEFT JOIN series ON series.id = measurement_series.series_id
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
 	AND NOT categories.hidden
 	AND NOT series.restricted
@@ -502,7 +502,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 	seriesId int64,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, freqFilter}, ""), seriesId, freq)
+	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, freqFilter}, ""), seriesId, freqDbNames[strings.ToUpper(freq)])
 	if err != nil {
 		return
 	}
@@ -557,7 +557,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter}, ""),
-		seriesId, geo, freq)
+		seriesId, geo, freqDbNames[strings.ToUpper(freq)])
 	if err != nil {
 		return
 	}
@@ -584,9 +584,11 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 ) (frequencyList []models.FrequencyResult, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series
-	JOIN (SELECT name FROM series where id = ?) as original_series
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.name LIKE CONCAT(TRIM(TRAILING 'NS' FROM LEFT(original_series.name, LOCATE("@", original_series.name))), '%')
+	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
+	WHERE series.universe = original_series.universe
+	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
+	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
@@ -621,9 +623,9 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	measurements.table_prefix, measurements.table_postfix,
 	measurements.id, measurements.data_portal_name,
 	series.base_year, series.decimals,
-	fips, SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1) as shandle, display_name_short
+	geo.fips, geo.handle AS shandle, geo.display_name_short
 	FROM series
-	LEFT JOIN geographies ON series.name LIKE CONCAT('%@', geographies.handle, '.%')
+	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN units ON units.id = series.unit_id
@@ -632,7 +634,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
 	dataPortalSeries, err = getNextSeriesFromRow(row)
@@ -661,7 +663,7 @@ func (r *SeriesRepository) GetSeriesObservations(
 
 	err = r.DB.QueryRow(`SELECT series.percent
 	FROM series
-	LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&percent)
 	if err != nil {

@@ -39,21 +39,17 @@ func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPort
 
 func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geographies []models.DataPortalGeography, err error) {
 	rows, err := r.DB.Query(
-		`SELECT geographies.fips, geographies.display_name_short, geographies.handle
-		 FROM (
-			SELECT DISTINCT(SUBSTRING_INDEX(SUBSTR(series.name, LOCATE('@', series.name) + 1), '.', 1)) AS handle
-			FROM categories
-			LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-			LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-			LEFT JOIN series ON series.id = measurement_series.series_id
-			LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
-			WHERE (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]'))
-			AND NOT categories.hidden
-			AND NOT series.restricted
-			AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-		 ) AS category_handles
-		 LEFT JOIN geographies ON geographies.handle LIKE category_handles.handle
-		 WHERE geographies.handle IS NOT NULL;`,
+		`SELECT DISTINCT geographies.fips, geographies.display_name_short, geographies.handle
+		FROM categories
+		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+		LEFT JOIN series ON series.id = measurement_series.series_id
+		LEFT JOIN geographies ON geographies.id = series.geography_id
+		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
+		WHERE (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]'))
+		AND NOT categories.hidden
+		AND NOT series.restricted
+		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`,
 		categoryId,
 		categoryId,
 	)
@@ -83,20 +79,16 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 }
 
 func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []models.DataPortalGeography, err error) {
-	rows, err := r.DB.Query(`SELECT
-		  geographies.fips, geographies.display_name_short,
-		  catgeo.chandle AS handle
-		FROM
-		  (SELECT DISTINCT(SUBSTRING_INDEX(SUBSTR(catnames.name, LOCATE('@', catnames.name) + 1), '.', 1)) AS chandle
-		    FROM
-		      (SELECT series.name AS name
-				FROM series JOIN (SELECT name FROM series where id = ?) as original_series
-				LEFT JOIN feature_toggles ON feature_toggles.name = 'filter_by_quarantine'
-				WHERE series.name LIKE CONCAT(left(original_series.name, locate("@", original_series.name)), '%')
-				AND NOT series.restricted
-				AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined))
-				AS catnames) AS catgeo
-			LEFT JOIN geographies ON catgeo.chandle LIKE geographies.handle;`, seriesId)
+	rows, err := r.DB.Query(
+		`SELECT DISTINCT geographies.fips, geographies.display_name_short, geographies.handle
+		FROM series
+		JOIN (SELECT name, universe FROM series where id = ?) AS original_series
+		LEFT JOIN geographies ON geographies.id = series.geography_id
+		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
+		WHERE series.universe = original_series.universe
+		AND substring_index(series.name, '@', 1) = substring_index(original_series.name, '@', 1)
+		AND NOT series.restricted
+		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
 	if err != nil {
 		return
 	}

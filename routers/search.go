@@ -36,6 +36,12 @@ func SetSearchRoutes(
 		"freq", "{freq:[ASQMWDasqmwd]}",
 		"expand", "true",
 	)
+	router.HandleFunc("/v1/search/series", controllers.GetSearchResultByGeoAndFreqAndUniverse(searchRepository, cacheRepository)).Methods("GET").Queries(
+		"q", "{search_text:.+}",
+		"geo", "{geo:[A-Za-z-0-9]+}",
+		"freq", "{freq:[ASQMWDasqmwd]}",
+		"u", "{universe_text:.+}",
+	)
 	router.HandleFunc("/v1/search/series", controllers.GetSearchResultByGeoAndFreq(searchRepository, cacheRepository)).Methods("GET").Queries(
 		"q", "{search_text:.+}",
 		"geo", "{geo:[A-Za-z-0-9]+}",
