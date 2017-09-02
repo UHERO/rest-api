@@ -25,6 +25,8 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -36,9 +38,13 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name,
+	  		COALESCE(series.description, ''),
+	  		COALESCE(series.dataPortalName, ''),
+	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	GROUP BY series.id
-	LIMIT 50;`, universeText, searchText, searchText)
+	LIMIT 50;`, universeText, searchText, searchText, searchText)
 	if err != nil {
 		return
 	}
@@ -69,15 +75,30 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	searchSummary.SearchText = searchText
 
 	var observationStart, observationEnd models.NullTime
-	err = r.DB.QueryRow(`SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
-	FROM series
- 	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
- 	LEFT JOIN feature_toggles ON feature_toggles.universe = public_data_points.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE public_data_points.universe = UPPER(?)
-	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, universeText, searchText, searchText).Scan(
+	err = r.DB.QueryRow(`
+	    SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
+	    FROM public_data_points
+	    JOIN series ON series.id = public_data_points.series_id
+	    JOIN (
+	      SELECT series_id FROM measurement_series where measurement_id in (
+		SELECT measurement_id FROM data_list_measurements where data_list_id in (
+		  SELECT data_list_id FROM categories
+		  WHERE universe = UPPER(?)
+		  AND ((MATCH(name) AGAINST(? IN NATURAL LANGUAGE MODE))
+		  OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
+		)
+	      )
+	      UNION
+	      SELECT id FROM series
+	      WHERE universe = UPPER(?)
+	      AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+	      OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	    ) AS s ON s.series_id = series.id
+	    LEFT JOIN feature_toggles ft ON ft.universe = series.universe AND ft.name = 'filter_by_quarantine'
+	    WHERE NOT series.restricted
+	    AND (ft.status IS NULL OR NOT ft.status OR NOT series.quarantined)`,
+		universeText, searchText, searchText,
+		universeText, searchText, searchText).Scan(
 		&observationStart,
 		&observationEnd,
 	)
@@ -94,14 +115,21 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	rows, err := r.DB.Query(`
 	SELECT DISTINCT geo.fips, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
 	FROM series
-	  LEFT JOIN geographies geo on geo.id = series.geography_id
-    	  LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN geographies geo on geo.id = series.geography_id
+	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurement_series.measurement_id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = UPPER(?)
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT quarantined)
 	AND ((MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	   OR LOWER(CONCAT(series.name, series.description, dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
-	ORDER BY 1,2,3,4;`, universeText, searchText, searchText)
+	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name,
+	  		COALESCE(series.description, ''),
+	  		COALESCE(series.dataPortalName, ''),
+	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	ORDER BY 1,2,3,4;`, universeText, searchText, searchText, searchText)
 	if err != nil {
 		return
 	}
@@ -195,6 +223,8 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -208,12 +238,17 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name,
+	  		COALESCE(series.description, ''),
+	  		COALESCE(series.dataPortalName, ''),
+	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	GROUP BY series.id
 	LIMIT 50;`,
 		universeText,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
+		searchText,
 		searchText,
 		searchText,
 	)
@@ -266,6 +301,8 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -279,12 +316,17 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name, series.description, series.dataPortalName)) LIKE CONCAT('%', LOWER(?), '%'))
+	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series.name,
+	  		COALESCE(series.description, ''),
+	  		COALESCE(series.dataPortalName, ''),
+	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	GROUP BY series.id
 	LIMIT 50;`,
 		universeText,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
+		searchText,
 		searchText,
 		searchText,
 	)
