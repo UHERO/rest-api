@@ -184,7 +184,7 @@ var freqFilter = ` AND series.frequency = ? `
 var measurementPostfix = ` GROUP BY series.id;`
 var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
 var siblingsPrefix = `SELECT
-        series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+    series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
@@ -199,6 +199,7 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
+	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
@@ -208,6 +209,7 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
+	AND public_data_points.value IS NOT NULL
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	GROUP BY series.id`
 
