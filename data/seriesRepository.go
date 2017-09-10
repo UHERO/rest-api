@@ -570,7 +570,10 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter, siblingSortStmt}, ""),
-		seriesId, geo, freqDbNames[strings.ToUpper(freq)])
+		seriesId,
+		geo,
+		freqDbNames[strings.ToUpper(freq)],
+	)
 	if err != nil {
 		return
 	}
