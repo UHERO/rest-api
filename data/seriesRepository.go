@@ -183,6 +183,7 @@ var geoFilter = ` AND geographies.handle = UPPER(?) `
 var freqFilter = ` AND series.frequency = ? `
 var measurementPostfix = ` GROUP BY series.id;`
 var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
+var siblingSortStmt = ` GROUP BY series.id;`
 var siblingsPrefix = `SELECT
     series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
@@ -210,8 +211,7 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND public_data_points.value IS NOT NULL
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-	GROUP BY series.id`
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 
 func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
@@ -478,7 +478,10 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 }
 
 func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(siblingsPrefix, seriesId)
+	rows, err := r.DB.Query(
+		strings.Join([]string{siblingsPrefix, siblingSortStmt}, ""),
+		seriesId,
+	)
 	if err != nil {
 		return
 	}
@@ -504,7 +507,11 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 	seriesId int64,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, freqFilter}, ""), seriesId, freqDbNames[strings.ToUpper(freq)])
+	rows, err := r.DB.Query(strings.Join(
+		[]string{siblingsPrefix, freqFilter, siblingSortStmt}, ""),
+		seriesId,
+		freqDbNames[strings.ToUpper(freq)],
+	)
 	if err != nil {
 		return
 	}
@@ -530,7 +537,11 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
 	seriesId int64,
 	geo string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(strings.Join([]string{siblingsPrefix, geoFilter}, ""), seriesId, geo)
+	rows, err := r.DB.Query(
+		strings.Join([]string{siblingsPrefix, geoFilter, siblingSortStmt}, ""),
+		seriesId,
+		geo,
+	)
 	if err != nil {
 		return
 	}
@@ -558,7 +569,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
-		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter}, ""),
+		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter, siblingSortStmt}, ""),
 		seriesId, geo, freqDbNames[strings.ToUpper(freq)])
 	if err != nil {
 		return
