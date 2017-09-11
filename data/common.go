@@ -67,7 +67,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		return
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id: series.Id,
+		Id:   series.Id,
 		Name: series.Name,
 	}
 	dataPortalSeries.FrequencyShort = dataPortalSeries.Name[len(dataPortalSeries.Name)-1:]
@@ -176,7 +176,7 @@ func getNextSeriesFromRow(row *sql.Row) (dataPortalSeries models.DataPortalSerie
 		return dataPortalSeries, err
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id: series.Id,
+		Id:   series.Id,
 		Name: series.Name,
 	}
 	dataPortalSeries.FrequencyShort = dataPortalSeries.Name[len(dataPortalSeries.Name)-1:]
@@ -261,7 +261,8 @@ func getFreqGeoCombinations(r *SeriesRepository, seriesId int64) (
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
 		LEFT JOIN geographies geo on geo.id = series.geography_id
-		WHERE measurement_series.series_id = ?;`, seriesId)
+		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
+		WHERE pdp.value IS NOT NULL AND measurement_series.series_id = ?;`, seriesId)
 	if err != nil {
 		return nil, nil, err
 	}
