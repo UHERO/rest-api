@@ -219,15 +219,11 @@ type Feedback struct {
 }
 
 func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		Date          string `json:"date"`
-		Value         string `json:"value"`
-		PseudoHistory *bool  `json:"pseudoHistory,omitempty"`
-	}{
-		Date:          formatDate(o.Date),
-		Value:         fmt.Sprintf("%.4f", o.Value),
-		PseudoHistory: o.PseudoHistory,
-	})
+	dataPoint := []string{ formatDate(o.Date), fmt.Sprintf("%.4f", o.Value) }
+	if o.PseudoHistory != nil {
+		dataPoint = append(dataPoint, fmt.Sprintf("%v", o.PseudoHistory))
+	}
+	return json.Marshal(dataPoint)
 }
 
 // solid idea from stack overflow: http://choly.ca/post/go-json-marshalling/
