@@ -256,46 +256,60 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 	error,
 ) {
 	rows, err := r.DB.Query(
-		`SELECT DISTINCT geo.fips, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) AS freq
+		`SELECT DISTINCT 'geo' AS gftype, geo.handle, geo.fips, geo.display_name_short
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
 		LEFT JOIN geographies geo on geo.id = series.geography_id
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
-		AND measurement_series.series_id = ?;`, seriesId)
+		AND measurement_series.series_id = ?
+			UNION
+		SELECT DISTINCT 'freq' AS gftype, RIGHT(series.name, 1) AS handle, null, null
+		FROM measurement_series
+		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
+		LEFT JOIN series ON series.id = ms.series_id
+		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
+		WHERE pdp.value IS NOT NULL
+		AND measurement_series.series_id = ?
+		;`, seriesId, seriesId)
 	if err != nil {
 		return nil, nil, err
 	}
-	geoFreqs := map[string][]models.FrequencyResult{}
 	geoByHandle := map[string]models.DataPortalGeography{}
-	freqGeos := map[string][]models.DataPortalGeography{}
-	freqByHandle := map[string]models.FrequencyResult{}
+	freqByHandle := map[string]models.DataPortalFrequency{}
 	for rows.Next() {
-		scangeo := models.Geography{}
-		frequency := models.FrequencyResult{}
-		err = rows.Scan(
-			&scangeo.FIPS,
-			&scangeo.Name,
-			&scangeo.Handle,
-			&frequency.Freq,
-		)
-		geography := models.DataPortalGeography{Handle: scangeo.Handle}
-		if scangeo.FIPS.Valid {
-			geography.FIPS = scangeo.FIPS.String
+		var gftype sql.NullString
+		err = rows.Scan(&gftype)
+		geo := models.Geography{}
+		frequency := models.DataPortalFrequency{}
+		if gftype == "geo" {
+			err = rows.Scan(
+				&gftype,
+				&geo.Handle,
+				&geo.FIPS,
+				&geo.Name,
+			)
+		} else {
+			err = rows.Scan(
+				&gftype,
+				&frequency.Freq,
+			)
 		}
-		if scangeo.Name.Valid {
-			geography.Name = scangeo.Name.String
+		geography := models.DataPortalGeography{Handle: geo.Handle}
+		if geo.FIPS.Valid {
+			geography.FIPS = geo.FIPS.String
+		}
+		if geo.Name.Valid {
+			geography.Name = geo.Name.String
 		}
 		frequency.Label = freqLabel[frequency.Freq]
-		// update the freq and geo maps
 		geoByHandle[geography.Handle] = geography
 		freqByHandle[frequency.Freq] = frequency
-		// add to the geoFreqs and freqGeos maps
 		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
 		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
 	}
-	geoFreqsResult := []models.GeographyFrequencies{}
+	geoFreqsResult := []models.Geographies{}
 	for geo, freqs := range geoFreqs {
 		sort.Sort(models.ByFrequency(freqs))
 		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
@@ -314,7 +328,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 		}
 	}
 
-	return geoFreqsResult, freqGeosResult, err
+	return geosResult, freqsResult, err
 }
 
 func formatWithYear(formatString string, year int64) string {
