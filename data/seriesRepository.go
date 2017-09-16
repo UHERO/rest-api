@@ -237,14 +237,12 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -276,14 +274,12 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -315,14 +311,12 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr
@@ -357,14 +351,12 @@ func (r *SeriesRepository) GetSeriesByGroupAndGeo(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -392,14 +384,12 @@ func (r *SeriesRepository) GetInflatedSeriesByGroup(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr
@@ -432,20 +422,18 @@ func (r *SeriesRepository) GetSeriesByGroup(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
 }
 
-func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []models.FrequencyResult, err error) {
+func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM categories
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
@@ -470,7 +458,7 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 		}
 		frequencies = append(
 			frequencies,
-			models.FrequencyResult{Freq: frequency.Freq, Label: freqLabel[frequency.Freq]},
+			models.DataPortalFrequency{Freq: frequency.Freq, Label: freqLabel[frequency.Freq]},
 		)
 	}
 	return
@@ -490,14 +478,12 @@ func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []m
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -520,14 +506,12 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -550,14 +534,12 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -582,14 +564,12 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -597,7 +577,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 
 func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	seriesId int64,
-) (frequencyList []models.FrequencyResult, err error) {
+) (frequencyList []models.DataPortalFrequency, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series
 	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series
@@ -621,7 +601,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 		}
 		frequencyList = append(
 			frequencyList,
-			models.FrequencyResult{Freq: frequency.Freq, Label: freqLabel[frequency.Freq]},
+			models.DataPortalFrequency{Freq: frequency.Freq, Label: freqLabel[frequency.Freq]},
 		)
 	}
 	return
@@ -657,14 +637,12 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	if err != nil {
 		return
 	}
-	geoFreqs, freqGeos, err := getFreqGeoCombinations(r, seriesId)
+	geos, freqs, err := getAllFreqsGeos(r, seriesId)
 	if err != nil {
 		return
 	}
-	dataPortalSeries.GeographyFrequencies = &geoFreqs
-	dataPortalSeries.FrequencyGeographies = &freqGeos
-	dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-	dataPortalSeries.FreqGeosDeprecated = &freqGeos
+	dataPortalSeries.Geographies = &geos
+	dataPortalSeries.Frequencies = &freqs
 	return
 }
 
