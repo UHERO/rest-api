@@ -272,23 +272,25 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		;`, seriesId, seriesId)
+		ORDER BY 1,2 ;`, seriesId, seriesId)
 	if err != nil {
 		return nil, nil, err
 	}
-	geoByHandle := map[string]models.DataPortalGeography{}
-	freqByHandle := map[string]models.DataPortalFrequency{}
+	geosResult := []models.DataPortalGeography{}
+	freqsResult := []models.DataPortalFrequency{}
 	for rows.Next() {
+		geography := models.DataPortalGeography{}
+		frequency := models.DataPortalFrequency{}
+
 		var gftype sql.NullString
 		err = rows.Scan(&gftype)
-		geo := models.Geography{}
-		frequency := models.DataPortalFrequency{}
+		geo_temp := models.Geography{}
 		if gftype == "geo" {
 			err = rows.Scan(
 				&gftype,
-				&geo.Handle,
-				&geo.FIPS,
-				&geo.Name,
+				&geo_temp.Handle,
+				&geo_temp.FIPS,
+				&geo_temp.Name,
 			)
 		} else {
 			err = rows.Scan(
@@ -296,38 +298,18 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 				&frequency.Freq,
 			)
 		}
-		geography := models.DataPortalGeography{Handle: geo.Handle}
-		if geo.FIPS.Valid {
-			geography.FIPS = geo.FIPS.String
+		geography.Handle = geo_temp.Handle
+		if geo_temp.FIPS.Valid {
+			geography.FIPS = geo_temp.FIPS.String
 		}
-		if geo.Name.Valid {
-			geography.Name = geo.Name.String
+		if geo_temp.Name.Valid {
+			geography.Name = geo_temp.Name.String
 		}
+		geosResult = append(geosResult, geography)
+
 		frequency.Label = freqLabel[frequency.Freq]
-		geoByHandle[geography.Handle] = geography
-		freqByHandle[frequency.Freq] = frequency
-		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
-		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
+		freqsResult = append(freqsResult, frequency)
 	}
-	geoFreqsResult := []models.Geographies{}
-	for geo, freqs := range geoFreqs {
-		sort.Sort(models.ByFrequency(freqs))
-		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
-			DataPortalGeography: geoByHandle[geo],
-			Frequencies:         freqs,
-		})
-	}
-
-	freqGeosResult := []models.FrequencyGeographies{}
-	for _, freq := range models.FreqOrder {
-		if val, ok := freqByHandle[freq]; ok {
-			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
-				FrequencyResult: val,
-				Geographies:     freqGeos[freq],
-			})
-		}
-	}
-
 	return geosResult, freqsResult, err
 }
 
