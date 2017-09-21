@@ -208,8 +208,10 @@ type SeriesObservations struct {
 }
 
 type TransformationResult struct {
-	Transformation string                  `json:"transformation"`
-	Observations   []DataPortalObservation `json:"observations"`
+	Transformation string        `json:"transformation"`
+	ObservationDates   []string  `json:"observation_dates"`
+	ObservationValues  []float64 `json:"observation_values"`
+	ObservationPHist   []bool    `json:"observation_phistory"`
 }
 
 type Feedback struct {

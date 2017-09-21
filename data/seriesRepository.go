@@ -740,7 +740,9 @@ func (r *SeriesRepository) GetTransformation(
 		return
 	}
 	var (
-		observations []models.DataPortalObservation
+		observation_dates  []string
+		observation_values []float64
+		observation_phist  []bool
 	)
 
 	for rows.Next() {
@@ -769,10 +771,10 @@ func (r *SeriesRepository) GetTransformation(
 		if observation.PseudoHistory.Valid && observation.PseudoHistory.Bool {
 			dataPortalObservation.PseudoHistory = &observation.PseudoHistory.Bool
 		}
-		observations = append(
-			observations,
-			dataPortalObservation,
-		)
+		// This "magic" date must be used for formatting!
+		observation_dates = append(observation_dates, observation.Date.Format("2006-01-02"))
+		observation_values = append(observation_values, observation.Value.Float64)
+		observation_phist = append(observation_phist, observation.PseudoHistory.Bool)
 	}
 	if currentStart.IsZero() || (!observationStart.IsZero() && currentStart.After(observationStart)) {
 		*currentStart = observationStart
@@ -781,6 +783,8 @@ func (r *SeriesRepository) GetTransformation(
 		*currentEnd = observationEnd
 	}
 	transformationResult.Transformation = transformations[transformation].Label
-	transformationResult.Observations = observations
+	transformationResult.ObservationDates = observation_dates
+	transformationResult.ObservationValues = observation_values
+	transformationResult.ObservationPHist = observation_phist
 	return
 }
