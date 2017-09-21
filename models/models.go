@@ -210,7 +210,7 @@ type SeriesObservations struct {
 type TransformationResult struct {
 	Transformation string        `json:"transformation"`
 	ObservationDates   []string  `json:"observation_dates"`
-	ObservationValues  []float64 `json:"observation_values"`
+	ObservationValues  []string  `json:"observation_values"`
 	ObservationPHist   []bool    `json:"observation_phistory"`
 }
 

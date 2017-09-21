@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/UHERO/rest-api/models"
+	"strconv"
 )
 
 type SeriesRepository struct {
@@ -741,7 +742,7 @@ func (r *SeriesRepository) GetTransformation(
 	}
 	var (
 		observation_dates  []string
-		observation_values []float64
+		observation_values []string
 		observation_phist  []bool
 	)
 
@@ -766,7 +767,7 @@ func (r *SeriesRepository) GetTransformation(
 		}
 		// This "magic" date must be used for formatting!
 		observation_dates = append(observation_dates, observation.Date.Format("2006-01-02"))
-		observation_values = append(observation_values, observation.Value.Float64)
+		observation_values = append(observation_values, strconv.FormatFloat(observation.Value.Float64, 'f', -1, 64))
 		observation_phist = append(observation_phist, observation.PseudoHistory.Bool)
 	}
 	if currentStart.IsZero() || (!observationStart.IsZero() && currentStart.After(observationStart)) {
