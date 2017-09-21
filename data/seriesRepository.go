@@ -767,7 +767,7 @@ func (r *SeriesRepository) GetTransformation(
 		}
 		// This "magic" date must be used for formatting!
 		observation_dates = append(observation_dates, observation.Date.Format("2006-01-02"))
-		observation_values = append(observation_values, strconv.FormatFloat(observation.Value.Float64, 'f', -1, 64))
+		observation_values = append(observation_values, strconv.FormatFloat(observation.Value.Float64, 'f', 5, 64))
 		observation_phist = append(observation_phist, observation.PseudoHistory.Bool)
 	}
 	if currentStart.IsZero() || (!observationStart.IsZero() && currentStart.After(observationStart)) {
