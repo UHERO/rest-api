@@ -764,13 +764,6 @@ func (r *SeriesRepository) GetTransformation(
 		if observationEnd.IsZero() || observationEnd.Before(observation.Date) {
 			observationEnd = observation.Date
 		}
-		dataPortalObservation := models.DataPortalObservation{
-			Date:  observation.Date,
-			Value: observation.Value.Float64,
-		}
-		if observation.PseudoHistory.Valid && observation.PseudoHistory.Bool {
-			dataPortalObservation.PseudoHistory = &observation.PseudoHistory.Bool
-		}
 		// This "magic" date must be used for formatting!
 		observation_dates = append(observation_dates, observation.Date.Format("2006-01-02"))
 		observation_values = append(observation_values, observation.Value.Float64)
