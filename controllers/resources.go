@@ -50,7 +50,7 @@ type (
 
 	// GET - /series/siblings/freq
 	FrequencyListResource struct {
-		Data []models.FrequencyResult `json:"data"`
+		Data []models.DataPortalFrequency `json:"data"`
 	}
 
 	// GET - /series

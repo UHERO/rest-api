@@ -131,38 +131,40 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	if err != nil {
 		return
 	}
-	geoFreqs := map[string][]models.FrequencyResult{}
-	geoByHandle := map[string]models.DataPortalGeography{}
-	freqGeos := map[string][]models.DataPortalGeography{}
-	freqByHandle := map[string]models.FrequencyResult{}
+	var seenGeos map[string]models.DataPortalGeography
+	var seenFreqs map[string]models.DataPortalFrequency
 
 	for rows.Next() {
 		scangeo := models.Geography{}
-		frequency := models.FrequencyResult{}
+		frequency := models.DataPortalFrequency{}
 		err = rows.Scan(
 			&scangeo.FIPS,
 			&scangeo.Name,
 			&scangeo.Handle,
 			&frequency.Freq,
 		)
-		geography := models.DataPortalGeography{Handle: scangeo.Handle}
-		if scangeo.FIPS.Valid {
-			geography.FIPS = scangeo.FIPS.String
+		handle := scangeo.Handle
+		if _, ok := seenGeos[handle]; !ok {
+			seenGeos[handle] = models.DataPortalGeography{Handle: handle}
+			if scangeo.FIPS.Valid {
+				*(&seenGeos[handle]).FIPS = scangeo.FIPS.String
+			}
+			if scangeo.Name.Valid {
+				*(&seenGeos[handle]).Name = scangeo.Name.String
+			}
 		}
-		if scangeo.Name.Valid {
-			geography.Name = scangeo.Name.String
+		handle = frequency.Freq
+		if _, ok := seenFreqs[handle]; !ok {
+			seenFreqs[handle] = models.DataPortalFrequency{Freq: handle}
+			*(&seenFreqs[handle]).Label = freqLabel[handle]
 		}
-		frequency.Label = freqLabel[frequency.Freq]
 		// set the default as the first in the sorted list
-		if searchSummary.DefaultGeoFreq == nil {
-			searchSummary.DefaultGeoFreq = &models.GeographyFrequency{
+		if searchSummary.DefaultGeo == nil {
+			searchSummary.DefaultGeo = &models.GeographyFrequency{
 				Geography: geography,
 				Frequency: frequency,
 			}
 		}
-		// update the freq and geo maps
-		geoByHandle[geography.Handle] = geography
-		freqByHandle[frequency.Freq] = frequency
 		// add to the geoFreqs and freqGeos maps
 		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
 		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)

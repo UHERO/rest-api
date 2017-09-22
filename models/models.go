@@ -48,7 +48,8 @@ type CategoryWithAncestry struct {
 
 type SearchSummary struct {
 	SearchText           string                  `json:"q"`
-	DefaultGeoFreq       *GeographyFrequency     `json:"defaults,omitempty"`
+	DefaultGeo           *DataPortalGeography    `json:"defaultGeo,omitempty"`
+	DefaultFreq          *DataPortalFrequency    `json:"defaultFreq,omitempty"`
 	Geographies          *[]DataPortalGeography  `json:"geos,omitempty"`
 	Frequencies          *[]DataPortalFrequency  `json:"freqs,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart"`
@@ -78,7 +79,7 @@ type DataPortalFrequency struct {
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
 
-// ByFrequency implements sort.Interface for []FrequencyResult based on
+// ByFrequency implements sort.Interface for []DataPortalFrequency based on
 // the Freq field.
 type ByFrequency []DataPortalFrequency
 type stringSlice []string
