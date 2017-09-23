@@ -20,8 +20,8 @@ type Category struct {
 	Name                 string                  `json:"name"`
 	ParentId             int64                   `json:"parentId,omitempty"`
 	DefaultGeoFreq       *GeoFreq                `json:"defaults,omitempty"`
-	Geographies          *[]DataPortalGeography  `json:"geos,omitempty"`
-	Frequencies          *[]DataPortalFrequency  `json:"freqs,omitempty"`
+	GeographyFrequencies *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
+	FrequencyGeographies *[]FrequencyGeographies `json:"freqGeos,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
 	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
@@ -90,11 +90,11 @@ type FrequencyResult struct {
 }
 type GeographyFrequencies struct {
 	DataPortalGeography
-	Frequencies []FrequencyResult `json:"freqs"`
+	Frequencies []DataPortalFrequency `json:"freqs"`
 }
 
 type FrequencyGeographies struct {
-	FrequencyResult
+	DataPortalFrequency
 	Geographies []DataPortalGeography `json:"geos"`
 }
 //
@@ -102,8 +102,8 @@ type FrequencyGeographies struct {
 //
 
 
-// ByFrequency implements sort.Interface for []DataPortalFrequency based on
-// the Freq field.
+// ByGeography/ByFrequency implement sort.Interface
+type ByGeography []DataPortalGeography
 type ByFrequency []DataPortalFrequency
 type stringSlice []string
 
@@ -127,7 +127,7 @@ func (a ByFrequency) Less(i, j int) bool {
 func (a ByGeography) Len() int      { return len(a) }
 func (a ByGeography) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByGeography) Less(i, j int) bool {
-	return 0 //// NOT REALLY
+	return a[i].Handle < a[j].Handle
 }
 
 type Frequency struct {

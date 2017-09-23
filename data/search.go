@@ -160,18 +160,21 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 				Freq: handle,
 				Label: freqLabel[handle] }
 		}
-		// set the default as the first in the sorted list
-		if searchSummary.DefaultGeo == nil {
-			searchSummary.DefaultGeo = &models.DataPortalGeography{}
-			searchSummary.DefaultFreq = &models.DataPortalFrequency{}
-		}
 	}
-	geosResult := []models.DataPortalGeography{}
-	freqsResult := []models.DataPortalFrequency{}
-	////// add the seen things to the above two arrays!!!
+	geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
+	for  _, value := range seenGeos {
+		geosResult = append(geosResult, value)
+	}
 	sort.Sort(models.ByGeography(geosResult))
+
+	freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
+	for  _, value := range seenFreqs {
+		freqsResult = append(freqsResult, value)
+	}
 	sort.Sort(models.ByFrequency(freqsResult))
 
+	searchSummary.DefaultGeo = &geosResult[0]
+	searchSummary.DefaultFreq = &freqsResult[0]
 	searchSummary.Geographies = &geosResult
 	searchSummary.Frequencies = &freqsResult
 	return
