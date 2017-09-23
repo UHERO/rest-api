@@ -124,6 +124,12 @@ func (a ByFrequency) Less(i, j int) bool {
 	return FreqOrder.indexOf(a[i].Freq) < FreqOrder.indexOf(a[j].Freq)
 }
 
+func (a ByGeography) Len() int      { return len(a) }
+func (a ByGeography) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByGeography) Less(i, j int) bool {
+	return 0 //// NOT REALLY
+}
+
 type Frequency struct {
 	Freq  string
 	Label sql.NullString
