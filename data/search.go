@@ -146,51 +146,34 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 		handle := scangeo.Handle
 		if _, ok := seenGeos[handle]; !ok {
 			seenGeos[handle] = models.DataPortalGeography{Handle: handle}
+			geo := seenGeos[handle]
 			if scangeo.FIPS.Valid {
-				*(&seenGeos[handle]).FIPS = scangeo.FIPS.String
+				geo.FIPS = scangeo.FIPS.String
 			}
 			if scangeo.Name.Valid {
-				*(&seenGeos[handle]).Name = scangeo.Name.String
+				geo.Name = scangeo.Name.String
 			}
 		}
 		handle = frequency.Freq
 		if _, ok := seenFreqs[handle]; !ok {
-			seenFreqs[handle] = models.DataPortalFrequency{Freq: handle}
-			*(&seenFreqs[handle]).Label = freqLabel[handle]
+			seenFreqs[handle] = models.DataPortalFrequency{
+				Freq: handle,
+				Label: freqLabel[handle] }
 		}
 		// set the default as the first in the sorted list
 		if searchSummary.DefaultGeo == nil {
-			searchSummary.DefaultGeo = &models.GeographyFrequency{
-				Geography: geography,
-				Frequency: frequency,
-			}
-		}
-		// add to the geoFreqs and freqGeos maps
-		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
-		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
-	}
-
-	geoFreqsResult := []models.GeographyFrequencies{}
-	for geo, freqs := range geoFreqs {
-		sort.Sort(models.ByFrequency(freqs))
-		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
-			DataPortalGeography: geoByHandle[geo],
-			Frequencies:         freqs,
-		})
-	}
-
-	freqGeosResult := []models.FrequencyGeographies{}
-	for _, freq := range models.FreqOrder {
-		if val, ok := freqByHandle[freq]; ok {
-			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
-				FrequencyResult: val,
-				Geographies:     freqGeos[freq],
-			})
+			searchSummary.DefaultGeo = &models.DataPortalGeography{}
+			searchSummary.DefaultFreq = &models.DataPortalFrequency{}
 		}
 	}
+	geosResult := []models.DataPortalGeography{}
+	freqsResult := []models.DataPortalFrequency{}
+	////// add the seen things to the above two arrays!!!
+	sort.Sort(models.ByGeography(geosResult))
+	sort.Sort(models.ByFrequency(freqsResult))
 
-	searchSummary.Geographies = &geoFreqsResult
-	searchSummary.Frequencies = &freqGeosResult
+	searchSummary.Geographies = &geosResult
+	searchSummary.Frequencies = &freqsResult
 	return
 }
 

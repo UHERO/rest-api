@@ -191,10 +191,8 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		}
 	}
 
-	dataPortalCategory.GeographyFrequencies = &geoFreqsResult
-	dataPortalCategory.FrequencyGeographies = &freqGeosResult
-	dataPortalCategory.GeoFreqsDeprecated = &geoFreqsResult
-	dataPortalCategory.FreqGeosDeprecated = &freqGeosResult
+	//dataPortalCategory.GeographyFrequencies = &geoFreqsResult
+	//dataPortalCategory.FrequencyGeographies = &freqGeosResult
 	return dataPortalCategory, err
 }
 

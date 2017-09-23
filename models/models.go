@@ -79,6 +79,29 @@ type DataPortalFrequency struct {
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
 
+//
+//  GET RID OF THIS CRAP LATER
+//
+type FrequencyResult struct {
+	Freq             string     `json:"freq"`
+	Label            string     `json:"label"`
+	ObservationStart *time.Time `json:"observationStart,omitempty"`
+	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
+}
+type GeographyFrequencies struct {
+	DataPortalGeography
+	Frequencies []FrequencyResult `json:"freqs"`
+}
+
+type FrequencyGeographies struct {
+	FrequencyResult
+	Geographies []DataPortalGeography `json:"geos"`
+}
+//
+//  GET RID OF THIS CRAP LATER
+//
+
+
 // ByFrequency implements sort.Interface for []DataPortalFrequency based on
 // the Freq field.
 type ByFrequency []DataPortalFrequency
