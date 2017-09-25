@@ -21,9 +21,13 @@ type Category struct {
 	ParentId             int64                   `json:"parentId,omitempty"`
 	DefaultGeoFreq       *GeoFreq                `json:"defaults,omitempty"`
 	GeographyFrequencies *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
-	FrequencyGeographies *[]FrequencyGeographies `json:"freqGeos,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
 	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
+}
+
+type GeographyFrequencies struct {
+	DataPortalGeography
+	Frequencies []DataPortalFrequency `json:"freqs"`
 }
 
 type GeoFreq struct {
@@ -78,29 +82,6 @@ type DataPortalFrequency struct {
 	ObservationStart *time.Time `json:"observationStart,omitempty"`
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
-
-//
-//  GET RID OF THIS CRAP LATER
-//
-type FrequencyResult struct {
-	Freq             string     `json:"freq"`
-	Label            string     `json:"label"`
-	ObservationStart *time.Time `json:"observationStart,omitempty"`
-	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
-}
-type GeographyFrequencies struct {
-	DataPortalGeography
-	Frequencies []DataPortalFrequency `json:"freqs"`
-}
-
-type FrequencyGeographies struct {
-	DataPortalFrequency
-	Geographies []DataPortalGeography `json:"geos"`
-}
-//
-//  GET RID OF THIS CRAP LATER
-//
-
 
 // ByGeography/ByFrequency implement sort.Interface
 type ByGeography []DataPortalGeography

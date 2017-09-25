@@ -2,10 +2,8 @@ package data
 
 import (
 	"database/sql"
-	"sort"
 	"strconv"
 	"strings"
-
 	"github.com/UHERO/rest-api/models"
 )
 
@@ -282,7 +280,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 		var gftype sql.NullString
 		err = rows.Scan(&gftype)
 
-		if gftype == "geo" {
+		if gftype.String == "geo" {
 			geography := models.DataPortalGeography{}
 			geo_temp := models.Geography{}
 			err = rows.Scan(

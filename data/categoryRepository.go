@@ -87,18 +87,18 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 
 func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
 	var category models.CategoryWithAncestry
-	err := r.DB.QueryRow(`SELECT
-	categories.id, MAX(categories.name), MAX(ancestry),
-	MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
-	FROM categories
-	LEFT JOIN data_list_measurements ON categories.data_list_id = data_list_measurements.data_list_id
-	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
- 	LEFT JOIN series ON series.id = measurement_series.series_id
- 	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-	WHERE categories.id = ?
-	AND NOT categories.hidden
-	AND NOT series.restricted
-	GROUP BY categories.id;`, id).Scan(
+	err := r.DB.QueryRow(
+		`SELECT categories.id, ANY_VALUE(categories.name), ANY_VALUE(ancestry),
+		MIN(public_data_points.date), MAX(public_data_points.date)
+		FROM categories
+		LEFT JOIN data_list_measurements ON categories.data_list_id = data_list_measurements.data_list_id
+		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+		LEFT JOIN series ON series.id = measurement_series.series_id
+		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+		WHERE categories.id = ?
+		AND NOT categories.hidden
+		AND NOT series.restricted
+		GROUP BY categories.id ;`, id).Scan(
 		&category.Id,
 		&category.Name,
 		&category.Ancestry,
@@ -134,13 +134,12 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	if err != nil {
 		return dataPortalCategory, err
 	}
-	geoFreqs := map[string][]models.FrequencyResult{}
+	geoFreqs := map[string][]models.DataPortalFrequency{}
 	geoByHandle := map[string]models.DataPortalGeography{}
-	freqGeos := map[string][]models.DataPortalGeography{}
-	freqByHandle := map[string]models.FrequencyResult{}
+
 	for rows.Next() {
 		scangeo := models.Geography{}
-		frequency := models.FrequencyResult{}
+		frequency := models.DataPortalFrequency{}
 		err = rows.Scan(
 			&scangeo.FIPS,
 			&scangeo.Name,
@@ -165,12 +164,8 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			geography.Name = scangeo.Name.String
 		}
 		frequency.Label = freqLabel[frequency.Freq]
-		// update the freq and geo maps
 		geoByHandle[geography.Handle] = geography
-		freqByHandle[frequency.Freq] = frequency
-		// add to the geoFreqs and freqGeos maps
 		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
-		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
 	}
 	geoFreqsResult := []models.GeographyFrequencies{}
 	for geo, freqs := range geoFreqs {
@@ -180,19 +175,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			Frequencies:         freqs,
 		})
 	}
-
-	freqGeosResult := []models.FrequencyGeographies{}
-	for _, freq := range models.FreqOrder {
-		if val, ok := freqByHandle[freq]; ok {
-			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
-				FrequencyResult: val,
-				Geographies:     freqGeos[freq],
-			})
-		}
-	}
-
-	//dataPortalCategory.GeographyFrequencies = &geoFreqsResult
-	//dataPortalCategory.FrequencyGeographies = &freqGeosResult
+	dataPortalCategory.GeographyFrequencies = &geoFreqsResult
 	return dataPortalCategory, err
 }
 
