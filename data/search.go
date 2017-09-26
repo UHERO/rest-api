@@ -153,12 +153,18 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 			if scangeo.Name.Valid {
 				geo.Name = scangeo.Name.String
 			}
+			if searchSummary.DefaultGeo == nil {
+				searchSummary.DefaultGeo = &seenGeos[handle]
+			}
 		}
 		handle = frequency.Freq
 		if _, ok := seenFreqs[handle]; !ok {
 			seenFreqs[handle] = models.DataPortalFrequency{
 				Freq: handle,
 				Label: freqLabel[handle] }
+			if searchSummary.DefaultFreq == nil {
+				searchSummary.DefaultFreq= &seenFreqs[handle]
+			}
 		}
 	}
 	geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
@@ -173,8 +179,6 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	}
 	sort.Sort(models.ByFrequency(freqsResult))
 
-	searchSummary.DefaultGeo = &geosResult[0]
-	searchSummary.DefaultFreq = &freqsResult[0]
 	searchSummary.Geographies = &geosResult
 	searchSummary.Frequencies = &freqsResult
 	return
