@@ -145,25 +145,27 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 		)
 		handle := scangeo.Handle
 		if _, ok := seenGeos[handle]; !ok {
-			seenGeos[handle] = models.DataPortalGeography{Handle: handle}
-			geo := seenGeos[handle]
+			geo := models.DataPortalGeography{Handle: handle}
 			if scangeo.FIPS.Valid {
 				geo.FIPS = scangeo.FIPS.String
 			}
 			if scangeo.Name.Valid {
 				geo.Name = scangeo.Name.String
 			}
+			seenGeos[handle] = geo
 			if searchSummary.DefaultGeo == nil {
-				searchSummary.DefaultGeo = &seenGeos[handle]
+				searchSummary.DefaultGeo = &geo
 			}
 		}
 		handle = frequency.Freq
 		if _, ok := seenFreqs[handle]; !ok {
-			seenFreqs[handle] = models.DataPortalFrequency{
+			freq := models.DataPortalFrequency{
 				Freq: handle,
-				Label: freqLabel[handle] }
+				Label: freqLabel[handle],
+			}
+			seenFreqs[handle] = freq
 			if searchSummary.DefaultFreq == nil {
-				searchSummary.DefaultFreq= &seenFreqs[handle]
+				searchSummary.DefaultFreq = &freq
 			}
 		}
 	}
