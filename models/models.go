@@ -173,8 +173,8 @@ type DataPortalSeries struct {
 	Indent                      int                     `json:"indent,omitempty"`
 	TablePrefix                 string                  `json:"tablePrefix"`
 	TablePostfix                string                  `json:"tablePostfix"`
-	Geographies                 *[]DataPortalGeography  `json:"geographiess,omitempty"`
-	Frequencies		    *[]DataPortalFrequency  `json:"frequencies,omitempty"`
+	Geographies                 *[]DataPortalGeography  `json:"geos,omitempty"`
+	Frequencies		    *[]DataPortalFrequency  `json:"freqs,omitempty"`
 }
 
 type InflatedSeries struct {
