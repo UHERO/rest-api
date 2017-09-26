@@ -131,8 +131,8 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	if err != nil {
 		return
 	}
-	var seenGeos map[string]models.DataPortalGeography
-	var seenFreqs map[string]models.DataPortalFrequency
+	seenGeos := map[string]models.DataPortalGeography{}
+	seenFreqs := map[string]models.DataPortalFrequency{}
 
 	for rows.Next() {
 		scangeo := models.Geography{}
@@ -145,28 +145,28 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 		)
 		handle := scangeo.Handle
 		if _, ok := seenGeos[handle]; !ok {
-			geo := models.DataPortalGeography{Handle: handle}
+			geo := &models.DataPortalGeography{Handle: handle}
 			if scangeo.FIPS.Valid {
 				geo.FIPS = scangeo.FIPS.String
 			}
 			if scangeo.Name.Valid {
 				geo.Name = scangeo.Name.String
 			}
-			seenGeos[handle] = geo
 			if searchSummary.DefaultGeo == nil {
-				searchSummary.DefaultGeo = &geo
+				searchSummary.DefaultGeo = geo
 			}
+			seenGeos[handle] = *geo
 		}
 		handle = frequency.Freq
 		if _, ok := seenFreqs[handle]; !ok {
-			freq := models.DataPortalFrequency{
+			freq := &models.DataPortalFrequency{
 				Freq: handle,
 				Label: freqLabel[handle],
 			}
-			seenFreqs[handle] = freq
 			if searchSummary.DefaultFreq == nil {
-				searchSummary.DefaultFreq = &freq
+				searchSummary.DefaultFreq = freq
 			}
+			seenFreqs[handle] = *freq
 		}
 	}
 	geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
