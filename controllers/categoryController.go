@@ -149,3 +149,40 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository, c *data.Ca
 		WriteCache(r, c, j)
 	}
 }
+
+func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if universe, ok := mux.Vars(r)["universe_text"]; !ok {
+			common.DisplayAppError(
+				w,
+				errors.New("Couldn't get universe handle from request"),
+				"Bad request.",
+				400,
+			)
+			ok = false
+			return
+		}
+		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		j, err := json.Marshal(CategoriesResource{Data: categories})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error processing JSON has occurred",
+				500,
+			)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, c, j)
+	}
+}

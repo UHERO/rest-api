@@ -14,10 +14,16 @@ type CategoryRepository struct {
 }
 
 func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
+	categories, err = r.GetAllCategoriesByUniverse("UHERO")
+	return
+}
+
+func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
 	rows, err := r.DB.Query(`SELECT id, name, ancestry, default_handle, default_freq
-							 FROM categories
-							 WHERE NOT hidden
-							 ORDER BY categories.list_order;`)
+				FROM categories
+				WHERE universe = ?
+				AND NOT hidden
+				ORDER BY categories.list_order;`, universe)
 	if err != nil {
 		return
 	}
