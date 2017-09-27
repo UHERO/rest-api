@@ -278,32 +278,28 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 	freqsResult := []models.DataPortalFrequency{}
 	for rows.Next() {
 		var gftype sql.NullString
-		err = rows.Scan(&gftype)
-
+		temp := models.Geography{}  // Using Geography object as a scan buffer, because it works.
+		err = rows.Scan(
+			&gftype,
+			&temp.Handle,
+			&temp.FIPS,
+			&temp.Name,
+		)
 		if gftype.String == "geo" {
-			geography := models.DataPortalGeography{}
-			geo_temp := models.Geography{}
-			err = rows.Scan(
-				&gftype,
-				&geography.Handle,
-				&geo_temp.FIPS,
-				&geo_temp.Name,
-			)
-			if geo_temp.FIPS.Valid {
-				geography.FIPS = geo_temp.FIPS.String
+			g := models.DataPortalGeography{Handle: temp.Handle}
+			if temp.FIPS.Valid {
+				g.FIPS = temp.FIPS.String
 			}
-			if geo_temp.Name.Valid {
-				geography.Name = geo_temp.Name.String
+			if temp.Name.Valid {
+				g.Name = temp.Name.String
 			}
-			geosResult = append(geosResult, geography)
+			geosResult = append(geosResult, g)
 		} else {
-			frequency := models.DataPortalFrequency{}
-			err = rows.Scan(
-				&gftype,
-				&frequency.Freq,
-			)
-			frequency.Label = freqLabel[frequency.Freq]
-			freqsResult = append(freqsResult, frequency)
+			f := models.DataPortalFrequency{
+				Freq: temp.Handle,
+				Label: freqLabel[temp.Handle],
+			}
+			freqsResult = append(freqsResult, f)
 		}
 	}
 	return geosResult, freqsResult, err
