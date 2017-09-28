@@ -152,7 +152,8 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository, c *data.Ca
 
 func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if universe, ok := mux.Vars(r)["universe_text"]; !ok {
+		universe, ok := mux.Vars(r)["universe_text"]
+		if !ok {
 			common.DisplayAppError(
 				w,
 				errors.New("Couldn't get universe handle from request"),

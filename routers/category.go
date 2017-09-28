@@ -47,6 +47,7 @@ func SetCategoryRoutes(
 		"/v1/category",
 		controllers.GetCategories(categoryRepository, cacheRepository),
 	).Methods("GET")
+
 	router.HandleFunc(
 		"/v1/category/freq",
 		controllers.GetFreqByCategoryId(seriesRepository, cacheRepository),
