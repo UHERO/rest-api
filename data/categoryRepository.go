@@ -19,11 +19,30 @@ func (r *CategoryRepository) GetAllCategories() (categories []models.Category, e
 }
 
 func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT id, name, ancestry, default_handle, default_freq
-				FROM categories
-				WHERE universe = ?
-				AND NOT hidden
-				ORDER BY categories.list_order;`, universe)
+	rows, err := r.DB.Query(
+		`SELECT categories.id,
+			categories.default_freq AS catfreq,
+			ANY_VALUE(categories.name) AS catname,
+			ANY_VALUE(categories.ancestry) AS ancest,
+			ANY_VALUE(geographies.handle) AS catgeo,
+			ANY_VALUE(geographies.fips) AS catgeofips,
+			ANY_VALUE(geographies.display_name_short) AS catgeodisp,
+			MIN(public_data_points.date) as startdate, MAX(public_data_points.date) as enddate
+		FROM categories
+		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
+		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+		LEFT JOIN series
+		    ON series.id = measurement_series.series_id
+		   AND series.geography_id = categories.default_geo_id
+		   AND RIGHT(series.name, 1) = categories.default_freq
+		   AND NOT series.restricted
+		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+		WHERE categories.universe = ?
+		AND categories.ancestry IS NOT NULL
+		AND NOT categories.hidden
+		GROUP BY categories.id, categories.default_geo_id, categories.default_freq
+		ORDER BY categories.list_order;`, universe)
 	if err != nil {
 		return
 	}
