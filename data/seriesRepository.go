@@ -741,9 +741,9 @@ func (r *SeriesRepository) GetTransformation(
 		return
 	}
 	var (
-		observation_dates  []string
-		observation_values []string
-		observation_phist  []bool
+		obsDates	[]string
+		obsValues	[]string
+		obsPseudoHist	[]bool
 	)
 
 	for rows.Next() {
@@ -766,9 +766,9 @@ func (r *SeriesRepository) GetTransformation(
 			observationEnd = observation.Date
 		}
 		// This "magic" date must be used for formatting!
-		observation_dates = append(observation_dates, observation.Date.Format("2006-01-02"))
-		observation_values = append(observation_values, strconv.FormatFloat(observation.Value.Float64, 'f', 5, 64))
-		observation_phist = append(observation_phist, observation.PseudoHistory.Bool)
+		obsDates = append(obsDates, observation.Date.Format("2006-01-02"))
+		obsValues = append(obsValues, strconv.FormatFloat(observation.Value.Float64, 'f', 5, 64))
+		obsPseudoHist = append(obsPseudoHist, observation.PseudoHistory.Bool)
 	}
 	if currentStart.IsZero() || (!observationStart.IsZero() && currentStart.After(observationStart)) {
 		*currentStart = observationStart
@@ -777,8 +777,8 @@ func (r *SeriesRepository) GetTransformation(
 		*currentEnd = observationEnd
 	}
 	transformationResult.Transformation = transformations[transformation].Label
-	transformationResult.ObservationDates = observation_dates
-	transformationResult.ObservationValues = observation_values
-	transformationResult.ObservationPHist = observation_phist
+	transformationResult.ObservationDates = obsDates
+	transformationResult.ObservationValues = obsValues
+	transformationResult.ObservationPHist = obsPseudoHist
 	return
 }

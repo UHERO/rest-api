@@ -209,9 +209,9 @@ type SeriesObservations struct {
 
 type TransformationResult struct {
 	Transformation string        `json:"transformation"`
-	ObservationDates   []string  `json:"observation_dates"`
-	ObservationValues  []string  `json:"observation_values"`
-	ObservationPHist   []bool    `json:"observation_phistory"`
+	ObservationDates   []string  `json:"dates"`
+	ObservationValues  []string  `json:"values"`
+	ObservationPHist   []bool    `json:"pseudoHistory"`
 }
 
 type Feedback struct {
