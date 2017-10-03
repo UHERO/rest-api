@@ -38,7 +38,7 @@ const (
 
 var transformations map[string]transformation = map[string]transformation{
 	Levels: { // untransformed value
-		Statement: `SELECT date, value/units, (pseudo_history = b'1')
+		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
 		FROM public_data_points
 		LEFT JOIN series ON public_data_points.series_id = series.id
 		WHERE series_id = ?;`,
@@ -47,17 +47,18 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 	YOYPercentChange: { // percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
-				FROM (SELECT value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
+				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
+				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
 				      FROM public_data_points WHERE series_id = ?) AS t1
 				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
-				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date);`,
+				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date)
+				LEFT JOIN series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "pc1",
 	},
 	YOYChange: { // change from 1 year ago
 		Statement: `SELECT t1.date, (t1.value - t2.last_value)/series.units AS yoy,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
+				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
 				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
 				      FROM public_data_points WHERE series_id = ?) AS t1
 				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
@@ -68,7 +69,7 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 	YTDChange: { // ytd change from 1 year ago
 		Statement: `SELECT t1.date, (t1.ytd - t2.last_ytd)/series.units AS ytd,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
+				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
       FROM (SELECT date, value, series_id, pseudo_history, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
               @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
             FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
@@ -83,35 +84,22 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 	YTDPercentChange: { // ytd percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.ytd/t2.last_ytd - 1)*100 AS ytd,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
-      FROM (SELECT date, value, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
+				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
+      FROM (SELECT series_id, date, value, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
               @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year, pseudo_history
             FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
             WHERE series_id = ? ORDER BY date) AS t1
       LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
                    @year := year(date), pseudo_history
                  FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-                 WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date);`,
+                 WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date)
+      LEFT JOIN series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
 	C5MAPercentChange: { // c5ma percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.c5ma/t2.last_c5ma - 1)*100 AS c5ma, 
-			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
-			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, last_year, pseudo_history) AS t1
-			LEFT JOIN (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS last_c5ma, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date);`,
-		PlaceholderCount: 4,
-		Label:            "c5ma",
-	},
-	C5MAChange: { // cm5a change from 1 year ago
-		Statement: `SELECT t1.date, (t1.c5ma - t2.last_c5ma)/series.units AS c5ma, 
-			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph
+			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
 			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
 				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
 				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
@@ -120,7 +108,22 @@ var transformations map[string]transformation = map[string]transformation{
 				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
 				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
 				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
-				LEFT JOIN series ON t1.series_id = series.id;`,
+      			LEFT JOIN series ON t1.series_id = series.id;`,
+		PlaceholderCount: 4,
+		Label:            "c5ma",
+	},
+	C5MAChange: { // cm5a change from 1 year ago
+		Statement: `SELECT t1.date, (t1.c5ma - t2.last_c5ma)/series.units AS c5ma, 
+			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
+			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
+				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
+				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
+				GROUP by series_id, date, last_year, pseudo_history) AS t1
+			LEFT JOIN (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS last_c5ma, pdp1.pseudo_history FROM
+				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
+				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
+				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
+			LEFT JOIN series ON t1.series_id = series.id;`,
 		PlaceholderCount: 4,
 		Label:            "c5ma",
 	},
@@ -752,6 +755,7 @@ func (r *SeriesRepository) GetTransformation(
 			&observation.Date,
 			&observation.Value,
 			&observation.PseudoHistory,
+			&observation.Decimals,
 		)
 		if err != nil {
 			return
@@ -765,9 +769,8 @@ func (r *SeriesRepository) GetTransformation(
 		if observationEnd.IsZero() || observationEnd.Before(observation.Date) {
 			observationEnd = observation.Date
 		}
-		// This "magic" date must be used for formatting!
 		obsDates = append(obsDates, observation.Date.Format("2006-01-02"))
-		obsValues = append(obsValues, strconv.FormatFloat(observation.Value.Float64, 'f', 5, 64))
+		obsValues = append(obsValues, strconv.FormatFloat(observation.Value.Float64, 'f', observation.Decimals, 64))
 		obsPseudoHist = append(obsPseudoHist, observation.PseudoHistory.Bool)
 	}
 	if currentStart.IsZero() || (!observationStart.IsZero() && currentStart.After(observationStart)) {

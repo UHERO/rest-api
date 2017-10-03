@@ -191,6 +191,7 @@ type Observation struct {
 	Date          time.Time
 	Value         sql.NullFloat64
 	PseudoHistory sql.NullBool
+	Decimals      int64
 }
 
 type DataPortalObservation struct {
