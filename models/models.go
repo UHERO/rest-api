@@ -20,6 +20,8 @@ type Category struct {
 	Name                 string                  `json:"name"`
 	ParentId             int64                   `json:"parentId,omitempty"`
 	Defaults	     *CategoryDefaults	     `json:"defaults,omitempty"`
+	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
+	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
 
 type CategoryDefaults struct {

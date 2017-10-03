@@ -69,11 +69,28 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 			Name:     category.Name,
 			ParentId: parentId,
 		}
-		if category.DefaultHandle.Valid && category.DefaultFrequency.Valid {
-			dataPortalCategory.DefaultGeoFreq = &models.GeoFreq{
-				Geography: category.DefaultHandle.String,
-				Frequency: category.DefaultFrequency.String,
+		if category.DefaultFrequency.Valid {
+			dataPortalCategory.Defaults.Frequency = &models.DataPortalFrequency{
+				Freq: category.DefaultFrequency.String,
+				Label: freqLabel[category.DefaultFrequency.String],
 			}
+		}
+		if category.DefaultGeoHandle.Valid {
+			dataPortalCategory.Defaults.Geography = &models.DataPortalGeography{
+				Handle: category.DefaultGeoHandle.String,
+			}
+			if category.DefaultGeoFIPS.Valid {
+				dataPortalCategory.Defaults.Geography.FIPS = category.DefaultGeoFIPS.String
+			}
+			if category.DefaultGeoName.Valid {
+				dataPortalCategory.Defaults.Geography.Name = category.DefaultGeoName.String
+			}
+		}
+		if category.ObservationStart.Valid {
+			dataPortalCategory.Defaults.ObservationStart = &category.ObservationStart.Time
+		}
+		if category.ObservationEnd.Valid {
+			dataPortalCategory.Defaults.ObservationEnd = &category.ObservationEnd.Time
 		}
 		categories = append(categories, dataPortalCategory)
 	}
@@ -204,7 +221,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			Frequencies:         freqs,
 		})
 	}
-	dataPortalCategory.GeographyFrequencies = &geoFreqsResult
+	//dataPortalCategory.GeographyFrequencies = &geoFreqsResult
 	return dataPortalCategory, err
 }
 
