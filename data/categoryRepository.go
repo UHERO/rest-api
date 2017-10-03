@@ -188,8 +188,8 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	if err != nil {
 		return dataPortalCategory, err
 	}
-	geoByHandle := map[string]models.DataPortalGeography{}
-	freqByHandle := map[string]models.DataPortalFrequency{}
+	seenGeos := map[string]models.DataPortalGeography{}
+	seenFreqs := map[string]models.DataPortalFrequency{}
 
 	for rows.Next() {
 		var catDefGeoId, seriesGeoId int
@@ -206,7 +206,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			&scangeo.ObservationStart,
 			&scangeo.ObservationEnd,
 		)
-		if _, exists := geoByHandle[scangeo.Handle]; !exists {
+		if _, exists := seenGeos[scangeo.Handle]; !exists {
 			geo := models.DataPortalGeography{Handle: scangeo.Handle}
 			/*
 			if scangeo.ObservationStart.Valid && scangeo.ObservationStart.Time.After(time.Time{}) {
@@ -224,19 +224,38 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			if scangeo.Name.Valid {
 				geo.Name = scangeo.Name.String
 			}
-			geoByHandle[geo.Handle] = geo
+			seenGeos[scangeo.Handle] = geo
 		}
-		if _, exists := freqByHandle[seriesFreq]; !exists {
+		if _, exists := seenFreqs[seriesFreq]; !exists {
 			freq := models.DataPortalFrequency{
 				Freq: seriesFreq,
 				Label: freqLabel[seriesFreq],
 			}
-			freqByHandle[seriesFreq] = freq
+			seenFreqs[seriesFreq] = freq
 		}
 		if catDefGeoId == seriesGeoId && catDefFreq == seriesFreq {
-			// create dfaults structure
+			dataPortalCategory.Defaults = &models.CategoryDefaults{
+				Geography: seenGeos[scangeo.Handle],
+				Frequency: seenFreqs[seriesFreq],
+				ObservationStart: &scangeo.ObservationStart,
+				ObservationEnd: &scangeo.ObservationEnd,
+			}
 		}
 	}
+	geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
+	for  _, value := range seenGeos {
+		geosResult = append(geosResult, value)
+	}
+	sort.Sort(models.ByGeography(geosResult))
+
+	freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
+	for  _, value := range seenFreqs {
+		freqsResult = append(freqsResult, value)
+	}
+	sort.Sort(models.ByFrequency(freqsResult))
+
+	dataPortalCategory.Geographies = &geosResult
+	dataPortalCategory.Frequencies = &freqsResult
 	return dataPortalCategory, err
 }
 
