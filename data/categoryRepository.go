@@ -68,6 +68,7 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 			Id:       category.Id,
 			Name:     category.Name,
 			ParentId: parentId,
+			Defaults: &models.CategoryDefaults{},
 		}
 		if category.DefaultFrequency.Valid {
 			dataPortalCategory.Defaults.Frequency = &models.DataPortalFrequency{
@@ -164,19 +165,26 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
 	}
 
-	rows, err := r.DB.Query(`SELECT ANY_VALUE(geographies.fips), ANY_VALUE(geographies.display_name_short),
-					ANY_VALUE(geographies.handle), ANY_VALUE(RIGHT(series.name, 1)),
-					MIN(public_data_points.date), MAX(public_data_points.date)
-			FROM categories
-			LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-			LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-			LEFT JOIN series ON series.id = measurement_series.series_id
-			LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-			LEFT JOIN geographies ON geographies.id = series.geography_id
-			WHERE categories.id = ?
-			AND NOT categories.hidden
-			AND NOT series.restricted
-			GROUP BY geographies.id, RIGHT(series.name, 1) ORDER BY COUNT(*) DESC;`, id)
+	rows, err := r.DB.Query(
+		`SELECT ANY_VALUE(categories.default_freq) AS catfreq,
+			ANY_VALUE(categories.name) AS catname,
+			ANY_VALUE(categories.ancestry) AS ancestry,
+			ANY_VALUE(geographies.handle) AS geo,
+			ANY_VALUE(geographies.fips) AS geofips,
+			ANY_VALUE(geographies.display_name_short) AS geodisp,
+		        RIGHT(series.name, 1) as freq,
+			MIN(public_data_points.date) as startdate, MAX(public_data_points.date) as enddate
+		FROM categories
+		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+		LEFT JOIN series
+		    ON series.id = measurement_series.series_id
+		   AND NOT series.restricted
+		LEFT JOIN geographies ON geographies.id = series.geography_id
+		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+		WHERE categories.id = ?
+		AND geographies.id is not null
+		GROUP BY geographies.id, RIGHT(series.name, 1);`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
