@@ -173,7 +173,8 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			ANY_VALUE(geographies.display_name_short) AS geodisp,
 			ANY_VALUE(series.geography_id) AS sergeoid,
 			RIGHT(series.name, 1) AS serfreq,
-			MIN(public_data_points.date) AS startdate, MAX(public_data_points.date) AS enddate
+			MIN(public_data_points.date) AS startdate,
+			MAX(public_data_points.date) AS enddate
 		FROM categories
 	        LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
@@ -206,8 +207,9 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			&scangeo.ObservationStart,
 			&scangeo.ObservationEnd,
 		)
+		geo := &models.DataPortalGeography{Handle: scangeo.Handle}
+		freq := &models.DataPortalFrequency{Freq: seriesFreq}
 		if _, exists := seenGeos[scangeo.Handle]; !exists {
-			geo := models.DataPortalGeography{Handle: scangeo.Handle}
 			/*
 			if scangeo.ObservationStart.Valid && scangeo.ObservationStart.Time.After(time.Time{}) {
 				geo.ObservationStart = &scangeo.ObservationStart.Time
@@ -224,21 +226,18 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			if scangeo.Name.Valid {
 				geo.Name = scangeo.Name.String
 			}
-			seenGeos[scangeo.Handle] = geo
+			seenGeos[scangeo.Handle] = *geo
 		}
 		if _, exists := seenFreqs[seriesFreq]; !exists {
-			freq := models.DataPortalFrequency{
-				Freq: seriesFreq,
-				Label: freqLabel[seriesFreq],
-			}
-			seenFreqs[seriesFreq] = freq
+			freq.Label = freqLabel[seriesFreq]
+			seenFreqs[seriesFreq] = *freq
 		}
-		if catDefGeoId == seriesGeoId && catDefFreq == seriesFreq {
+		if catDefGeoId == seriesGeoId && catDefFreq == seriesFreq && dataPortalCategory.Defaults == nil {
 			dataPortalCategory.Defaults = &models.CategoryDefaults{
-				Geography: seenGeos[scangeo.Handle],
-				Frequency: seenFreqs[seriesFreq],
-				ObservationStart: &scangeo.ObservationStart,
-				ObservationEnd: &scangeo.ObservationEnd,
+				Geography: geo,
+				Frequency: freq,
+				ObservationStart: &scangeo.ObservationStart.Time,
+				ObservationEnd: &scangeo.ObservationEnd.Time,
 			}
 		}
 	}
