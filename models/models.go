@@ -39,15 +39,16 @@ type GeographyFrequencies struct {
 }
 
 type CategoryWithAncestryEtc struct {
-	Id               int64
-	Name             string
-	Ancestry         sql.NullString
-	DefaultGeoHandle sql.NullString
-	DefaultGeoFIPS   sql.NullString
-	DefaultGeoName   sql.NullString
-	DefaultFrequency sql.NullString
-	ObservationStart NullTime
-	ObservationEnd   NullTime
+	Id			int64
+	Name			string
+	Ancestry		sql.NullString
+	DefaultGeoHandle	sql.NullString
+	DefaultGeoFIPS		sql.NullString
+	DefaultGeoName		sql.NullString
+	DefaultGeoShortName	sql.NullString
+	DefaultFrequency	sql.NullString
+	ObservationStart	NullTime
+	ObservationEnd  	NullTime
 }
 
 type SearchSummary struct {
@@ -63,6 +64,7 @@ type SearchSummary struct {
 type Geography struct {
 	FIPS             sql.NullString `json:"fips"`
 	Name             sql.NullString `json:"name"`
+	ShortName        sql.NullString `json:"shortName"`
 	Handle           string         `json:"handle"`
 	ObservationStart NullTime
 	ObservationEnd   NullTime
@@ -71,6 +73,7 @@ type Geography struct {
 type DataPortalGeography struct {
 	FIPS             string     `json:"fips"`
 	Name             string     `json:"name"`
+	ShortName        string     `json:"shortName"`
 	Handle           string     `json:"handle"`
 	ObservationStart *time.Time `json:"observationStart,omitempty"`
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`

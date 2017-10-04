@@ -26,7 +26,8 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 			ANY_VALUE(categories.ancestry) AS ancest,
 			ANY_VALUE(geographies.handle) AS catgeo,
 			ANY_VALUE(geographies.fips) AS catgeofips,
-			ANY_VALUE(geographies.display_name_short) AS catgeodisp,
+			ANY_VALUE(geographies.display_name) AS catgeoname,
+			ANY_VALUE(geographies.display_name_short) AS catgeonameshort,
 			MIN(public_data_points.date) as startdate, MAX(public_data_points.date) as enddate
 		FROM categories
 		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
@@ -56,6 +57,7 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 			&category.DefaultGeoHandle,
 			&category.DefaultGeoFIPS,
 			&category.DefaultGeoName,
+			&category.DefaultGeoShortName,
 			&category.ObservationStart,
 			&category.ObservationEnd,
 		)
@@ -85,6 +87,9 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 			}
 			if category.DefaultGeoName.Valid {
 				dataPortalCategory.Defaults.Geography.Name = category.DefaultGeoName.String
+			}
+			if category.DefaultGeoShortName.Valid {
+				dataPortalCategory.Defaults.Geography.ShortName = category.DefaultGeoShortName.String
 			}
 		}
 		if category.ObservationStart.Valid {
@@ -170,7 +175,8 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			ANY_VALUE(categories.default_geo_id) AS catgeoid,
 			ANY_VALUE(geographies.handle) AS geo,
 			ANY_VALUE(geographies.fips) AS geofips,
-			ANY_VALUE(geographies.display_name_short) AS geodisp,
+			ANY_VALUE(geographies.display_name) AS geoname,
+			ANY_VALUE(geographies.display_name_short) AS geonameshort,
 			ANY_VALUE(series.geography_id) AS sergeoid,
 			RIGHT(series.name, 1) AS serfreq,
 			MIN(public_data_points.date) AS startdate,
@@ -202,6 +208,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			&scangeo.Handle,
 			&scangeo.FIPS,
 			&scangeo.Name,
+			&scangeo.ShortName,
 			&seriesGeoId,
 			&seriesFreq,
 			&scangeo.ObservationStart,
@@ -225,6 +232,9 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			}
 			if scangeo.Name.Valid {
 				geo.Name = scangeo.Name.String
+			}
+			if scangeo.ShortName.Valid {
+				geo.Name = scangeo.ShortName.String
 			}
 			seenGeos[scangeo.Handle] = *geo
 		}
