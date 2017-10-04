@@ -28,7 +28,8 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 			ANY_VALUE(geographies.fips) AS catgeofips,
 			ANY_VALUE(geographies.display_name) AS catgeoname,
 			ANY_VALUE(geographies.display_name_short) AS catgeonameshort,
-			MIN(public_data_points.date) as startdate, MAX(public_data_points.date) as enddate
+			MIN(public_data_points.date) as startdate,
+			MAX(public_data_points.date) as enddate
 		FROM categories
 		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
@@ -141,7 +142,8 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	var category models.CategoryWithAncestryEtc
 	err := r.DB.QueryRow(
 		`SELECT categories.id, ANY_VALUE(categories.name), ANY_VALUE(ancestry),
-		MIN(public_data_points.date), MAX(public_data_points.date)
+			MIN(public_data_points.date),
+			MAX(public_data_points.date)
 		FROM categories
 		LEFT JOIN data_list_measurements ON categories.data_list_id = data_list_measurements.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
