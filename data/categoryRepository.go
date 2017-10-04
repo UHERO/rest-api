@@ -28,8 +28,8 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 			ANY_VALUE(geographies.fips) AS catgeofips,
 			ANY_VALUE(geographies.display_name) AS catgeoname,
 			ANY_VALUE(geographies.display_name_short) AS catgeonameshort,
-			MIN(public_data_points.date) as startdate,
-			MAX(public_data_points.date) as enddate
+			MIN(public_data_points.date) AS startdate,
+			MAX(public_data_points.date) AS enddate
 		FROM categories
 		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
@@ -219,16 +219,6 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		geo := &models.DataPortalGeography{Handle: scangeo.Handle}
 		freq := &models.DataPortalFrequency{Freq: seriesFreq}
 		if _, exists := seenGeos[scangeo.Handle]; !exists {
-			/*
-			if scangeo.ObservationStart.Valid && scangeo.ObservationStart.Time.After(time.Time{}) {
-				geo.ObservationStart = &scangeo.ObservationStart.Time
-				frequency.ObservationStart = geo.ObservationStart
-			}
-			if scangeo.ObservationEnd.Valid && scangeo.ObservationEnd.Time.After(time.Time{}) {
-				geo.ObservationEnd = &scangeo.ObservationEnd.Time
-				frequency.ObservationEnd = geo.ObservationEnd
-			}
-			*/
 			if scangeo.FIPS.Valid {
 				geo.FIPS = scangeo.FIPS.String
 			}

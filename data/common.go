@@ -254,7 +254,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 	error,
 ) {
 	rows, err := r.DB.Query(
-		`SELECT DISTINCT 'geo' AS gftype, geo.handle, geo.fips, geo.display_name_short
+		`SELECT DISTINCT 'geo' AS gftype, geo.handle, geo.fips, geo.display_name, geo.display_name_short
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
@@ -263,7 +263,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
 			UNION
-		SELECT DISTINCT 'freq' AS gftype, RIGHT(series.name, 1) AS handle, null, null
+		SELECT DISTINCT 'freq' AS gftype, RIGHT(series.name, 1) AS handle, null, null, null
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
@@ -284,6 +284,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 			&temp.Handle,
 			&temp.FIPS,
 			&temp.Name,
+			&temp.ShortName,
 		)
 		if gftype.String == "geo" {
 			g := models.DataPortalGeography{Handle: temp.Handle}
@@ -292,6 +293,9 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 			}
 			if temp.Name.Valid {
 				g.Name = temp.Name.String
+			}
+			if temp.ShortName.Valid {
+				g.ShortName = temp.ShortName.String
 			}
 			geosResult = append(geosResult, g)
 		} else {
