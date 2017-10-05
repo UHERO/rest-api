@@ -636,16 +636,19 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	if err != nil {
 		return
 	}
-	dataPortalSeries, err = getNextSeriesFromRows(row)
-	if err != nil {
-		return
+	for row.Next() {
+		dataPortalSeries, err = getNextSeriesFromRows(row)
+		if err != nil {
+			return
+		}
+		geos, freqs, err := getAllFreqsGeos(r, seriesId)
+		if err != nil {
+			return dataPortalSeries, err
+		}
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
+		break
 	}
-	geos, freqs, err := getAllFreqsGeos(r, seriesId)
-	if err != nil {
-		return
-	}
-	dataPortalSeries.Geographies = &geos
-	dataPortalSeries.Frequencies = &freqs
 	return
 }
 
