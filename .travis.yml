@@ -5,4 +5,3 @@ go:
 
 services:
   - redis-server
-
