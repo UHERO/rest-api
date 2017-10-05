@@ -71,9 +71,9 @@ type Geography struct {
 }
 
 type DataPortalGeography struct {
-	FIPS             string     `json:"fips"`
-	Name             string     `json:"name"`
-	ShortName        string     `json:"shortName"`
+	FIPS             string     `json:"fips,omitempty"`
+	Name             string     `json:"name,omitempty"`
+	ShortName        string     `json:"shortName,omitempty"`
 	Handle           string     `json:"handle"`
 	ObservationStart *time.Time `json:"observationStart,omitempty"`
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`

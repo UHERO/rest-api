@@ -20,7 +20,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(geo.fips), MAX(geo.handle) AS shandle, MAX(geo.display_name_short)
+	MAX(geo.fips), MAX(geo.handle) AS shandle, MAX(geo.display_name), MAX(geo.display_name_short)
 	FROM series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -208,7 +208,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name_short)
+	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name), MAX(geo.display_name_short)
 	FROM series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -284,7 +284,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name_short)
+	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name), MAX(geo.display_name_short)
 	FROM series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
