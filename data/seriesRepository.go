@@ -608,7 +608,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 }
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
-	row := r.DB.QueryRow(`SELECT DISTINCT
+	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(measurement_units.short_label, '')),
@@ -633,6 +633,9 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
+	if err != nil {
+		return
+	}
 	dataPortalSeries, err = getNextSeriesFromRows(row)
 	if err != nil {
 		return
