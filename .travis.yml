@@ -5,3 +5,5 @@ go:
 
 services:
   - redis-server
+
+sudo: required
