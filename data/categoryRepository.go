@@ -21,9 +21,9 @@ func (r *CategoryRepository) GetAllCategories() (categories []models.Category, e
 func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
 	rows, err := r.DB.Query(
 		`SELECT categories.id,
-			categories.default_freq AS catfreq,
 			ANY_VALUE(categories.name) AS catname,
 			ANY_VALUE(categories.ancestry) AS ancest,
+			categories.default_freq AS catfreq,
 			ANY_VALUE(geographies.handle) AS catgeo,
 			ANY_VALUE(geographies.fips) AS catgeofips,
 			ANY_VALUE(geographies.display_name) AS catgeoname,
@@ -52,9 +52,9 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		category := models.CategoryWithAncestryEtc{}
 		err = rows.Scan(
 			&category.Id,
-			&category.DefaultFrequency,
 			&category.Name,
 			&category.Ancestry,
+			&category.DefaultFrequency,
 			&category.DefaultGeoHandle,
 			&category.DefaultGeoFIPS,
 			&category.DefaultGeoName,
