@@ -38,7 +38,7 @@ var (
 	ErrNegativeInt = errNegativeInt
 
 	serverPath     = flag.String("redis-server", "redis-server", "Path to redis server binary")
-	serverBasePort = flag.Int("redis-port", 6379, "Beginning of port range for test servers")
+	serverBasePort = flag.Int("redis-port", 16379, "Beginning of port range for test servers")
 	serverLogName  = flag.String("redis-log", "", "Write Redis server logs to `filename`")
 	serverLog      = ioutil.Discard
 
@@ -127,9 +127,12 @@ func stopDefaultServer() {
 
 // startDefaultServer starts the default server if not already running.
 func startDefaultServer() error {
+	fmt.Print(">>>>>>>> ENTER startDefaultServer")
 	defaultServerMu.Lock()
 	defer defaultServerMu.Unlock()
+	fmt.Print(">>>>>>>> AFTER LOCK/UNLOCK")
 	if defaultServer != nil || defaultServerErr != nil {
+		fmt.Print(">>>>>>>> RETURN Err")
 		return defaultServerErr
 	}
 	defaultServer, defaultServerErr = NewServer(
@@ -137,15 +140,18 @@ func startDefaultServer() error {
 		"--port", strconv.Itoa(*serverBasePort),
 		"--save", "",
 		"--appendonly", "no")
+	fmt.Print(">>>>>>>> FINAL RETURN")
 	return defaultServerErr
 }
 
 // DialDefaultServer starts the test server if not already started and dials a
 // connection to the server.
 func DialDefaultServer() (Conn, error) {
+	fmt.Print(">>>>>>>> BEFORE startDefaultServer")
 	if err := startDefaultServer(); err != nil {
 		return nil, err
 	}
+	fmt.Print(">>>>>>>> AFTER startDefaultServer")
 	c, err := Dial("tcp", fmt.Sprintf(":%d", *serverBasePort), DialReadTimeout(1*time.Second), DialWriteTimeout(1*time.Second))
 	if err != nil {
 		return nil, err
