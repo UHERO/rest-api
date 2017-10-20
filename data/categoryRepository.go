@@ -201,8 +201,10 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	seenFreqs := map[string]models.DataPortalFrequency{}
 
 	for rows.Next() {
-		var catDefGeoId, seriesGeoId int
-		var catDefFreq, seriesFreq string
+		var catDefGeoId sql.NullInt64
+		var catDefFreq sql.NullString
+		var seriesGeoId int64
+		var seriesFreq string
 		scangeo := models.Geography{}
 		err = rows.Scan(
 			&catDefFreq,
@@ -234,12 +236,18 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			freq.Label = freqLabel[seriesFreq]
 			seenFreqs[seriesFreq] = *freq
 		}
-		if catDefGeoId == seriesGeoId && catDefFreq == seriesFreq && dataPortalCategory.Defaults == nil {
+		if dataPortalCategory.Defaults == nil && (
+				(catDefGeoId.Valid && catDefGeoId.Int64 == seriesGeoId) ||
+				(catDefFreq.Valid && catDefFreq.String == seriesFreq)) {
 			dataPortalCategory.Defaults = &models.CategoryDefaults{
-				Geography: geo,
-				Frequency: freq,
 				ObservationStart: &scangeo.ObservationStart.Time,
 				ObservationEnd: &scangeo.ObservationEnd.Time,
+			}
+			if catDefGeoId.Valid && catDefGeoId.Int64 == seriesGeoId {
+				dataPortalCategory.Defaults.Geography = geo
+			}
+			if catDefFreq.Valid && catDefFreq.String == seriesFreq {
+				dataPortalCategory.Defaults.Frequency = freq
 			}
 		}
 	}
