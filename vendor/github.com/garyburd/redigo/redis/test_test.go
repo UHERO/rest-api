@@ -54,7 +54,6 @@ type Server struct {
 }
 
 func NewServer(name string, args ...string) (*Server, error) {
-	//fmt.Print(">>>> NewServer: cmd path = |%v|", *serverPath)
 	s := &Server{
 		name: name,
 		cmd:  exec.Command(*serverPath, args...),
@@ -128,12 +127,9 @@ func stopDefaultServer() {
 
 // startDefaultServer starts the default server if not already running.
 func startDefaultServer() error {
-	//fmt.Print(">>>>>>>> ENTER startDefaultServer")
 	defaultServerMu.Lock()
 	defer defaultServerMu.Unlock()
-	//fmt.Print(">>>>>>>> AFTER LOCK/UNLOCK")
 	if defaultServer != nil || defaultServerErr != nil {
-		//fmt.Print(">>>>>>>> RETURN Err")
 		return defaultServerErr
 	}
 	defaultServer, defaultServerErr = NewServer(
@@ -141,18 +137,15 @@ func startDefaultServer() error {
 		"--port", strconv.Itoa(*serverBasePort),
 		"--save", "",
 		"--appendonly", "no")
-	//fmt.Printf(">>>>>>>> FINAL RETURN: %v\n", defaultServerErr)
 	return defaultServerErr
 }
 
 // DialDefaultServer starts the test server if not already started and dials a
 // connection to the server.
 func DialDefaultServer() (Conn, error) {
-	//fmt.Print(">>>>>>>> BEFORE startDefaultServer")
 	if err := startDefaultServer(); err != nil {
 		return nil, err
 	}
-	//fmt.Print(">>>>>>>> AFTER startDefaultServer")
 	c, err := Dial("tcp", fmt.Sprintf(":%d", *serverBasePort), DialReadTimeout(1*time.Second), DialWriteTimeout(1*time.Second))
 	if err != nil {
 		return nil, err

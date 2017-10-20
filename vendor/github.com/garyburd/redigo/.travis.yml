@@ -1,8 +1,7 @@
 language: go
 sudo: false
-before_script: sudo redis-server /etc/redis/redis.conf --port 6379
-#services:
-#  - redis-server
+services:
+  - redis-server
 
 go:
   - 1.4
