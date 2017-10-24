@@ -33,11 +33,6 @@ type CategoryDefaults struct {
 	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
 
-type GeographyFrequencies struct {
-	DataPortalGeography
-	Frequencies []DataPortalFrequency `json:"freqs"`
-}
-
 type CategoryWithAncestryEtc struct {
 	Id			int64
 	Name			string
