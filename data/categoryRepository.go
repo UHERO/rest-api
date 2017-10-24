@@ -71,7 +71,10 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 			Id:       category.Id,
 			Name:     category.Name,
 			ParentId: parentId,
-			Defaults: &models.CategoryDefaults{},
+		}
+		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid || category.ObservationStart.Valid || category.ObservationEnd.Valid {
+			// Only initialize Defaults struct if any defaults values are available
+			dataPortalCategory.Defaults = &models.CategoryDefaults{}
 		}
 		if category.DefaultFrequency.Valid {
 			dataPortalCategory.Defaults.Frequency = &models.DataPortalFrequency{
