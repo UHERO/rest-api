@@ -33,7 +33,7 @@ type CategoryDefaults struct {
 	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
 
-type CategoryWithAncestryEtc struct {
+type CategoryWithAncestry struct {
 	Id			int64
 	Name			string
 	Ancestry		sql.NullString

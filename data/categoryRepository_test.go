@@ -14,12 +14,12 @@ func TestGetAllCategories(t *testing.T) {
 	}
 	defer db.Close()
 
-	category1 := models.CategoryWithAncestryEtc{
+	category1 := models.CategoryWithAncestry{
 		Id:       1,
 		Name:     "Summary",
 		Ancestry: sql.NullString{Valid: false},
 	}
-	category2 := models.CategoryWithAncestryEtc{
+	category2 := models.CategoryWithAncestry{
 		Id:       2,
 		Name:     "Income",
 		Ancestry: sql.NullString{Valid: true, String: "1"},

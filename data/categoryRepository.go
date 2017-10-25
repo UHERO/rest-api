@@ -49,7 +49,7 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		return
 	}
 	for rows.Next() {
-		category := models.CategoryWithAncestryEtc{}
+		category := models.CategoryWithAncestry{}
 		err = rows.Scan(
 			&category.Id,
 			&category.Name,
@@ -142,7 +142,7 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 }
 
 func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
-	var category models.CategoryWithAncestryEtc
+	var category models.CategoryWithAncestry
 	err := r.DB.QueryRow(
 		`SELECT categories.id, ANY_VALUE(categories.name), ANY_VALUE(ancestry),
 			MIN(public_data_points.date),
@@ -280,7 +280,7 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 		return
 	}
 	for rows.Next() {
-		category := models.CategoryWithAncestryEtc{}
+		category := models.CategoryWithAncestry{}
 		err = rows.Scan(
 			&category.Id,
 			&category.Name,
