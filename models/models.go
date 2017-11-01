@@ -191,6 +191,7 @@ type Observation struct {
 	Date          time.Time
 	Value         sql.NullFloat64
 	PseudoHistory sql.NullBool
+	Decimals      int
 }
 
 type DataPortalObservation struct {
@@ -208,8 +209,10 @@ type SeriesObservations struct {
 }
 
 type TransformationResult struct {
-	Transformation string                  `json:"transformation"`
-	Observations   []DataPortalObservation `json:"observations"`
+	Transformation string        `json:"transformation"`
+	ObservationDates   []string  `json:"dates"`
+	ObservationValues  []string  `json:"values"`
+	ObservationPHist   []bool    `json:"pseudoHistory"`
 }
 
 type Feedback struct {
