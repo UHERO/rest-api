@@ -22,14 +22,22 @@ func main() {
 	common.StartUp()
 
 	// Set up MySQL
+	dbPort, ok := os.LookupEnv("DB_PORT")
+	if !ok {
+		dbPort = "3306"
+	}
+	dbName, ok := os.LookupEnv("DB_DBNAME")
+	if !ok {
+		dbName = "uhero_db_dev"
+	}
 	mysqlConfig := mysql.Config{
 		User:      os.Getenv("DB_USER"),
 		Passwd:    os.Getenv("DB_PASSWORD"),
 		Net:       "tcp",
-		Addr:      net.JoinHostPort(os.Getenv("DB_HOST"), "3306"),
+		Addr:      net.JoinHostPort(os.Getenv("DB_HOST"), dbPort),
 		Loc:       time.Local,
 		ParseTime: true,
-		DBName:    "uhero_db_dev",
+		DBName:    dbName,
 	}
 	connectionString := mysqlConfig.FormatDSN()
 	db, err := sql.Open("mysql", connectionString)
@@ -40,7 +48,7 @@ func main() {
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("Cannot login to MySQL server")
+		log.Fatal("Cannot login to MySQL server - check all DB_* environment variables")
 	}
 
 	// Set up Redis
