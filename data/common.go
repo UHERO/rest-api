@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"github.com/UHERO/rest-api/models"
+	"time"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -209,4 +210,8 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 
 func formatWithYear(formatString string, year int64) string {
 	return strings.Replace(formatString, "%Y", strconv.FormatInt(year, 10), -1)
+}
+
+func rangesOverlap(start1 time.Time, end1 time.Time, start2 time.Time, end2 time.Time) bool {
+	return !(end1.Before(start2) || end2.Before(start1))
 }

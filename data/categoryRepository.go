@@ -278,6 +278,20 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 					ObservationStart: &scanfreq.ObservationStart.Time,
 					ObservationEnd: &scanfreq.ObservationEnd.Time,
 				}
+			} else {
+				overlap := rangesOverlap(scanfreq.ObservationStart.Time, scanfreq.ObservationEnd.Time,
+						*dataPortalCategory.Defaults.ObservationStart, *dataPortalCategory.Defaults.ObservationEnd)
+				if !overlap {
+					dataPortalCategory.Defaults.ObservationStart = nil
+					dataPortalCategory.Defaults.ObservationEnd = nil
+				} else {
+					if scanfreq.ObservationStart.Time.After(*dataPortalCategory.Defaults.ObservationStart) {
+						dataPortalCategory.Defaults.ObservationStart = &scanfreq.ObservationStart.Time
+					}
+					if scanfreq.ObservationEnd.Time.Before(*dataPortalCategory.Defaults.ObservationEnd) {
+						dataPortalCategory.Defaults.ObservationEnd = &scanfreq.ObservationEnd.Time
+					}
+				}
 			}
 			dataPortalCategory.Defaults.Frequency = freq
 		}
