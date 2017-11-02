@@ -65,6 +65,13 @@ type Geography struct {
 	ObservationEnd   NullTime
 }
 
+type Frequency struct {
+	Freq  string
+	Label sql.NullString
+	ObservationStart NullTime
+	ObservationEnd   NullTime
+}
+
 type DataPortalGeography struct {
 	FIPS             string     `json:"fips,omitempty"`
 	Name             string     `json:"name,omitempty"`
@@ -107,11 +114,6 @@ func (a ByGeography) Len() int      { return len(a) }
 func (a ByGeography) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByGeography) Less(i, j int) bool {
 	return a[i].Handle < a[j].Handle
-}
-
-type Frequency struct {
-	Freq  string
-	Label sql.NullString
 }
 
 type Series struct {

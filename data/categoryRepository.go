@@ -176,14 +176,12 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 	}
 
 	rows, err := r.DB.Query(
-		`SELECT ANY_VALUE(categories.default_freq) AS catfreq,
-			ANY_VALUE(categories.default_geo_id) AS catgeoid,
-			ANY_VALUE(geographies.handle) AS geo,
+		`SELECT ANY_VALUE(geographies.handle) AS geo,
 			ANY_VALUE(geographies.fips) AS geofips,
 			ANY_VALUE(geographies.display_name) AS geoname,
 			ANY_VALUE(geographies.display_name_short) AS geonameshort,
 			ANY_VALUE(series.geography_id) AS sergeoid,
-			RIGHT(series.name, 1) AS serfreq,
+			ANY_VALUE(CASE WHEN series.geography_id = categories.default_geo_id THEN true ELSE false END) AS isdefault,
 			MIN(public_data_points.date) AS startdate,
 			MAX(public_data_points.date) AS enddate
 		FROM categories
@@ -196,76 +194,97 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 		WHERE categories.id = ?
 		AND geographies.id IS NOT NULL
-		GROUP BY geographies.id, RIGHT(series.name, 1);`, id)
+		GROUP BY geographies.id ;`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
-	seenGeos := map[string]models.DataPortalGeography{}
-	seenFreqs := map[string]models.DataPortalFrequency{}
-
+	var geosResult []models.DataPortalGeography
 	for rows.Next() {
-		var catDefGeoId sql.NullInt64
-		var catDefFreq sql.NullString
-		var seriesGeoId int64
-		var seriesFreq string
+		var isDefaultGeo bool
 		scangeo := models.Geography{}
 		err = rows.Scan(
-			&catDefFreq,
-			&catDefGeoId,
 			&scangeo.Handle,
 			&scangeo.FIPS,
 			&scangeo.Name,
 			&scangeo.ShortName,
-			&seriesGeoId,
-			&seriesFreq,
+			&isDefaultGeo,
 			&scangeo.ObservationStart,
 			&scangeo.ObservationEnd,
 		)
 		geo := &models.DataPortalGeography{Handle: scangeo.Handle}
-		freq := &models.DataPortalFrequency{Freq: seriesFreq}
-		if _, exists := seenGeos[scangeo.Handle]; !exists {
-			if scangeo.FIPS.Valid {
-				geo.FIPS = scangeo.FIPS.String
-			}
-			if scangeo.Name.Valid {
-				geo.Name = scangeo.Name.String
-			}
-			if scangeo.ShortName.Valid {
-				geo.Name = scangeo.ShortName.String
-			}
-			seenGeos[scangeo.Handle] = *geo
+		if scangeo.FIPS.Valid {
+			geo.FIPS = scangeo.FIPS.String
 		}
-		if _, exists := seenFreqs[seriesFreq]; !exists {
-			freq.Label = freqLabel[seriesFreq]
-			seenFreqs[seriesFreq] = *freq
+		if scangeo.Name.Valid {
+			geo.Name = scangeo.Name.String
 		}
-		if dataPortalCategory.Defaults == nil && (
-				(catDefGeoId.Valid && catDefGeoId.Int64 == seriesGeoId) ||
-				(catDefFreq.Valid && catDefFreq.String == seriesFreq)) {
+		if scangeo.ShortName.Valid {
+			geo.Name = scangeo.ShortName.String
+		}
+		if scangeo.ObservationStart.Valid  {
+			geo.ObservationStart = &scangeo.ObservationStart.Time
+		}
+		if scangeo.ObservationEnd.Valid  {
+			geo.ObservationEnd = &scangeo.ObservationEnd.Time
+		}
+		if isDefaultGeo {
 			dataPortalCategory.Defaults = &models.CategoryDefaults{
+				Geography: geo,
 				ObservationStart: &scangeo.ObservationStart.Time,
 				ObservationEnd: &scangeo.ObservationEnd.Time,
 			}
-			if catDefGeoId.Valid && catDefGeoId.Int64 == seriesGeoId {
-				dataPortalCategory.Defaults.Geography = geo
-			}
-			if catDefFreq.Valid && catDefFreq.String == seriesFreq {
-				dataPortalCategory.Defaults.Frequency = freq
-			}
 		}
+		geosResult = append(geosResult, *geo)
 	}
-	geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
-	for  _, value := range seenGeos {
-		geosResult = append(geosResult, value)
+	rows, err = r.DB.Query(
+		`SELECT RIGHT(series.name, 1) AS serfreq,
+			ANY_VALUE(CASE WHEN RIGHT(series.name, 1) = categories.default_freq THEN true ELSE false END) AS isdefault,
+			MIN(public_data_points.date) AS startdate,
+			MAX(public_data_points.date) AS enddate
+		FROM categories
+	        LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+		LEFT JOIN series
+		    ON series.id = measurement_series.series_id
+		   AND NOT series.restricted
+		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+		WHERE categories.id = ?
+		AND series.id IS NOT NULL
+		GROUP BY RIGHT(series.name, 1) ;`, id)
+	if err != nil {
+		return dataPortalCategory, err
+	}
+	var freqsResult []models.DataPortalFrequency
+	for rows.Next() {
+		var isDefaultFreq bool
+		scanfreq := models.Frequency{}
+		err = rows.Scan(
+			&scanfreq.Freq,
+			&isDefaultFreq,
+			&scanfreq.ObservationStart,
+			&scanfreq.ObservationEnd,
+
+		)
+		freq := &models.DataPortalFrequency{Freq: scanfreq.Freq}
+		if scanfreq.ObservationStart.Valid  {
+			freq.ObservationStart = &scanfreq.ObservationStart.Time
+		}
+		if scanfreq.ObservationEnd.Valid  {
+			freq.ObservationEnd = &scanfreq.ObservationEnd.Time
+		}
+		if isDefaultFreq {
+			if dataPortalCategory.Defaults == nil {
+				dataPortalCategory.Defaults = &models.CategoryDefaults{
+					ObservationStart: &scanfreq.ObservationStart.Time,
+					ObservationEnd: &scanfreq.ObservationEnd.Time,
+				}
+			}
+			dataPortalCategory.Defaults.Frequency = freq
+		}
+		freqsResult = append(freqsResult, *freq)
 	}
 	sort.Sort(models.ByGeography(geosResult))
-
-	freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
-	for  _, value := range seenFreqs {
-		freqsResult = append(freqsResult, value)
-	}
 	sort.Sort(models.ByFrequency(freqsResult))
-
 	dataPortalCategory.Geographies = &geosResult
 	dataPortalCategory.Frequencies = &freqsResult
 	return dataPortalCategory, err
