@@ -111,7 +111,7 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	}
 
 	rows, err := r.DB.Query(`
-	SELECT DISTINCT geo.fips, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
+	SELECT DISTINCT geo.fips, geo.display_name, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
 	FROM series
 	LEFT JOIN geographies geo on geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -140,6 +140,7 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 		err = rows.Scan(
 			&scangeo.FIPS,
 			&scangeo.Name,
+			&scangeo.ShortName,
 			&scangeo.Handle,
 			&frequency.Freq,
 		)
@@ -151,6 +152,9 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 			}
 			if scangeo.Name.Valid {
 				geo.Name = scangeo.Name.String
+			}
+			if scangeo.ShortName.Valid {
+				geo.ShortName = scangeo.ShortName.String
 			}
 			if searchSummary.DefaultGeo == nil {
 				searchSummary.DefaultGeo = geo
