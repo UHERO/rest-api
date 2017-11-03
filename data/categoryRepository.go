@@ -180,7 +180,6 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			ANY_VALUE(geographies.fips) AS geofips,
 			ANY_VALUE(geographies.display_name) AS geoname,
 			ANY_VALUE(geographies.display_name_short) AS geonameshort,
-			ANY_VALUE(series.geography_id) AS sergeoid,
 			ANY_VALUE(CASE WHEN series.geography_id = categories.default_geo_id THEN true ELSE false END) AS isdefault,
 			MIN(public_data_points.date) AS startdate,
 			MAX(public_data_points.date) AS enddate
@@ -219,7 +218,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			geo.Name = scangeo.Name.String
 		}
 		if scangeo.ShortName.Valid {
-			geo.Name = scangeo.ShortName.String
+			geo.ShortName = scangeo.ShortName.String
 		}
 		if scangeo.ObservationStart.Valid  {
 			geo.ObservationStart = &scangeo.ObservationStart.Time
@@ -265,7 +264,7 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 			&scanfreq.ObservationEnd,
 
 		)
-		freq := &models.DataPortalFrequency{Freq: scanfreq.Freq}
+		freq := &models.DataPortalFrequency{Freq: scanfreq.Freq, Label: freqLabel[scanfreq.Freq]}
 		if scanfreq.ObservationStart.Valid  {
 			freq.ObservationStart = &scanfreq.ObservationStart.Time
 		}
