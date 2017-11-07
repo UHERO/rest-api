@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"regexp"
 )
 
 const authPrefix = "Bearer "
@@ -96,10 +97,20 @@ func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.Re
 			)
 			return
 		}
+		addACAO := false
 		origin := r.Header.Get("Origin")
-		if strings.HasPrefix(origin, "http://localhost") ||
-			strings.Contains(origin, applications[0].Hostname) ||
-			origin == "" {
+		localhost, _ := regexp.MatchString("https?://localhost(:[0-9]+)?$", origin)
+		if origin == "" || localhost {
+			addACAO = true
+		} else {
+			for _, app := range applications {
+				if strings.Contains(origin, app.Hostname) {
+					addACAO = true
+					break
+				}
+			}
+		}
+		if addACAO {
 			w.Header().Add("Access-Control-Allow-Origin", origin)
 		}
 		next(w, r)
