@@ -78,19 +78,19 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	    FROM public_data_points
 	    JOIN series ON series.id = public_data_points.series_id
 	    JOIN (
-	      SELECT series_id FROM measurement_series where measurement_id in (
-		SELECT measurement_id FROM data_list_measurements where data_list_id in (
+	      SELECT series_id FROM measurement_series WHERE measurement_id IN (
+		SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
 		  SELECT data_list_id FROM categories
 		  WHERE universe = UPPER(?)
 		  AND ((MATCH(name) AGAINST(? IN NATURAL LANGUAGE MODE))
-		  OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
+		    OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
 		)
 	      )
 	      UNION
-	      SELECT id FROM series
+	      SELECT id AS series_id FROM series
 	      WHERE universe = UPPER(?)
 	      AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	      OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	        OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	    ) AS s ON s.series_id = series.id
 	    LEFT JOIN feature_toggles ft ON ft.universe = series.universe AND ft.name = 'filter_by_quarantine'
 	    WHERE NOT series.restricted
