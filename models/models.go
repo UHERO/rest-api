@@ -21,7 +21,7 @@ type Category struct {
 	ParentId             int64                   `json:"parentId,omitempty"`
 	Defaults	     *CategoryDefaults	     `json:"defaults,omitempty"`
 	Geographies          *[]DataPortalGeography  `json:"geos,omitempty"`
-	Frequencies          *[]DataPortalFrequency  `json:"freqs,omitempty"`
+	Frequencies          *[]DataPortalFrequency  `json:"frequencies,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
 	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
@@ -50,8 +50,8 @@ type SearchSummary struct {
 	SearchText           string                  `json:"q"`
 	DefaultGeo           *DataPortalGeography    `json:"defaultGeo,omitempty"`
 	DefaultFreq          *DataPortalFrequency    `json:"defaultFreq,omitempty"`
-	Geographies          *[]DataPortalGeography  `json:"geos,omitempty"`
-	Frequencies          *[]DataPortalFrequency  `json:"freqs,omitempty"`
+	Geographies          *[]DataPortalGeography  `json:"geographies,omitempty"`
+	Frequencies          *[]DataPortalFrequency  `json:"frequencies,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart"`
 	ObservationEnd       *time.Time              `json:"observationEnd"`
 }
@@ -173,8 +173,8 @@ type DataPortalSeries struct {
 	Indent                      int                     `json:"indent,omitempty"`
 	TablePrefix                 string                  `json:"tablePrefix"`
 	TablePostfix                string                  `json:"tablePostfix"`
-	Geographies                 *[]DataPortalGeography  `json:"geos,omitempty"`
-	Frequencies		    *[]DataPortalFrequency  `json:"freqs,omitempty"`
+	Geographies                 *[]DataPortalGeography  `json:"geographies,omitempty"`
+	Frequencies		    *[]DataPortalFrequency  `json:"frequencies,omitempty"`
 }
 
 type InflatedSeries struct {
