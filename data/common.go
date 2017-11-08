@@ -153,7 +153,12 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 	error,
 ) {
 	rows, err := r.DB.Query(
-		`SELECT DISTINCT 'geo' AS gftype, geo.handle, geo.fips, geo.display_name, geo.display_name_short
+		`SELECT DISTINCT 'geo' AS gftype,
+			ANY_VALUE(geo.handle) AS handle,
+			ANY_VALUE(geo.fips) AS fips,
+			ANY_VALUE(geo.display_name) AS display_name,
+			ANY_VALUE(geo.display_name_short) AS display_name_short,
+			MIN(pdp.date), MAX(pdp.date)
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
@@ -161,14 +166,17 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-			UNION
-		SELECT DISTINCT 'freq' AS gftype, RIGHT(series.name, 1) AS handle, null, null, null
+		GROUP BY geo.id
+		   UNION
+		SELECT DISTINCT 'freq' AS gftype,
+			RIGHT(series.name, 1) AS handle, null, null, null, MIN(pdp.date), MAX(pdp.date)
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
+		GROUP BY RIGHT(series.name, 1)
 		ORDER BY 1,2 ;`, seriesId, seriesId)
 	if err != nil {
 		return nil, nil, err
@@ -184,6 +192,8 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 			&temp.FIPS,
 			&temp.Name,
 			&temp.ShortName,
+			&temp.ObservationStart,
+			&temp.ObservationEnd,
 		)
 		if gftype.String == "geo" {
 			g := models.DataPortalGeography{Handle: temp.Handle}
@@ -196,11 +206,23 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 			if temp.ShortName.Valid {
 				g.ShortName = temp.ShortName.String
 			}
+			if temp.ObservationStart.Valid  {
+				g.ObservationStart = &temp.ObservationStart.Time
+			}
+			if temp.ObservationEnd.Valid  {
+				g.ObservationEnd = &temp.ObservationEnd.Time
+			}
 			geosResult = append(geosResult, g)
 		} else {
 			f := models.DataPortalFrequency{
 				Freq: temp.Handle,
 				Label: freqLabel[temp.Handle],
+			}
+			if temp.ObservationStart.Valid  {
+				f.ObservationStart = &temp.ObservationStart.Time
+			}
+			if temp.ObservationEnd.Valid  {
+				f.ObservationEnd = &temp.ObservationEnd.Time
 			}
 			freqsResult = append(freqsResult, f)
 		}
