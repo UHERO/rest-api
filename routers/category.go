@@ -27,6 +27,12 @@ func SetCategoryRoutes(
 	)
 	router.HandleFunc(
 		"/v1/category",
+		controllers.GetCategoriesByUniverse(categoryRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"u", "{universe_text:.+}",
+	)
+	router.HandleFunc(
+		"/v1/category",
 		controllers.GetCategoryRoots(categoryRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"top_level", "true",
@@ -37,7 +43,11 @@ func SetCategoryRoutes(
 	).Methods("GET").Queries(
 		"top_level", "false",
 	)
-	router.HandleFunc("/v1/category", controllers.GetCategories(categoryRepository, cacheRepository)).Methods("GET")
+	router.HandleFunc(
+		"/v1/category",
+		controllers.GetCategories(categoryRepository, cacheRepository),
+	).Methods("GET")
+
 	router.HandleFunc(
 		"/v1/category/freq",
 		controllers.GetFreqByCategoryId(seriesRepository, cacheRepository),
