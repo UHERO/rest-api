@@ -21,6 +21,14 @@ func SetCategoryRoutes(
 	)
 	router.HandleFunc(
 		"/v1/category",
+		controllers.GetCategoryByIdGeoFreq(categoryRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+		"geo", "{geo:[A-Za-z0-9]+}",
+		"freq", "{freq:[ASQMWDasqmwd]}",
+	)
+	router.HandleFunc(
+		"/v1/category",
 		controllers.GetCategoriesByName(categoryRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"search_text", "{searchText:.+}",

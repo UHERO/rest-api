@@ -142,6 +142,11 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 }
 
 func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
+	return r.GetCategoryByIdGeoFreq(id, nil, nil)
+
+}
+
+func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, geo string, freq string) (models.Category, error) {
 	var category models.CategoryWithAncestry
 	err := r.DB.QueryRow(
 		`SELECT categories.id, ANY_VALUE(categories.name), ANY_VALUE(ancestry),
