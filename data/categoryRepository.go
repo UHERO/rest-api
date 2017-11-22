@@ -207,12 +207,15 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	}
 	var geosResult  []models.DataPortalGeography
 	var freqsResult []models.DataPortalFrequency
+	seenGeos := map[string]models.DataPortalGeography{}
+	seenFreqs := map[string]models.DataPortalFrequency{}
+
 	for rows.Next() {
 		var isDefaultGeo, isDefaultFreq	bool
-		var seriesFreq string
+		var handle, seriesFreq string
 		scangeo := models.Geography{}
 		err = rows.Scan(
-			&scangeo.Handle,
+			&handle,
 			&seriesFreq,
 			&scangeo.FIPS,
 			&scangeo.Name,
@@ -222,7 +225,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			&scangeo.ObservationStart,
 			&scangeo.ObservationEnd,
 		)
-		geo := &models.DataPortalGeography{Handle: scangeo.Handle}
+		geo := &models.DataPortalGeography{Handle: handle}
 		freq := &models.DataPortalFrequency{Freq: seriesFreq, Label: freqLabel[seriesFreq]}
 		if scangeo.FIPS.Valid {
 			geo.FIPS = scangeo.FIPS.String
@@ -234,22 +237,38 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			geo.ShortName = scangeo.ShortName.String
 		}
 		if scangeo.ObservationStart.Valid  {
-			geo.ObservationStart = &scangeo.ObservationStart.Time
+			 geo.ObservationStart = &scangeo.ObservationStart.Time
 			freq.ObservationStart = &scangeo.ObservationStart.Time
 		}
 		if scangeo.ObservationEnd.Valid  {
-			geo.ObservationEnd = &scangeo.ObservationEnd.Time
+			 geo.ObservationEnd = &scangeo.ObservationEnd.Time
 			freq.ObservationEnd = &scangeo.ObservationEnd.Time
 		}
 
-		if geo.Handle != originGeo && seriesFreq == originFreq {
+		if originGeo == nil || originFreq == nil { // no origin to do one-step-away from
+			xGeo, ok := seenGeos[handle]
+			if !ok {
+				seenGeos[handle] = *geo
+			} else if geo.ObservationStart.Before(xGeo.ObservationStart) {
+				xGeo.ObservationStart = geo.ObservationStart
+			} else if geo.ObservationEnd.After(xGeo.ObservationEnd) {
+				xGeo.ObservationEnd = geo.ObservationEnd
+			}
+			xFreq, ok := seenFreqs[seriesFreq]
+			if !ok {
+				seenFreqs[seriesFreq] = *freq
+			} else if freq.ObservationStart.Before(xFreq.ObservationStart) {
+				xFreq.ObservationStart = freq.ObservationStart
+			} else if freq.ObservationEnd.After(xFreq.ObservationEnd) {
+				xFreq.ObservationEnd = freq.ObservationEnd
+			}
+		} else if geo.Handle != originGeo && seriesFreq == originFreq {
 			geosResult = append(geosResult, *geo)
-		}
-		if geo.Handle == originGeo && seriesFreq != originFreq {
+		} else if geo.Handle == originGeo && seriesFreq != originFreq {
 			freqsResult = append(freqsResult, *freq)
 		}
 
-		if notSureBoutThis && isDefaultGeo {
+		if notSureBoutThis && xisDefaultGeo {
 			dataPortalCategory.Defaults = &models.CategoryDefaults{
 				Geography: geo,
 				ObservationStart: &scangeo.ObservationStart.Time,
@@ -258,16 +277,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		}
 	}
 /////////////////////////////////////////////////////////////////////////////////////
-	for rows.Next() {
-		scanfreq := models.Frequency{}
-		err = rows.Scan(
-			&scanfreq.Freq,
-			&isDefaultFreq,
-			&scanfreq.ObservationStart,
-			&scanfreq.ObservationEnd,
-
-		)
-		if notSureBoutThis && isDefaultFreq {
+		if notSureBoutThis && xisDefaultFreq {
 			if dataPortalCategory.Defaults == nil {
 				dataPortalCategory.Defaults = &models.CategoryDefaults{
 					ObservationStart: &scanfreq.ObservationStart.Time,
@@ -290,8 +300,6 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			}
 			dataPortalCategory.Defaults.Frequency = freq
 		}
-		freqsResult = append(freqsResult, *freq)
-	}
 	sort.Sort(models.ByGeography(geosResult))
 	sort.Sort(models.ByFrequency(freqsResult))
 	dataPortalCategory.Geographies = &geosResult
