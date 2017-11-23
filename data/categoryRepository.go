@@ -142,8 +142,7 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 }
 
 func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
-	return r.GetCategoryByIdGeoFreq(id, nil, nil)
-
+	return r.GetCategoryByIdGeoFreq(id, "", "")
 }
 
 func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
@@ -207,9 +206,10 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	}
 	var geosResult  []models.DataPortalGeography
 	var freqsResult []models.DataPortalFrequency
-	var defaultGeo, defaultFreq string
-	seenGeos := map[string]models.DataPortalGeography{}
-	seenFreqs := map[string]models.DataPortalFrequency{}
+	var defaultGeo	*models.DataPortalGeography
+	var defaultFreq *models.DataPortalFrequency
+	seenGeos := map[string]*models.DataPortalGeography{}
+	seenFreqs := map[string]*models.DataPortalFrequency{}
 
 	for rows.Next() {
 		var isDefaultGeo, isDefaultFreq	bool
@@ -245,34 +245,34 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			 geo.ObservationEnd = &scangeo.ObservationEnd.Time
 			freq.ObservationEnd = &scangeo.ObservationEnd.Time
 		}
-		if originGeo == nil || originFreq == nil { // no origin to do one-step-away from
+		if originGeo == "" || originFreq == "" {  // no origin to do one-step-away from
 			xGeo, ok := seenGeos[handle]
 			if !ok {
-				seenGeos[handle] = *geo
+				seenGeos[handle] = geo
 			} else {
-				if geo.ObservationStart.Before(xGeo.ObservationStart) {
+				if geo.ObservationStart.Before(*xGeo.ObservationStart) {
 					xGeo.ObservationStart = geo.ObservationStart
 				}
-				if geo.ObservationEnd.After(xGeo.ObservationEnd) {
+				if geo.ObservationEnd.After(*xGeo.ObservationEnd) {
 					xGeo.ObservationEnd = geo.ObservationEnd
 				}
 			}
 			xFreq, ok := seenFreqs[seriesFreq]
 			if !ok {
-				seenFreqs[seriesFreq] = *freq
+				seenFreqs[seriesFreq] = freq
 			} else {
-				if freq.ObservationStart.Before(xFreq.ObservationStart) {
+				if freq.ObservationStart.Before(*xFreq.ObservationStart) {
 					xFreq.ObservationStart = freq.ObservationStart
 				}
-				if freq.ObservationEnd.After(xFreq.ObservationEnd) {
+				if freq.ObservationEnd.After(*xFreq.ObservationEnd) {
 					xFreq.ObservationEnd = freq.ObservationEnd
 				}
 			}
 			if isDefaultGeo {
-				defaultGeo = handle
+				defaultGeo = geo
 			}
 			if isDefaultFreq {
-				defaultFreq = seriesFreq
+				defaultFreq = freq
 			}
 		} else if geo.Handle != originGeo && seriesFreq == originFreq {
 			geosResult = append(geosResult, *geo)
@@ -280,26 +280,23 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			freqsResult = append(freqsResult, *freq)
 		}
 	}
-	if originGeo == nil || originFreq == nil {
+	if originGeo == "" || originFreq == "" {
 		geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
 		for  _, value := range seenGeos {
-			geosResult = append(geosResult, value)
+			geosResult = append(geosResult, *value)
 		}
 		freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
 		for  _, value := range seenFreqs {
-			freqsResult = append(freqsResult, value)
+			freqsResult = append(freqsResult, *value)
 		}
 		if defaultGeo != nil {
-			if dataPortalCategory.Defaults == nil {
-				dataPortalCategory.Defaults = &models.CategoryDefaults{}
-			}
-			dataPortalCategory.Defaults.Geography = seenGeos[defaultGeo]
+			dataPortalCategory.Defaults = &models.CategoryDefaults{Geography: defaultGeo}
 		}
 		if defaultFreq != nil {
 			if dataPortalCategory.Defaults == nil {
 				dataPortalCategory.Defaults = &models.CategoryDefaults{}
 			}
-			dataPortalCategory.Defaults.Frequency = seenFreqs[defaultFreq]
+			dataPortalCategory.Defaults.Frequency = defaultFreq
 		}
 	}
 	sort.Sort(models.ByGeography(geosResult))
