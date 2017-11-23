@@ -304,7 +304,9 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 				}
 			} else {
 				CDstart, CDend := rangeIntersection(*defaultGeo.ObservationStart, *defaultGeo.ObservationEnd,
-					*defaultFreq.ObservationStart, *defaultFreq.ObservationEnd)
+								*defaultFreq.ObservationStart, *defaultFreq.ObservationEnd)
+				dataPortalCategory.Defaults.ObservationStart = &CDstart.Time
+				dataPortalCategory.Defaults.ObservationEnd = &CDend.Time
 			}
 			dataPortalCategory.Defaults.Frequency = defaultFreq
 		}

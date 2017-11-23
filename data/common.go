@@ -235,10 +235,12 @@ func formatWithYear(formatString string, year int64) string {
 }
 
 func rangeIntersection(start1 time.Time, end1 time.Time, start2 time.Time, end2 time.Time) (iStart models.NullTime, iEnd models.NullTime) {
-	iStart.Time = start1
-	iEnd.Time = end1
+	iStart = models.NullTime{Time: start1, Valid: true}
+	iEnd = models.NullTime{Time: end1, Valid: true}
 	if !rangesOverlap(start1, end1, start2, end2) {
-		return models.NullTime{Valid: false}, models.NullTime{Valid: false}
+		iStart.Valid = false
+		iEnd.Valid = false
+		return
 	}
 	if start2.After(start1) {
 		iStart.Time = start2
