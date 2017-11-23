@@ -290,11 +290,21 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			freqsResult = append(freqsResult, *value)
 		}
 		if defaultGeo != nil {
-			dataPortalCategory.Defaults = &models.CategoryDefaults{Geography: defaultGeo}
+			dataPortalCategory.Defaults = &models.CategoryDefaults{
+				Geography: defaultGeo,
+				ObservationStart: defaultGeo.ObservationStart,
+				ObservationEnd: defaultGeo.ObservationEnd,
+			}
 		}
 		if defaultFreq != nil {
 			if dataPortalCategory.Defaults == nil {
-				dataPortalCategory.Defaults = &models.CategoryDefaults{}
+				dataPortalCategory.Defaults = &models.CategoryDefaults{
+					ObservationStart: defaultFreq.ObservationStart,
+					ObservationEnd: defaultFreq.ObservationEnd,
+				}
+			} else {
+				CDstart, CDend := rangeIntersection(*defaultGeo.ObservationStart, *defaultGeo.ObservationEnd,
+					*defaultFreq.ObservationStart, *defaultFreq.ObservationEnd)
 			}
 			dataPortalCategory.Defaults.Frequency = defaultFreq
 		}
