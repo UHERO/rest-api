@@ -207,6 +207,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	}
 	var geosResult  []models.DataPortalGeography
 	var freqsResult []models.DataPortalFrequency
+	var defaultGeo, defaultFreq string
 	seenGeos := map[string]models.DataPortalGeography{}
 	seenFreqs := map[string]models.DataPortalFrequency{}
 
@@ -244,62 +245,63 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			 geo.ObservationEnd = &scangeo.ObservationEnd.Time
 			freq.ObservationEnd = &scangeo.ObservationEnd.Time
 		}
-
 		if originGeo == nil || originFreq == nil { // no origin to do one-step-away from
 			xGeo, ok := seenGeos[handle]
 			if !ok {
 				seenGeos[handle] = *geo
-			} else if geo.ObservationStart.Before(xGeo.ObservationStart) {
-				xGeo.ObservationStart = geo.ObservationStart
-			} else if geo.ObservationEnd.After(xGeo.ObservationEnd) {
-				xGeo.ObservationEnd = geo.ObservationEnd
+			} else {
+				if geo.ObservationStart.Before(xGeo.ObservationStart) {
+					xGeo.ObservationStart = geo.ObservationStart
+				}
+				if geo.ObservationEnd.After(xGeo.ObservationEnd) {
+					xGeo.ObservationEnd = geo.ObservationEnd
+				}
 			}
 			xFreq, ok := seenFreqs[seriesFreq]
 			if !ok {
 				seenFreqs[seriesFreq] = *freq
-			} else if freq.ObservationStart.Before(xFreq.ObservationStart) {
-				xFreq.ObservationStart = freq.ObservationStart
-			} else if freq.ObservationEnd.After(xFreq.ObservationEnd) {
-				xFreq.ObservationEnd = freq.ObservationEnd
+			} else {
+				if freq.ObservationStart.Before(xFreq.ObservationStart) {
+					xFreq.ObservationStart = freq.ObservationStart
+				}
+				if freq.ObservationEnd.After(xFreq.ObservationEnd) {
+					xFreq.ObservationEnd = freq.ObservationEnd
+				}
+			}
+			if isDefaultGeo {
+				defaultGeo = handle
+			}
+			if isDefaultFreq {
+				defaultFreq = seriesFreq
 			}
 		} else if geo.Handle != originGeo && seriesFreq == originFreq {
 			geosResult = append(geosResult, *geo)
 		} else if geo.Handle == originGeo && seriesFreq != originFreq {
 			freqsResult = append(freqsResult, *freq)
 		}
-
-		if notSureBoutThis && xisDefaultGeo {
-			dataPortalCategory.Defaults = &models.CategoryDefaults{
-				Geography: geo,
-				ObservationStart: &scangeo.ObservationStart.Time,
-				ObservationEnd: &scangeo.ObservationEnd.Time,
+	}
+	if originGeo == nil || originFreq == nil {
+		geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
+		for  _, value := range seenGeos {
+			geosResult = append(geosResult, value)
+		}
+		freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
+		for  _, value := range seenFreqs {
+			freqsResult = append(freqsResult, value)
+		}
+		if defaultGeo != nil {
+			if dataPortalCategory.Defaults == nil {
+				dataPortalCategory.Defaults = &models.CategoryDefaults{}
 			}
+			dataPortalCategory.Defaults.Geography = seenGeos[defaultGeo]
+		}
+		if defaultFreq != nil {
+			if dataPortalCategory.Defaults == nil {
+				dataPortalCategory.Defaults = &models.CategoryDefaults{}
+			}
+			dataPortalCategory.Defaults.Frequency = seenFreqs[defaultFreq]
 		}
 	}
-/////////////////////////////////////////////////////////////////////////////////////
-		if notSureBoutThis && xisDefaultFreq {
-			if dataPortalCategory.Defaults == nil {
-				dataPortalCategory.Defaults = &models.CategoryDefaults{
-					ObservationStart: &scanfreq.ObservationStart.Time,
-					ObservationEnd: &scanfreq.ObservationEnd.Time,
-				}
-			} else {
-				overlap := rangesOverlap(scanfreq.ObservationStart.Time, scanfreq.ObservationEnd.Time,
-						*dataPortalCategory.Defaults.ObservationStart, *dataPortalCategory.Defaults.ObservationEnd)
-				if !overlap {
-					dataPortalCategory.Defaults.ObservationStart = nil
-					dataPortalCategory.Defaults.ObservationEnd = nil
-				} else {
-					if scanfreq.ObservationStart.Time.After(*dataPortalCategory.Defaults.ObservationStart) {
-						dataPortalCategory.Defaults.ObservationStart = &scanfreq.ObservationStart.Time
-					}
-					if scanfreq.ObservationEnd.Time.Before(*dataPortalCategory.Defaults.ObservationEnd) {
-						dataPortalCategory.Defaults.ObservationEnd = &scanfreq.ObservationEnd.Time
-					}
-				}
-			}
-			dataPortalCategory.Defaults.Frequency = freq
-		}
 	sort.Sort(models.ByGeography(geosResult))
 	sort.Sort(models.ByFrequency(freqsResult))
 	dataPortalCategory.Geographies = &geosResult
