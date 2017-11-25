@@ -280,6 +280,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			freqsResult = append(freqsResult, *freq)
 		}
 	}
+
 	if originGeo == "" || originFreq == "" {
 		geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
 		for  _, value := range seenGeos {
@@ -303,10 +304,10 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 					ObservationEnd: defaultFreq.ObservationEnd,
 				}
 			} else {
-				CDstart, CDend := rangeIntersection(*defaultGeo.ObservationStart, *defaultGeo.ObservationEnd,
+				start, end := rangeIntersection(*defaultGeo.ObservationStart, *defaultGeo.ObservationEnd,
 								*defaultFreq.ObservationStart, *defaultFreq.ObservationEnd)
-				dataPortalCategory.Defaults.ObservationStart = &CDstart.Time
-				dataPortalCategory.Defaults.ObservationEnd = &CDend.Time
+				dataPortalCategory.Defaults.ObservationStart = start
+				dataPortalCategory.Defaults.ObservationEnd = end
 			}
 			dataPortalCategory.Defaults.Frequency = defaultFreq
 		}

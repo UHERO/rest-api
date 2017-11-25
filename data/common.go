@@ -234,19 +234,17 @@ func formatWithYear(formatString string, year int64) string {
 	return strings.Replace(formatString, "%Y", strconv.FormatInt(year, 10), -1)
 }
 
-func rangeIntersection(start1 time.Time, end1 time.Time, start2 time.Time, end2 time.Time) (iStart models.NullTime, iEnd models.NullTime) {
-	iStart = models.NullTime{Time: start1, Valid: true}
-	iEnd = models.NullTime{Time: end1, Valid: true}
+func rangeIntersection(start1 time.Time, end1 time.Time, start2 time.Time, end2 time.Time) (iStart *time.Time, iEnd *time.Time) {
+	iStart = &start1
+	iEnd = &end1
 	if !rangesOverlap(start1, end1, start2, end2) {
-		iStart.Valid = false
-		iEnd.Valid = false
-		return
+		return nil, nil
 	}
 	if start2.After(start1) {
-		iStart.Time = start2
+		iStart = &start2
 	}
 	if end2.Before(end1) {
-		iEnd.Time = end2
+		iEnd = &end2
 	}
 	return
 }
