@@ -180,7 +180,6 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	if category.ObservationEnd.Valid && category.ObservationEnd.Time.After(time.Time{}) {
 		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
 	}
-
 	rows, err := r.DB.Query(
 		`SELECT ANY_VALUE(geographies.handle) AS geo,
 	                RIGHT(series.name, 1) AS serfreq,
@@ -200,6 +199,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		LEFT JOIN geographies ON geographies.id = series.geography_id
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 		WHERE categories.id = ?
+		AND series.name IS NOT null /* suppress null output row */
 		GROUP BY geographies.id, RIGHT(series.name, 1) ;`, id)
 	if err != nil {
 		return dataPortalCategory, err
@@ -212,7 +212,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	seenFreqs := map[string]*models.DataPortalFrequency{}
 
 	for rows.Next() {
-		var isDefaultGeo, isDefaultFreq	bool
+		var isDefaultGeo, isDefaultFreq	sql.NullBool
 		var handle, seriesFreq string
 		scangeo := models.Geography{}
 		err = rows.Scan(
@@ -268,10 +268,10 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 					xFreq.ObservationEnd = freq.ObservationEnd
 				}
 			}
-			if isDefaultGeo {
+			if isDefaultGeo.Valid && isDefaultGeo.Bool {
 				defaultGeo = geo
 			}
-			if isDefaultFreq {
+			if isDefaultFreq.Valid && isDefaultFreq.Bool {
 				defaultFreq = freq
 			}
 		} else if geo.Handle != originGeo && seriesFreq == originFreq {
@@ -282,11 +282,11 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	}
 
 	if originGeo == "" || originFreq == "" {
-		geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
+		//geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
 		for  _, value := range seenGeos {
 			geosResult = append(geosResult, *value)
 		}
-		freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
+		//freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
 		for  _, value := range seenFreqs {
 			freqsResult = append(freqsResult, *value)
 		}
