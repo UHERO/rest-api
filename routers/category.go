@@ -15,17 +15,17 @@ func SetCategoryRoutes(
 ) *mux.Router {
 	router.HandleFunc(
 		"/v1/category",
-		controllers.GetCategory(categoryRepository, cacheRepository),
-	).Methods("GET").Queries(
-		"id", "{id:[0-9]+}",
-	)
-	router.HandleFunc(
-		"/v1/category",
 		controllers.GetCategoryByIdGeoFreq(categoryRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 		"geo", "{geo:[A-Za-z0-9]+}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
+	)
+	router.HandleFunc(
+		"/v1/category",
+		controllers.GetCategory(categoryRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
 	)
 	router.HandleFunc(
 		"/v1/category",
