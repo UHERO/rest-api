@@ -199,7 +199,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		LEFT JOIN geographies ON geographies.id = series.geography_id
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 		WHERE categories.id = ?
-		AND series.name IS NOT null /* suppress null output row */
+		AND public_data_points.value IS NOT null /* suppress those with no public data */
 		GROUP BY geographies.id, RIGHT(series.name, 1) ;`, id)
 	if err != nil {
 		return dataPortalCategory, err
