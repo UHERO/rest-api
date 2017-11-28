@@ -269,10 +269,10 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 				}
 			}
 			if isDefaultGeo.Valid && isDefaultGeo.Bool {
-				defaultGeo = geo
+				defaultGeo = xGeo
 			}
 			if isDefaultFreq.Valid && isDefaultFreq.Bool {
-				defaultFreq = freq
+				defaultFreq = xFreq
 			}
 		} else if geo.Handle != originGeo && seriesFreq == originFreq {
 			geosResult = append(geosResult, *geo)
@@ -282,11 +282,9 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	}
 
 	if originGeo == "" || originFreq == "" {
-		//geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
 		for  _, value := range seenGeos {
 			geosResult = append(geosResult, *value)
 		}
-		//freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
 		for  _, value := range seenFreqs {
 			freqsResult = append(freqsResult, *value)
 		}
