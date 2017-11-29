@@ -216,10 +216,10 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			if originFreq == "" && category.DefaultFrequency.Valid {
 				originFreq = category.DefaultFrequency.String
 			}
-			startOfTime := time.Date(1099, 1, 1, 0, 0, 0, 0, nil)
-			endOfTime := time.Date(2999, 1, 1, 0, 0, 0, 0, nil)
-			dataPortalCategory.ObservationStart = &startOfTime
-			dataPortalCategory.ObservationEnd = &endOfTime
+			startOfTime := time.Date(1099, 1, 1, 0, 0, 0, 0, &time.Location{})
+			endOfTime := time.Date(2999, 1, 1, 0, 0, 0, 0, &time.Location{})
+			dataPortalCategory.ObservationStart = &endOfTime // yes, reversed at init time
+			dataPortalCategory.ObservationEnd = &startOfTime
 		}
 		geo := &models.DataPortalGeography{Handle: handle}
 		freq := &models.DataPortalFrequency{Freq: seriesFreq, Label: freqLabel[seriesFreq]}
@@ -257,7 +257,8 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 					ObservationEnd: &scangeo.ObservationEnd.Time,
 				}
 			}
-		} else if geo.Handle == originGeo {
+		}
+		if geo.Handle == originGeo {
 			freqsResult = append(freqsResult, *freq)
 		}
 	}

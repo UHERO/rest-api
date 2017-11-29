@@ -84,7 +84,7 @@ type DataPortalGeography struct {
 
 type DataPortalFrequency struct {
 	Freq             string     `json:"freq"`
-	Label            string     `json:"label"`
+	Label            string     `json:"label,omitempty"`
 	ObservationStart *time.Time `json:"observationStart,omitempty"`
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
