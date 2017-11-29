@@ -148,17 +148,18 @@ func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) 
 func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
 	dataPortalCategory := models.Category{}
 	rows, err := r.DB.Query(
-		`SELECT ANY_VALUE(categories.name) AS catname,
-                      ANY_VALUE(parentcat.id) AS parent_id,
-                      ANY_VALUE(COALESCE(mygeo.handle, parentgeo.handle)) AS def_geo,
-                      ANY_VALUE(COALESCE(categories.default_freq, parentcat.default_freq)) AS def_freq,
-	              ANY_VALUE(geographies.handle) AS series_geo,
-                      RIGHT(series.name, 1) AS series_freq,
-                      ANY_VALUE(geographies.fips) AS geofips,
-		      ANY_VALUE(geographies.display_name) AS geoname,
-		      ANY_VALUE(geographies.display_name_short) AS geonameshort,
-		      MIN(public_data_points.date) AS startdate,
-		      MAX(public_data_points.date) AS enddate
+		`SELECT categories.id,
+			ANY_VALUE(categories.name) AS catname,
+			ANY_VALUE(parentcat.id) AS parent_id,
+			ANY_VALUE(COALESCE(mygeo.handle, parentgeo.handle)) AS def_geo,
+			ANY_VALUE(COALESCE(categories.default_freq, parentcat.default_freq)) AS def_freq,
+			ANY_VALUE(geographies.handle) AS series_geo,
+			RIGHT(series.name, 1) AS series_freq,
+			ANY_VALUE(geographies.fips) AS geofips,
+			ANY_VALUE(geographies.display_name) AS geoname,
+			ANY_VALUE(geographies.display_name_short) AS geonameshort,
+			MIN(public_data_points.date) AS startdate,
+			MAX(public_data_points.date) AS enddate
 		FROM categories
   		LEFT JOIN geographies mygeo ON mygeo.id = categories.default_geo_id
 		LEFT JOIN categories parentcat ON parentcat.id = SUBSTRING_INDEX(categories.ancestry, '/', -1)
@@ -180,8 +181,8 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	var freqsResult []models.DataPortalFrequency
 	var defaultGeo	*models.DataPortalGeography
 	var defaultFreq *models.DataPortalFrequency
-	seenGeos := map[string]*models.DataPortalGeography{}
-	seenFreqs := map[string]*models.DataPortalFrequency{}
+	//seenGeos := map[string]*models.DataPortalGeography{}
+	//seenFreqs := map[string]*models.DataPortalFrequency{}
 
 	for rows.Next() {
 		var isDefaultGeo, isDefaultFreq	sql.NullBool
@@ -209,12 +210,14 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			if category.ParentId.Valid {
 				dataPortalCategory.ParentId = category.ParentId.Int64
 			}
-			if category.DefaultGeoHandle.Valid {
-				//dataPortalCategory.ParentId = category.ParentId.Int64
+			if originGeo == "" && category.DefaultGeoHandle.Valid {
+				originGeo = category.DefaultGeoHandle.String
 			}
-			if category.DefaultFrequency.Valid {
-				//dataPortalCategory.ParentId = category.ParentId.Int64
+			if originFreq == "" && category.DefaultFrequency.Valid {
+				originFreq = category.DefaultFrequency.String
 			}
+			dataPortalCategory.ObservationStart = time.Date(2999, 1, 1, 0, 0, 0, 0, nil)
+			dataPortalCategory.ObservationEnd = time.Date(1099, 1, 1, 0, 0, 0, 0, nil)
 		}
 		geo := &models.DataPortalGeography{Handle: handle}
 		freq := &models.DataPortalFrequency{Freq: seriesFreq, Label: freqLabel[seriesFreq]}
@@ -241,38 +244,9 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 				dataPortalCategory.ObservationEnd = &scangeo.ObservationEnd.Time
 			}
 		}
-		if originGeo == "" || originFreq == "" {  // no origin to do one-step-away from
-			xGeo, ok := seenGeos[handle]
-			if !ok {
-				seenGeos[handle] = geo
-			} else {
-				if geo.ObservationStart.Before(*xGeo.ObservationStart) {
-					xGeo.ObservationStart = geo.ObservationStart
-				}
-				if geo.ObservationEnd.After(*xGeo.ObservationEnd) {
-					xGeo.ObservationEnd = geo.ObservationEnd
-				}
-			}
-			xFreq, ok := seenFreqs[seriesFreq]
-			if !ok {
-				seenFreqs[seriesFreq] = freq
-			} else {
-				if freq.ObservationStart.Before(*xFreq.ObservationStart) {
-					xFreq.ObservationStart = freq.ObservationStart
-				}
-				if freq.ObservationEnd.After(*xFreq.ObservationEnd) {
-					xFreq.ObservationEnd = freq.ObservationEnd
-				}
-			}
-			if isDefaultGeo.Valid && isDefaultGeo.Bool {
-				defaultGeo = xGeo
-			}
-			if isDefaultFreq.Valid && isDefaultFreq.Bool {
-				defaultFreq = xFreq
-			}
-		} else if geo.Handle != originGeo && seriesFreq == originFreq {
+		if seriesFreq == originFreq {
 			geosResult = append(geosResult, *geo)
-		} else if geo.Handle == originGeo && seriesFreq != originFreq {
+		} else if geo.Handle == originGeo {
 			freqsResult = append(freqsResult, *freq)
 		}
 	}
