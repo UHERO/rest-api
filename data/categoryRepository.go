@@ -185,7 +185,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	//seenFreqs := map[string]*models.DataPortalFrequency{}
 
 	for rows.Next() {
-		var isDefaultGeo, isDefaultFreq	sql.NullBool
+		//var isDefaultGeo, isDefaultFreq	sql.NullBool
 		var handle, seriesFreq string
 		category := models.CategoryWithAncestry{}
 		scangeo := models.Geography{}
@@ -246,38 +246,17 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		}
 		if seriesFreq == originFreq {
 			geosResult = append(geosResult, *geo)
+
+			if geo.Handle == originGeo {
+				dataPortalCategory.Defaults = &models.CategoryDefaults{
+					Geography: &models.DataPortalGeography{Handle: originGeo},
+					Frequency: &models.DataPortalFrequency{Freq: originFreq},
+					ObservationStart: &scangeo.ObservationStart.Time,
+					ObservationEnd: &scangeo.ObservationEnd.Time,
+				}
+			}
 		} else if geo.Handle == originGeo {
 			freqsResult = append(freqsResult, *freq)
-		}
-	}
-
-	if originGeo == "" || originFreq == "" {
-		for  _, value := range seenGeos {
-			geosResult = append(geosResult, *value)
-		}
-		for  _, value := range seenFreqs {
-			freqsResult = append(freqsResult, *value)
-		}
-		if defaultGeo != nil {
-			dataPortalCategory.Defaults = &models.CategoryDefaults{
-				Geography: defaultGeo,
-				ObservationStart: defaultGeo.ObservationStart,
-				ObservationEnd: defaultGeo.ObservationEnd,
-			}
-		}
-		if defaultFreq != nil {
-			if dataPortalCategory.Defaults == nil {
-				dataPortalCategory.Defaults = &models.CategoryDefaults{
-					ObservationStart: defaultFreq.ObservationStart,
-					ObservationEnd: defaultFreq.ObservationEnd,
-				}
-			} else {
-				start, end := rangeIntersection(*defaultGeo.ObservationStart, *defaultGeo.ObservationEnd,
-								*defaultFreq.ObservationStart, *defaultFreq.ObservationEnd)
-				dataPortalCategory.Defaults.ObservationStart = start
-				dataPortalCategory.Defaults.ObservationEnd = end
-			}
-			dataPortalCategory.Defaults.Frequency = defaultFreq
 		}
 	}
 	sort.Sort(models.ByGeography(geosResult))
