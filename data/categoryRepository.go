@@ -179,8 +179,8 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	}
 	var geosResult  []models.DataPortalGeography
 	var freqsResult []models.DataPortalFrequency
-	var defaultGeo	*models.DataPortalGeography
-	var defaultFreq *models.DataPortalFrequency
+	//var defaultGeo	*models.DataPortalGeography
+	//var defaultFreq *models.DataPortalFrequency
 	//seenGeos := map[string]*models.DataPortalGeography{}
 	//seenFreqs := map[string]*models.DataPortalFrequency{}
 
@@ -203,7 +203,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			&scangeo.ObservationStart,
 			&scangeo.ObservationEnd,
 		)
-		if dataPortalCategory.Id == nil {
+		if dataPortalCategory.Id == 0 {
 			// Store Category-level information
 			dataPortalCategory.Id = category.Id
 			dataPortalCategory.Name = category.Name
@@ -216,8 +216,10 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			if originFreq == "" && category.DefaultFrequency.Valid {
 				originFreq = category.DefaultFrequency.String
 			}
-			dataPortalCategory.ObservationStart = time.Date(2999, 1, 1, 0, 0, 0, 0, nil)
-			dataPortalCategory.ObservationEnd = time.Date(1099, 1, 1, 0, 0, 0, 0, nil)
+			startOfTime := time.Date(1099, 1, 1, 0, 0, 0, 0, nil)
+			endOfTime := time.Date(2999, 1, 1, 0, 0, 0, 0, nil)
+			dataPortalCategory.ObservationStart = &startOfTime
+			dataPortalCategory.ObservationEnd = &endOfTime
 		}
 		geo := &models.DataPortalGeography{Handle: handle}
 		freq := &models.DataPortalFrequency{Freq: seriesFreq, Label: freqLabel[seriesFreq]}
@@ -233,14 +235,14 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		if scangeo.ObservationStart.Valid  {
 			 geo.ObservationStart = &scangeo.ObservationStart.Time
 			freq.ObservationStart = &scangeo.ObservationStart.Time
-			if scangeo.ObservationStart.Time.Before(dataPortalCategory.ObservationStart) {
+			if scangeo.ObservationStart.Time.Before(*dataPortalCategory.ObservationStart) {
 				dataPortalCategory.ObservationStart = &scangeo.ObservationStart.Time
 			}
 		}
 		if scangeo.ObservationEnd.Valid  {
 			 geo.ObservationEnd = &scangeo.ObservationEnd.Time
 			freq.ObservationEnd = &scangeo.ObservationEnd.Time
-			if scangeo.ObservationEnd.Time.After(dataPortalCategory.ObservationEnd) {
+			if scangeo.ObservationEnd.Time.After(*dataPortalCategory.ObservationEnd) {
 				dataPortalCategory.ObservationEnd = &scangeo.ObservationEnd.Time
 			}
 		}
