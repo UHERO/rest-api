@@ -37,6 +37,7 @@ type CategoryWithAncestry struct {
 	Id			int64
 	Name			string
 	Ancestry		sql.NullString
+	ParentId		sql.NullInt64
 	DefaultGeoHandle	sql.NullString
 	DefaultGeoFIPS		sql.NullString
 	DefaultGeoName		sql.NullString
