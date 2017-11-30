@@ -179,13 +179,8 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	}
 	var geosResult  []models.DataPortalGeography
 	var freqsResult []models.DataPortalFrequency
-	//var defaultGeo	*models.DataPortalGeography
-	//var defaultFreq *models.DataPortalFrequency
-	//seenGeos := map[string]*models.DataPortalGeography{}
-	//seenFreqs := map[string]*models.DataPortalFrequency{}
 
 	for rows.Next() {
-		//var isDefaultGeo, isDefaultFreq	sql.NullBool
 		var handle, seriesFreq string
 		category := models.CategoryWithAncestry{}
 		scangeo := models.Geography{}
@@ -246,6 +241,9 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 				dataPortalCategory.ObservationEnd = &scangeo.ObservationEnd.Time
 			}
 		}
+		if geo.Handle == originGeo {
+			freqsResult = append(freqsResult, *freq)
+		}
 		if seriesFreq == originFreq {
 			geosResult = append(geosResult, *geo)
 
@@ -257,9 +255,6 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 					ObservationEnd: &scangeo.ObservationEnd.Time,
 				}
 			}
-		}
-		if geo.Handle == originGeo {
-			freqsResult = append(freqsResult, *freq)
 		}
 	}
 	sort.Sort(models.ByGeography(geosResult))
