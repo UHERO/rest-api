@@ -20,6 +20,7 @@ type Category struct {
 	Name                 string                  `json:"name"`
 	ParentId             int64                   `json:"parentId,omitempty"`
 	Defaults	     *CategoryDefaults	     `json:"defaults,omitempty"`
+	Current		     *CurrentGeoFreq	     `json:"current,omitempty"`
 	Geographies          *[]DataPortalGeography  `json:"geos,omitempty"`
 	Frequencies          *[]DataPortalFrequency  `json:"freqs,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
@@ -31,6 +32,13 @@ type CategoryDefaults struct {
 	Frequency            *DataPortalFrequency    `json:"freq,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
 	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
+}
+
+type CurrentGeoFreq struct {
+	Geography            string		`json:"geo,omitempty"`
+	Frequency            string		`json:"freq,omitempty"`
+	ObservationStart     *time.Time		`json:"observationStart,omitempty"`
+	ObservationEnd       *time.Time		`json:"observationEnd,omitempty"`
 }
 
 type CategoryWithAncestry struct {

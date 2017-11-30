@@ -250,9 +250,9 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			geosResult = append(geosResult, *geo)
 
 			if geo.Handle == originGeo {
-				dataPortalCategory.Defaults = &models.CategoryDefaults{
-					Geography: &models.DataPortalGeography{Handle: originGeo},
-					Frequency: &models.DataPortalFrequency{Freq: originFreq},
+				dataPortalCategory.Current = &models.CurrentGeoFreq{
+					Geography: originGeo,
+					Frequency: originFreq,
 					ObservationStart: &scangeo.ObservationStart.Time,
 					ObservationEnd: &scangeo.ObservationEnd.Time,
 				}
