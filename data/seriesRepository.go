@@ -679,13 +679,14 @@ func (r *SeriesRepository) GetSeriesObservations(
 ) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
+	var universe string
 	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, C5MAPercentChange
 
-	err = r.DB.QueryRow(`SELECT series.percent
+	err = r.DB.QueryRow(`SELECT series.universe, series.percent
 	FROM series
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&percent)
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&universe, &percent)
 	if err != nil {
 		return
 	}
@@ -695,24 +696,32 @@ func (r *SeriesRepository) GetSeriesObservations(
 		C5MA = C5MAChange
 	}
 
-	lvlTransform, err := r.GetTransformation(Levels, seriesId, &start, &end)
+	transform, err := r.GetTransformation(Levels, seriesId, &start, &end)
 	if err != nil {
 		return
 	}
-	yoyTransform, err := r.GetTransformation(YOY, seriesId, &start, &end)
-	if err != nil {
-		return
-	}
-	ytdTransform, err := r.GetTransformation(YTD, seriesId, &start, &end)
-	if err != nil {
-		return
-	}
-	c5maTransform, err := r.GetTransformation(C5MA, seriesId, &start, &end)
-	if err != nil {
-		return
-	}
+	seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 
-	seriesObservations.TransformationResults = []models.TransformationResult{lvlTransform, yoyTransform, ytdTransform, c5maTransform}
+	if universe != "NTA" {
+		transform, err = r.GetTransformation(YOY, seriesId, &start, &end)
+		if err != nil {
+			return
+		}
+		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
+
+		transform, err = r.GetTransformation(YTD, seriesId, &start, &end)
+		if err != nil {
+			return
+		}
+		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
+	}
+	if universe == "NTA" {
+		transform, err = r.GetTransformation(C5MA, seriesId, &start, &end)
+		if err != nil {
+			return
+		}
+		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
+	}
 	seriesObservations.ObservationStart = start
 	seriesObservations.ObservationEnd = end
 	return
