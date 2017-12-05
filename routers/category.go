@@ -15,6 +15,14 @@ func SetCategoryRoutes(
 ) *mux.Router {
 	router.HandleFunc(
 		"/v1/category",
+		controllers.GetCategoryByIdGeoFreq(categoryRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+		"geo", "{geo:[A-Za-z0-9]+}",
+		"freq", "{freq:[ASQMWDasqmwd]}",
+	)
+	router.HandleFunc(
+		"/v1/category",
 		controllers.GetCategory(categoryRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
@@ -24,6 +32,12 @@ func SetCategoryRoutes(
 		controllers.GetCategoriesByName(categoryRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"search_text", "{searchText:.+}",
+	)
+	router.HandleFunc(
+		"/v1/category",
+		controllers.GetCategoriesByUniverse(categoryRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"u", "{universe_text:.+}",
 	)
 	router.HandleFunc(
 		"/v1/category",
@@ -37,7 +51,11 @@ func SetCategoryRoutes(
 	).Methods("GET").Queries(
 		"top_level", "false",
 	)
-	router.HandleFunc("/v1/category", controllers.GetCategories(categoryRepository, cacheRepository)).Methods("GET")
+	router.HandleFunc(
+		"/v1/category",
+		controllers.GetCategories(categoryRepository, cacheRepository),
+	).Methods("GET")
+
 	router.HandleFunc(
 		"/v1/category/freq",
 		controllers.GetFreqByCategoryId(seriesRepository, cacheRepository),

@@ -19,42 +19,48 @@ type Category struct {
 	Id                   int64                   `json:"id"`
 	Name                 string                  `json:"name"`
 	ParentId             int64                   `json:"parentId,omitempty"`
-	DefaultGeoFreq       *GeoFreq                `json:"defaults,omitempty"`
-	GeoFreqsDeprecated   *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
-	GeographyFrequencies *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
-	FreqGeosDeprecated   *[]FrequencyGeographies `json:"freq_geos,omitempty"`
-	FrequencyGeographies *[]FrequencyGeographies `json:"freqGeos,omitempty"`
+	Defaults	     *CategoryDefaults	     `json:"defaults,omitempty"`
+	Current		     *CurrentGeoFreq	     `json:"current,omitempty"`
+	Geographies          *[]DataPortalGeography  `json:"geos,omitempty"`
+	Frequencies          *[]DataPortalFrequency  `json:"freqs,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
 	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
 
-type GeoFreq struct {
-	Geography string `json:"geo,omitempty"`
-	Frequency string `json:"freq,omitempty"`
+type CategoryDefaults struct {
+	Geography            *DataPortalGeography    `json:"geo,omitempty"`
+	Frequency            *DataPortalFrequency    `json:"freq,omitempty"`
+	ObservationStart     *time.Time              `json:"observationStart,omitempty"`
+	ObservationEnd       *time.Time              `json:"observationEnd,omitempty"`
 }
 
-type GeographyFrequency struct {
-	Geography DataPortalGeography `json:"geo"`
-	Frequency FrequencyResult     `json:"freq"`
+type CurrentGeoFreq struct {
+	Geography            string		`json:"geo,omitempty"`
+	Frequency            string		`json:"freq,omitempty"`
+	ObservationStart     *time.Time		`json:"observationStart,omitempty"`
+	ObservationEnd       *time.Time		`json:"observationEnd,omitempty"`
 }
 
 type CategoryWithAncestry struct {
-	Id               int64
-	Name             string
-	Ancestry         sql.NullString
-	DefaultHandle    sql.NullString
-	DefaultFrequency sql.NullString
-	ObservationStart NullTime
-	ObservationEnd   NullTime
+	Id			int64
+	Name			string
+	Ancestry		sql.NullString
+	ParentId		sql.NullInt64
+	DefaultGeoHandle	sql.NullString
+	DefaultGeoFIPS		sql.NullString
+	DefaultGeoName		sql.NullString
+	DefaultGeoShortName	sql.NullString
+	DefaultFrequency	sql.NullString
+	ObservationStart	NullTime
+	ObservationEnd  	NullTime
 }
 
 type SearchSummary struct {
 	SearchText           string                  `json:"q"`
-	DefaultGeoFreq       *GeographyFrequency     `json:"defaults,omitempty"`
-	GeoFreqsDeprecated   *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
-	FreqGeosDeprecated   *[]FrequencyGeographies `json:"freq_geos,omitempty"`
-	GeographyFrequencies *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
-	FrequencyGeographies *[]FrequencyGeographies `json:"freqGeos,omitempty"`
+	DefaultGeo           *DataPortalGeography    `json:"defaultGeo,omitempty"`
+	DefaultFreq          *DataPortalFrequency    `json:"defaultFreq,omitempty"`
+	Geographies          *[]DataPortalGeography  `json:"geos,omitempty"`
+	Frequencies          *[]DataPortalFrequency  `json:"freqs,omitempty"`
 	ObservationStart     *time.Time              `json:"observationStart"`
 	ObservationEnd       *time.Time              `json:"observationEnd"`
 }
@@ -62,29 +68,38 @@ type SearchSummary struct {
 type Geography struct {
 	FIPS             sql.NullString `json:"fips"`
 	Name             sql.NullString `json:"name"`
+	ShortName        sql.NullString `json:"shortName"`
 	Handle           string         `json:"handle"`
 	ObservationStart NullTime
 	ObservationEnd   NullTime
 }
 
+type Frequency struct {
+	Freq  string
+	Label sql.NullString
+	ObservationStart NullTime
+	ObservationEnd   NullTime
+}
+
 type DataPortalGeography struct {
-	FIPS             string     `json:"fips"`
-	Name             string     `json:"name"`
+	FIPS             string     `json:"fips,omitempty"`
+	Name             string     `json:"name,omitempty"`
+	ShortName        string     `json:"shortName,omitempty"`
 	Handle           string     `json:"handle"`
 	ObservationStart *time.Time `json:"observationStart,omitempty"`
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
 
-type FrequencyResult struct {
+type DataPortalFrequency struct {
 	Freq             string     `json:"freq"`
-	Label            string     `json:"label"`
+	Label            string     `json:"label,omitempty"`
 	ObservationStart *time.Time `json:"observationStart,omitempty"`
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
 
-// ByFrequency implements sort.Interface for []FrequencyResult based on
-// the Freq field.
-type ByFrequency []FrequencyResult
+// ByGeography/ByFrequency implement sort.Interface
+type ByGeography []DataPortalGeography
+type ByFrequency []DataPortalFrequency
 type stringSlice []string
 
 func (s stringSlice) indexOf(stringToFind string) int {
@@ -104,19 +119,10 @@ func (a ByFrequency) Less(i, j int) bool {
 	return FreqOrder.indexOf(a[i].Freq) < FreqOrder.indexOf(a[j].Freq)
 }
 
-type Frequency struct {
-	Freq  string
-	Label sql.NullString
-}
-
-type GeographyFrequencies struct {
-	DataPortalGeography
-	Frequencies []FrequencyResult `json:"freqs"`
-}
-
-type FrequencyGeographies struct {
-	FrequencyResult
-	Geographies []DataPortalGeography `json:"geos"`
+func (a ByGeography) Len() int      { return len(a) }
+func (a ByGeography) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByGeography) Less(i, j int) bool {
+	return a[i].Handle < a[j].Handle
 }
 
 type Series struct {
@@ -176,10 +182,8 @@ type DataPortalSeries struct {
 	Indent                      int                     `json:"indent,omitempty"`
 	TablePrefix                 string                  `json:"tablePrefix"`
 	TablePostfix                string                  `json:"tablePostfix"`
-	GeographyFrequencies        *[]GeographyFrequencies `json:"geoFreqs,omitempty"`
-	FrequencyGeographies        *[]FrequencyGeographies `json:"freqGeos,omitempty"`
-	GeoFreqsDeprecated          *[]GeographyFrequencies `json:"geo_freqs,omitempty"`
-	FreqGeosDeprecated          *[]FrequencyGeographies `json:"freq_geos,omitempty"`
+	Geographies                 *[]DataPortalGeography  `json:"geos,omitempty"`
+	Frequencies		    *[]DataPortalFrequency  `json:"freqs,omitempty"`
 }
 
 type InflatedSeries struct {

@@ -24,9 +24,9 @@ func TestGetAllCategories(t *testing.T) {
 		Name:     "Income",
 		Ancestry: sql.NullString{Valid: true, String: "1"},
 	}
-	categoryResult := sqlmock.NewRows([]string{"id", "name", "ancestry", "geo", "freq"}).
-		AddRow(category1.Id, category1.Name, nil, "HI", "A").
-		AddRow(category2.Id, category2.Name, category2.Ancestry.String, nil, nil)
+	categoryResult := sqlmock.NewRows([]string{"id", "name", "ancestry", "freq", "geo", "fips", "gname", "gshort", "obsStart", "obsEnd"}).
+		AddRow(category1.Id, category1.Name, nil, "A", "HI", nil, nil, nil, nil, nil).
+		AddRow(category2.Id, category2.Name, category2.Ancestry.String, nil, nil, nil, nil, nil, nil, nil)
 	mock.ExpectQuery("SELECT (.+)").
 		WillReturnRows(categoryResult)
 

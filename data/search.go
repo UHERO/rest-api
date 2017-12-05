@@ -20,7 +20,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(geo.fips), MAX(geo.handle) AS shandle, MAX(geo.display_name_short)
+	MAX(geo.fips), MAX(geo.handle) AS shandle, MAX(geo.display_name), MAX(geo.display_name_short)
 	FROM series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -53,14 +53,12 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -80,19 +78,19 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	    FROM public_data_points
 	    JOIN series ON series.id = public_data_points.series_id
 	    JOIN (
-	      SELECT series_id FROM measurement_series where measurement_id in (
-		SELECT measurement_id FROM data_list_measurements where data_list_id in (
+	      SELECT series_id FROM measurement_series WHERE measurement_id IN (
+		SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
 		  SELECT data_list_id FROM categories
 		  WHERE universe = UPPER(?)
 		  AND ((MATCH(name) AGAINST(? IN NATURAL LANGUAGE MODE))
-		  OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
+		    OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
 		)
 	      )
 	      UNION
-	      SELECT id FROM series
+	      SELECT id AS series_id FROM series
 	      WHERE universe = UPPER(?)
 	      AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	      OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	        OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	    ) AS s ON s.series_id = series.id
 	    LEFT JOIN feature_toggles ft ON ft.universe = series.universe AND ft.name = 'filter_by_quarantine'
 	    WHERE NOT series.restricted
@@ -113,7 +111,7 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	}
 
 	rows, err := r.DB.Query(`
-	SELECT DISTINCT geo.fips, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
+	SELECT DISTINCT geo.fips, geo.display_name, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
 	FROM series
 	LEFT JOIN geographies geo on geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -133,66 +131,62 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	if err != nil {
 		return
 	}
-	geoFreqs := map[string][]models.FrequencyResult{}
-	geoByHandle := map[string]models.DataPortalGeography{}
-	freqGeos := map[string][]models.DataPortalGeography{}
-	freqByHandle := map[string]models.FrequencyResult{}
+	seenGeos := map[string]models.DataPortalGeography{}
+	seenFreqs := map[string]models.DataPortalFrequency{}
 
 	for rows.Next() {
 		scangeo := models.Geography{}
-		frequency := models.FrequencyResult{}
+		frequency := models.DataPortalFrequency{}
 		err = rows.Scan(
 			&scangeo.FIPS,
 			&scangeo.Name,
+			&scangeo.ShortName,
 			&scangeo.Handle,
 			&frequency.Freq,
 		)
-		geography := models.DataPortalGeography{Handle: scangeo.Handle}
-		if scangeo.FIPS.Valid {
-			geography.FIPS = scangeo.FIPS.String
-		}
-		if scangeo.Name.Valid {
-			geography.Name = scangeo.Name.String
-		}
-		frequency.Label = freqLabel[frequency.Freq]
-		// set the default as the first in the sorted list
-		if searchSummary.DefaultGeoFreq == nil {
-			searchSummary.DefaultGeoFreq = &models.GeographyFrequency{
-				Geography: geography,
-				Frequency: frequency,
+		handle := scangeo.Handle
+		if _, ok := seenGeos[handle]; !ok {
+			geo := &models.DataPortalGeography{Handle: handle}
+			if scangeo.FIPS.Valid {
+				geo.FIPS = scangeo.FIPS.String
 			}
+			if scangeo.Name.Valid {
+				geo.Name = scangeo.Name.String
+			}
+			if scangeo.ShortName.Valid {
+				geo.ShortName = scangeo.ShortName.String
+			}
+			if searchSummary.DefaultGeo == nil {
+				searchSummary.DefaultGeo = geo
+			}
+			seenGeos[handle] = *geo
 		}
-		// update the freq and geo maps
-		geoByHandle[geography.Handle] = geography
-		freqByHandle[frequency.Freq] = frequency
-		// add to the geoFreqs and freqGeos maps
-		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
-		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
-	}
-
-	geoFreqsResult := []models.GeographyFrequencies{}
-	for geo, freqs := range geoFreqs {
-		sort.Sort(models.ByFrequency(freqs))
-		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
-			DataPortalGeography: geoByHandle[geo],
-			Frequencies:         freqs,
-		})
-	}
-
-	freqGeosResult := []models.FrequencyGeographies{}
-	for _, freq := range models.FreqOrder {
-		if val, ok := freqByHandle[freq]; ok {
-			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
-				FrequencyResult: val,
-				Geographies:     freqGeos[freq],
-			})
+		handle = frequency.Freq
+		if _, ok := seenFreqs[handle]; !ok {
+			freq := &models.DataPortalFrequency{
+				Freq: handle,
+				Label: freqLabel[handle],
+			}
+			if searchSummary.DefaultFreq == nil {
+				searchSummary.DefaultFreq = freq
+			}
+			seenFreqs[handle] = *freq
 		}
 	}
+	geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
+	for  _, value := range seenGeos {
+		geosResult = append(geosResult, value)
+	}
+	sort.Sort(models.ByGeography(geosResult))
 
-	searchSummary.GeographyFrequencies = &geoFreqsResult
-	searchSummary.FrequencyGeographies = &freqGeosResult
-	searchSummary.GeoFreqsDeprecated = &geoFreqsResult
-	searchSummary.FreqGeosDeprecated = &freqGeosResult
+	freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
+	for  _, value := range seenFreqs {
+		freqsResult = append(freqsResult, value)
+	}
+	sort.Sort(models.ByFrequency(freqsResult))
+
+	searchSummary.Geographies = &geosResult
+	searchSummary.Frequencies = &freqsResult
 	return
 }
 
@@ -218,7 +212,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name_short)
+	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name), MAX(geo.display_name_short)
 	FROM series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -261,14 +255,12 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesList = append(seriesList, dataPortalSeries)
 	}
 	return
@@ -296,7 +288,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
-	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name_short)
+	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name), MAX(geo.display_name_short)
 	FROM series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
@@ -338,14 +330,12 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geoFreqs, freqGeos, err := getFreqGeoCombinations(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
 		if err != nil {
 			return seriesList, err
 		}
-		dataPortalSeries.GeographyFrequencies = &geoFreqs
-		dataPortalSeries.FrequencyGeographies = &freqGeos
-		dataPortalSeries.GeoFreqsDeprecated = &geoFreqs
-		dataPortalSeries.FreqGeosDeprecated = &freqGeos
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
 		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
 		if scanErr != nil {
 			return seriesList, scanErr

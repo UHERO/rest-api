@@ -14,10 +14,37 @@ type CategoryRepository struct {
 }
 
 func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT id, name, ancestry, default_handle, default_freq
-							 FROM categories
-							 WHERE NOT hidden
-							 ORDER BY categories.list_order;`)
+	categories, err = r.GetAllCategoriesByUniverse("UHERO")
+	return
+}
+
+func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
+	rows, err := r.DB.Query(
+		`SELECT categories.id,
+			ANY_VALUE(categories.name) AS catname,
+			ANY_VALUE(categories.ancestry) AS ancest,
+			categories.default_freq AS catfreq,
+			ANY_VALUE(geographies.handle) AS catgeo,
+			ANY_VALUE(geographies.fips) AS catgeofips,
+			ANY_VALUE(geographies.display_name) AS catgeoname,
+			ANY_VALUE(geographies.display_name_short) AS catgeonameshort,
+			MIN(public_data_points.date) AS startdate,
+			MAX(public_data_points.date) AS enddate
+		FROM categories
+		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
+		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+		LEFT JOIN series
+		    ON series.id = measurement_series.series_id
+		   AND series.geography_id = categories.default_geo_id
+		   AND RIGHT(series.name, 1) = categories.default_freq
+		   AND NOT series.restricted
+		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+		WHERE categories.universe = ?
+		AND categories.ancestry IS NOT NULL
+		AND NOT categories.hidden
+		GROUP BY categories.id, categories.default_geo_id, categories.default_freq
+		ORDER BY categories.list_order;`, universe)
 	if err != nil {
 		return
 	}
@@ -27,8 +54,13 @@ func (r *CategoryRepository) GetAllCategories() (categories []models.Category, e
 			&category.Id,
 			&category.Name,
 			&category.Ancestry,
-			&category.DefaultHandle,
 			&category.DefaultFrequency,
+			&category.DefaultGeoHandle,
+			&category.DefaultGeoFIPS,
+			&category.DefaultGeoName,
+			&category.DefaultGeoShortName,
+			&category.ObservationStart,
+			&category.ObservationEnd,
 		)
 		if err != nil {
 			return
@@ -40,11 +72,35 @@ func (r *CategoryRepository) GetAllCategories() (categories []models.Category, e
 			Name:     category.Name,
 			ParentId: parentId,
 		}
-		if category.DefaultHandle.Valid && category.DefaultFrequency.Valid {
-			dataPortalCategory.DefaultGeoFreq = &models.GeoFreq{
-				Geography: category.DefaultHandle.String,
-				Frequency: category.DefaultFrequency.String,
+		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid || category.ObservationStart.Valid || category.ObservationEnd.Valid {
+			// Only initialize Defaults struct if any defaults values are available
+			dataPortalCategory.Defaults = &models.CategoryDefaults{}
+		}
+		if category.DefaultFrequency.Valid {
+			dataPortalCategory.Defaults.Frequency = &models.DataPortalFrequency{
+				Freq: category.DefaultFrequency.String,
+				Label: freqLabel[category.DefaultFrequency.String],
 			}
+		}
+		if category.DefaultGeoHandle.Valid {
+			dataPortalCategory.Defaults.Geography = &models.DataPortalGeography{
+				Handle: category.DefaultGeoHandle.String,
+			}
+			if category.DefaultGeoFIPS.Valid {
+				dataPortalCategory.Defaults.Geography.FIPS = category.DefaultGeoFIPS.String
+			}
+			if category.DefaultGeoName.Valid {
+				dataPortalCategory.Defaults.Geography.Name = category.DefaultGeoName.String
+			}
+			if category.DefaultGeoShortName.Valid {
+				dataPortalCategory.Defaults.Geography.ShortName = category.DefaultGeoShortName.String
+			}
+		}
+		if category.ObservationStart.Valid {
+			dataPortalCategory.Defaults.ObservationStart = &category.ObservationStart.Time
+		}
+		if category.ObservationEnd.Valid {
+			dataPortalCategory.Defaults.ObservationEnd = &category.ObservationEnd.Time
 		}
 		categories = append(categories, dataPortalCategory)
 	}
@@ -86,115 +142,125 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 }
 
 func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
-	var category models.CategoryWithAncestry
-	err := r.DB.QueryRow(`SELECT
-	categories.id, MAX(categories.name), MAX(ancestry),
-	MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
-	FROM categories
-	LEFT JOIN data_list_measurements ON categories.data_list_id = data_list_measurements.data_list_id
-	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
- 	LEFT JOIN series ON series.id = measurement_series.series_id
- 	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-	WHERE categories.id = ?
-	AND NOT categories.hidden
-	AND NOT series.restricted
-	GROUP BY categories.id;`, id).Scan(
-		&category.Id,
-		&category.Name,
-		&category.Ancestry,
-		&category.ObservationStart,
-		&category.ObservationEnd,
-	)
-	parentId := getParentId(category.Ancestry)
-	dataPortalCategory := models.Category{
-		Id:       category.Id,
-		Name:     category.Name,
-		ParentId: parentId,
-	}
-	if category.ObservationStart.Valid && category.ObservationStart.Time.After(time.Time{}) {
-		dataPortalCategory.ObservationStart = &category.ObservationStart.Time
-	}
-	if category.ObservationEnd.Valid && category.ObservationEnd.Time.After(time.Time{}) {
-		dataPortalCategory.ObservationEnd = &category.ObservationEnd.Time
-	}
+	return r.GetCategoryByIdGeoFreq(id, "", "")
+}
 
-	rows, err := r.DB.Query(`SELECT ANY_VALUE(geographies.fips), ANY_VALUE(geographies.display_name_short),
-					ANY_VALUE(geographies.handle), ANY_VALUE(RIGHT(series.name, 1)),
-					MIN(public_data_points.date), MAX(public_data_points.date)
-			FROM categories
-			LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-			LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-			LEFT JOIN series ON series.id = measurement_series.series_id
-			LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-			LEFT JOIN geographies ON geographies.id = series.geography_id
-			WHERE categories.id = ?
-			AND NOT categories.hidden
-			AND NOT series.restricted
-			GROUP BY geographies.id, RIGHT(series.name, 1) ORDER BY COUNT(*) DESC;`, id)
+func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
+	dataPortalCategory := models.Category{}
+	rows, err := r.DB.Query(
+		`SELECT categories.id,
+			ANY_VALUE(categories.name) AS catname,
+			ANY_VALUE(parentcat.id) AS parent_id,
+			ANY_VALUE(COALESCE(mygeo.handle, parentgeo.handle)) AS def_geo,
+			ANY_VALUE(COALESCE(categories.default_freq, parentcat.default_freq)) AS def_freq,
+			ANY_VALUE(geographies.handle) AS series_geo,
+			RIGHT(series.name, 1) AS series_freq,
+			ANY_VALUE(geographies.fips) AS geofips,
+			ANY_VALUE(geographies.display_name) AS geoname,
+			ANY_VALUE(geographies.display_name_short) AS geonameshort,
+			MIN(public_data_points.date) AS startdate,
+			MAX(public_data_points.date) AS enddate
+		FROM categories
+  		LEFT JOIN geographies mygeo ON mygeo.id = categories.default_geo_id
+		LEFT JOIN categories parentcat ON parentcat.id = SUBSTRING_INDEX(categories.ancestry, '/', -1)
+		LEFT JOIN geographies parentgeo ON parentgeo.id = parentcat.default_geo_id
+	        LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
+		LEFT JOIN series
+		    ON series.id = measurement_series.series_id
+		   AND NOT series.restricted
+		LEFT JOIN geographies ON geographies.id = series.geography_id
+		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+		WHERE categories.id = ?
+		AND public_data_points.value IS NOT null /* suppress those with no public data */
+		GROUP BY categories.id, geographies.id, RIGHT(series.name, 1)  ;`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
-	geoFreqs := map[string][]models.FrequencyResult{}
-	geoByHandle := map[string]models.DataPortalGeography{}
-	freqGeos := map[string][]models.DataPortalGeography{}
-	freqByHandle := map[string]models.FrequencyResult{}
+	var geosResult  []models.DataPortalGeography
+	var freqsResult []models.DataPortalFrequency
+
 	for rows.Next() {
+		var handle, seriesFreq string
+		category := models.CategoryWithAncestry{}
 		scangeo := models.Geography{}
-		frequency := models.FrequencyResult{}
 		err = rows.Scan(
+			&category.Id,
+			&category.Name,
+			&category.ParentId,
+			&category.DefaultGeoHandle,
+			&category.DefaultFrequency,
+			&handle,
+			&seriesFreq,
 			&scangeo.FIPS,
 			&scangeo.Name,
-			&scangeo.Handle,
-			&frequency.Freq,
+			&scangeo.ShortName,
 			&scangeo.ObservationStart,
 			&scangeo.ObservationEnd,
 		)
-		geography := models.DataPortalGeography{Handle: scangeo.Handle}
-		if scangeo.ObservationStart.Valid && scangeo.ObservationStart.Time.After(time.Time{}) {
-			geography.ObservationStart = &scangeo.ObservationStart.Time
-			frequency.ObservationStart = geography.ObservationStart
+		if dataPortalCategory.Id == 0 {
+			// Store Category-level information
+			dataPortalCategory.Id = category.Id
+			dataPortalCategory.Name = category.Name
+			if category.ParentId.Valid {
+				dataPortalCategory.ParentId = category.ParentId.Int64
+			}
+			if originGeo == "" && category.DefaultGeoHandle.Valid {
+				originGeo = category.DefaultGeoHandle.String
+			}
+			if originFreq == "" && category.DefaultFrequency.Valid {
+				originFreq = category.DefaultFrequency.String
+			}
+			startOfTime := time.Date(1099, 1, 1, 0, 0, 0, 0, &time.Location{})
+			endOfTime := time.Date(2999, 1, 1, 0, 0, 0, 0, &time.Location{})
+			dataPortalCategory.ObservationStart = &endOfTime // yes, reversed at init time
+			dataPortalCategory.ObservationEnd = &startOfTime
 		}
-		if scangeo.ObservationEnd.Valid && scangeo.ObservationEnd.Time.After(time.Time{}) {
-			geography.ObservationEnd = &scangeo.ObservationEnd.Time
-			frequency.ObservationEnd = geography.ObservationEnd
-		}
+		geo := &models.DataPortalGeography{Handle: handle}
+		freq := &models.DataPortalFrequency{Freq: seriesFreq, Label: freqLabel[seriesFreq]}
 		if scangeo.FIPS.Valid {
-			geography.FIPS = scangeo.FIPS.String
+			geo.FIPS = scangeo.FIPS.String
 		}
 		if scangeo.Name.Valid {
-			geography.Name = scangeo.Name.String
+			geo.Name = scangeo.Name.String
 		}
-		frequency.Label = freqLabel[frequency.Freq]
-		// update the freq and geo maps
-		geoByHandle[geography.Handle] = geography
-		freqByHandle[frequency.Freq] = frequency
-		// add to the geoFreqs and freqGeos maps
-		geoFreqs[geography.Handle] = append(geoFreqs[geography.Handle], frequency)
-		freqGeos[frequency.Freq] = append(freqGeos[frequency.Freq], geography)
-	}
-	geoFreqsResult := []models.GeographyFrequencies{}
-	for geo, freqs := range geoFreqs {
-		sort.Sort(models.ByFrequency(freqs))
-		geoFreqsResult = append(geoFreqsResult, models.GeographyFrequencies{
-			DataPortalGeography: geoByHandle[geo],
-			Frequencies:         freqs,
-		})
-	}
+		if scangeo.ShortName.Valid {
+			geo.ShortName = scangeo.ShortName.String
+		}
+		if scangeo.ObservationStart.Valid  {
+			 geo.ObservationStart = &scangeo.ObservationStart.Time
+			freq.ObservationStart = &scangeo.ObservationStart.Time
+			if scangeo.ObservationStart.Time.Before(*dataPortalCategory.ObservationStart) {
+				dataPortalCategory.ObservationStart = &scangeo.ObservationStart.Time
+			}
+		}
+		if scangeo.ObservationEnd.Valid  {
+			 geo.ObservationEnd = &scangeo.ObservationEnd.Time
+			freq.ObservationEnd = &scangeo.ObservationEnd.Time
+			if scangeo.ObservationEnd.Time.After(*dataPortalCategory.ObservationEnd) {
+				dataPortalCategory.ObservationEnd = &scangeo.ObservationEnd.Time
+			}
+		}
+		if geo.Handle == originGeo {
+			freqsResult = append(freqsResult, *freq)
+		}
+		if seriesFreq == originFreq {
+			geosResult = append(geosResult, *geo)
 
-	freqGeosResult := []models.FrequencyGeographies{}
-	for _, freq := range models.FreqOrder {
-		if val, ok := freqByHandle[freq]; ok {
-			freqGeosResult = append(freqGeosResult, models.FrequencyGeographies{
-				FrequencyResult: val,
-				Geographies:     freqGeos[freq],
-			})
+			if geo.Handle == originGeo {
+				dataPortalCategory.Current = &models.CurrentGeoFreq{
+					Geography: originGeo,
+					Frequency: originFreq,
+					ObservationStart: &scangeo.ObservationStart.Time,
+					ObservationEnd: &scangeo.ObservationEnd.Time,
+				}
+			}
 		}
 	}
-
-	dataPortalCategory.GeographyFrequencies = &geoFreqsResult
-	dataPortalCategory.FrequencyGeographies = &freqGeosResult
-	dataPortalCategory.GeoFreqsDeprecated = &geoFreqsResult
-	dataPortalCategory.FreqGeosDeprecated = &freqGeosResult
+	sort.Sort(models.ByGeography(geosResult))
+	sort.Sort(models.ByFrequency(freqsResult))
+	dataPortalCategory.Geographies = &geosResult
+	dataPortalCategory.Frequencies = &freqsResult
 	return dataPortalCategory, err
 }
 
