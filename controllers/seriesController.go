@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
-	"github.com/gorilla/mux"
 	"github.com/UHERO/rest-api/models"
 )
 
@@ -290,7 +289,7 @@ func GetSeriesView(
 		}
 		view.Series = series
 
-		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+		categories, err := categoryRepository.GetAllCategoriesByUniverse(series.Universe)
 		if err != nil {
 			common.DisplayAppError(
 				w,
