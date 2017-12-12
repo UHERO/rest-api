@@ -3,11 +3,10 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
-	"errors"
+	"github.com/UHERO/rest-api/models"
 )
 
 func GetSeriesByGroupId(
@@ -271,9 +270,9 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository, cacheReposit
 func GetSeriesView(
 	seriesRepository *data.SeriesRepository,
 	categoryRepository *data.CategoryRepository,
-	cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+	cacheRepository *data.CacheRepository,
+) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		the_data := nil
 		id, ok := getId(w, r)
 		if !ok {
 			return
@@ -282,7 +281,7 @@ func GetSeriesView(
 		if !ok {
 			universe = "UHERO"
 		}
-		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+		_, err := categoryRepository.GetAllCategoriesByUniverse(universe)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -292,7 +291,7 @@ func GetSeriesView(
 			)
 			return
 		}
-		series, err := seriesRepository.GetSeriesById(id)
+		_, err = seriesRepository.GetSeriesById(id)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -302,7 +301,7 @@ func GetSeriesView(
 			)
 			return
 		}
-		seriesObs, err := seriesRepository.GetSeriesObservations(id)
+		_, err = seriesRepository.GetSeriesObservations(id)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -312,7 +311,17 @@ func GetSeriesView(
 			)
 			return
 		}
-		j, err := json.Marshal(the_data)
+		_, err = seriesRepository.GetSeriesSiblingsById(id)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		j, err := json.Marshal(&models.DataPortalSeries{}) // Not really this. We'll make a new combined model object
 		if err != nil {
 			common.DisplayAppError(
 				w,
