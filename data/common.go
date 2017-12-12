@@ -39,6 +39,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	err = rows.Scan(
 		&series.Id,
 		&series.Name,
+		&series.Universe,
 		&series.Description,
 		&series.Frequency,
 		&series.SeasonallyAdjusted,
@@ -69,6 +70,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	dataPortalSeries = models.DataPortalSeries{
 		Id:   series.Id,
 		Name: series.Name,
+		Universe: series.Universe,
 	}
 	dataPortalSeries.FrequencyShort = dataPortalSeries.Name[len(dataPortalSeries.Name)-1:]
 	dataPortalSeries.Frequency = freqLabel[dataPortalSeries.FrequencyShort]

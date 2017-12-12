@@ -278,22 +278,6 @@ func GetSeriesView(
 		if !ok {
 			return
 		}
-		universe, ok := mux.Vars(r)["universe_text"]
-		if !ok {
-			universe = "UHERO"
-		}
-		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
-		}
-		view.Categories = categories
-
 		series, err := seriesRepository.GetSeriesById(id)
 		if err != nil {
 			common.DisplayAppError(
@@ -305,6 +289,18 @@ func GetSeriesView(
 			return
 		}
 		view.Series = series
+
+		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		view.Categories = categories
 
 		observations, err := seriesRepository.GetSeriesObservations(id)
 		if err != nil {

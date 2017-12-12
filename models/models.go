@@ -128,6 +128,7 @@ func (a ByGeography) Less(i, j int) bool {
 type Series struct {
 	Id                 int64
 	Name               string
+	Universe	   string
 	Description        sql.NullString
 	Frequency          sql.NullString
 	SeasonallyAdjusted sql.NullBool
@@ -165,6 +166,7 @@ type DataPortalSeriesView struct {
 type DataPortalSeries struct {
 	Id                          int64                   `json:"id"`
 	Name                        string                  `json:"name"`
+	Universe		    string                  `json:"universe,omitempty"`
 	Title                       string                  `json:"title,omitempty"`
 	Description                 string                  `json:"description,omitempty"`
 	MeasurementId               int64                   `json:"measurementId,omitempty"`
