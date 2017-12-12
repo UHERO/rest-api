@@ -36,5 +36,8 @@ func SetSeriesRoutes(
 	router.HandleFunc("/v1/series/observations", controllers.GetSeriesObservations(seriesRepository, cacheRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
+	router.HandleFunc("/v1/series/view", controllers.GetSeriesView(seriesRepository, cacheRepository)).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+	)
 	return router
 }

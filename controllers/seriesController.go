@@ -265,3 +265,8 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository, cacheReposit
 		WriteCache(r, cacheRepository, j)
 	}
 }
+
+func GetSeriesView(seriesRepository *data.SeriesRepository, cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+	}
+}
