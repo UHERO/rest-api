@@ -6,6 +6,8 @@ import (
 
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
+	"github.com/gorilla/mux"
+	"errors"
 )
 
 func GetSeriesByGroupId(
@@ -266,7 +268,61 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository, cacheReposit
 	}
 }
 
-func GetSeriesView(seriesRepository *data.SeriesRepository, cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesView(
+	seriesRepository *data.SeriesRepository,
+	categoryRepository *data.CategoryRepository,
+	cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		the_data := nil
+		id, ok := getId(w, r)
+		if !ok {
+			return
+		}
+		universe, ok := mux.Vars(r)["universe_text"]
+		if !ok {
+			universe = "UHERO"
+		}
+		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		series, err := seriesRepository.GetSeriesById(id)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		seriesObs, err := seriesRepository.GetSeriesObservations(id)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		j, err := json.Marshal(the_data)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error processing JSON has occurred",
+				500,
+			)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
 	}
 }

@@ -21,7 +21,7 @@ func InitRoutes(
 
 	apiRouter := mux.NewRouter().StrictSlash(false)
 	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository, measurementRepository, cacheRepository)
-	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository, cacheRepository)
+	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository, categoryRepository, cacheRepository)
 	apiRouter = SetMeasurementRoutes(apiRouter, seriesRepository, cacheRepository)
 	apiRouter = SetSearchRoutes(apiRouter, seriesRepository, cacheRepository)
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
