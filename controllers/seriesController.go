@@ -273,6 +273,7 @@ func GetSeriesView(
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		view := models.DataPortalSeriesView{}
 		id, ok := getId(w, r)
 		if !ok {
 			return
@@ -281,7 +282,7 @@ func GetSeriesView(
 		if !ok {
 			universe = "UHERO"
 		}
-		_, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -291,7 +292,9 @@ func GetSeriesView(
 			)
 			return
 		}
-		_, err = seriesRepository.GetSeriesById(id)
+		view.Categories = categories
+
+		series, err := seriesRepository.GetSeriesById(id)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -301,7 +304,9 @@ func GetSeriesView(
 			)
 			return
 		}
-		_, err = seriesRepository.GetSeriesObservations(id)
+		view.Series = series
+
+		observations, err := seriesRepository.GetSeriesObservations(id)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -311,7 +316,9 @@ func GetSeriesView(
 			)
 			return
 		}
-		_, err = seriesRepository.GetSeriesSiblingsById(id)
+		view.Observations = observations
+
+		siblings, err := seriesRepository.GetSeriesSiblingsById(id)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -321,7 +328,9 @@ func GetSeriesView(
 			)
 			return
 		}
-		j, err := json.Marshal(&models.DataPortalSeries{}) // Not really this. We'll make a new combined model object
+		view.Siblings = siblings
+
+		j, err := json.Marshal(&view)
 		if err != nil {
 			common.DisplayAppError(
 				w,

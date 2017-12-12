@@ -58,6 +58,11 @@ type (
 		Data models.DataPortalSeries `json:"data"`
 	}
 
+	// GET - /series/view
+	SeriesView struct {
+		Data models.DataPortalSeriesView `json:"data"`
+	}
+
 	// GET - /series/observations
 	ObservationList struct {
 		Data models.SeriesObservations `json:"data"`
