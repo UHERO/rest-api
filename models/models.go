@@ -18,6 +18,7 @@ type Application struct {
 type Category struct {
 	Id                   int64                   `json:"id"`
 	Name                 string                  `json:"name"`
+	Universe             string                  `json:"universe"`
 	ParentId             int64                   `json:"parentId,omitempty"`
 	Defaults	     *CategoryDefaults	     `json:"defaults,omitempty"`
 	Current		     *CurrentGeoFreq	     `json:"current,omitempty"`
@@ -44,6 +45,7 @@ type CurrentGeoFreq struct {
 type CategoryWithAncestry struct {
 	Id			int64
 	Name			string
+	Universe		string
 	Ancestry		sql.NullString
 	ParentId		sql.NullInt64
 	DefaultGeoHandle	sql.NullString
