@@ -159,8 +159,8 @@ type Measurement struct {
 }
 
 type DataPortalSeriesView struct {
-	Categories	[]Category		`json:"categories"`
 	Series		DataPortalSeries	`json:"series"`
+	Categories	[]Category		`json:"categories"`
 	Observations	SeriesObservations	`json:"observations"`
 	Siblings	[]DataPortalSeries	`json:"siblings"`
 }
@@ -168,7 +168,7 @@ type DataPortalSeriesView struct {
 type DataPortalSeries struct {
 	Id                          int64                   `json:"id"`
 	Name                        string                  `json:"name"`
-	Universe		    string                  `json:"universe,omitempty"`
+	Universe		    string                  `json:"universe"`
 	Title                       string                  `json:"title,omitempty"`
 	Description                 string                  `json:"description,omitempty"`
 	MeasurementId               int64                   `json:"measurementId,omitempty"`
