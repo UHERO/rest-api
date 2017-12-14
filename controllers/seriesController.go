@@ -325,7 +325,7 @@ func GetSeriesView(
 		}
 		view.Siblings = siblings
 
-		j, err := json.Marshal(&view)
+		j, err := json.Marshal(SeriesView{Data: view})
 		if err != nil {
 			common.DisplayAppError(
 				w,
