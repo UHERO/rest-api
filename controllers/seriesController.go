@@ -279,60 +279,35 @@ func GetSeriesPackage(
 		}
 		series, err := seriesRepository.GetSeriesById(id)
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
 		pkg.Series = series
 
 		categories, err := categoryRepository.GetAllCategoriesByUniverse(series.Universe)
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
 		pkg.Categories = categories
 
 		observations, err := seriesRepository.GetSeriesObservations(id)
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
 		pkg.Observations = observations
 
 		siblings, err := seriesRepository.GetSeriesSiblingsById(id)
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
 		pkg.Siblings = siblings
 
 		j, err := json.Marshal(SeriesPackage{Data: pkg})
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
 			return
 		}
 		WriteResponse(w, j)
