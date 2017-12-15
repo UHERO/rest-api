@@ -26,6 +26,7 @@ func InitRoutes(
 	apiRouter = SetSearchRoutes(apiRouter, seriesRepository, cacheRepository)
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
 	apiRouter = SetFeedbackRoutes(apiRouter, feedbackRepository)
+	apiRouter = SetPackageRoutes(apiRouter, seriesRepository, categoryRepository, cacheRepository)
 
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),

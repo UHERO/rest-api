@@ -59,8 +59,8 @@ type (
 	}
 
 	// GET - /series/view
-	SeriesView struct {
-		Data models.DataPortalSeriesView `json:"data"`
+	SeriesPackage struct {
+		Data models.DataPortalSeriesPackage `json:"data"`
 	}
 
 	// GET - /series/observations

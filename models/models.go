@@ -158,7 +158,7 @@ type Measurement struct {
 	Indent int    `json:"indent,omitempty"`
 }
 
-type DataPortalSeriesView struct {
+type DataPortalSeriesPackage struct {
 	Series		DataPortalSeries	`json:"series"`
 	Categories	[]Category		`json:"categories"`
 	Observations	SeriesObservations	`json:"observations"`

@@ -266,13 +266,13 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository, cacheReposit
 	}
 }
 
-func GetSeriesView(
+func GetSeriesPackage(
 	seriesRepository *data.SeriesRepository,
 	categoryRepository *data.CategoryRepository,
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		view := models.DataPortalSeriesView{}
+		view := models.DataPortalSeriesPackage{}
 		id, ok := getId(w, r)
 		if !ok {
 			return
