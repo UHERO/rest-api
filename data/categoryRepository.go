@@ -292,24 +292,20 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 	return
 }
 
-func (r *CategoryRepository) GetChildrenOf(id int64) (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT id, name, parent_id FROM categories
-							 WHERE parent_id = ? AND NOT hidden
-							 ORDER BY list_order;`, id)
+func (r *CategoryRepository) GetChildrenOf(id int64) (children []int64, err error) {
+	rows, err := r.DB.Query(`SELECT id FROM categories
+	                         WHERE SUBSTRING_INDEX(ancestry, '/', -1) = ?
+	                         AND NOT hidden ORDER BY list_order;`, id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
-		category := models.Category{}
-		err = rows.Scan(
-			&category.Id,
-			&category.Name,
-			&category.ParentId,
-		)
+		var child_id int64
+		err = rows.Scan(&child_id)
 		if err != nil {
 			return
 		}
-		categories = append(categories, category)
+		children = append(children, child_id)
 	}
 	return
 }

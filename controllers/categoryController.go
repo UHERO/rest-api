@@ -268,6 +268,17 @@ cacheRepository *data.CacheRepository,
 			return
 		}
 		// Find universe, and child cats by category_id
+		kids, err := categoryRepository.GetChildrenOf(id)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		for
 		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
 		if err != nil {
 			common.DisplayAppError(
