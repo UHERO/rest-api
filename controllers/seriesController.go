@@ -272,7 +272,7 @@ func GetSeriesPackage(
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		view := models.DataPortalSeriesPackage{}
+		pkg := models.DataPortalSeriesPackage{}
 		id, ok := getId(w, r)
 		if !ok {
 			return
@@ -287,7 +287,7 @@ func GetSeriesPackage(
 			)
 			return
 		}
-		view.Series = series
+		pkg.Series = series
 
 		categories, err := categoryRepository.GetAllCategoriesByUniverse(series.Universe)
 		if err != nil {
@@ -299,7 +299,7 @@ func GetSeriesPackage(
 			)
 			return
 		}
-		view.Categories = categories
+		pkg.Categories = categories
 
 		observations, err := seriesRepository.GetSeriesObservations(id)
 		if err != nil {
@@ -311,7 +311,7 @@ func GetSeriesPackage(
 			)
 			return
 		}
-		view.Observations = observations
+		pkg.Observations = observations
 
 		siblings, err := seriesRepository.GetSeriesSiblingsById(id)
 		if err != nil {
@@ -323,9 +323,9 @@ func GetSeriesPackage(
 			)
 			return
 		}
-		view.Siblings = siblings
+		pkg.Siblings = siblings
 
-		j, err := json.Marshal(SeriesView{Data: view})
+		j, err := json.Marshal(SeriesPackage{Data: pkg})
 		if err != nil {
 			common.DisplayAppError(
 				w,

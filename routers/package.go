@@ -18,4 +18,5 @@ func SetPackageRoutes(
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
+	return router
 }
