@@ -30,6 +30,11 @@ type (
 		Data models.Category `json:"data"`
 	}
 
+	// GET - /category/view
+	CategoryView struct {
+		Data models.DataPortalCategoryView `json:"data"`
+	}
+
 	// GET - /category
 	CategoriesResource struct {
 		Data []models.Category `json:"data"`

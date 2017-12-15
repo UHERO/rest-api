@@ -270,35 +270,29 @@ cacheRepository *data.CacheRepository,
 		// Find universe, and child cats by category_id
 		kids, err := categoryRepository.GetChildrenOf(id)
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
-		for
+		var universe string
+		for kid_id := range kids {
+			category, err := categoryRepository.GetCategoryById(kid_id)
+			if err != nil {
+				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+				return
+			}
+			universe = category.Universe
+			// add category to view
+		}
 		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
 		view.Categories = categories
 
 		j, err := json.Marshal(CategoryView{Data: view})
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
 			return
 		}
 		WriteResponse(w, j)
