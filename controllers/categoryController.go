@@ -9,6 +9,7 @@ import (
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
 	"strconv"
+	"github.com/UHERO/rest-api/models"
 )
 
 func GetCategory(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
@@ -252,5 +253,44 @@ func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *dat
 		}
 		WriteResponse(w, j)
 		WriteCache(r, c, j)
+	}
+}
+
+func GetCategoryView(
+categoryRepository *data.CategoryRepository,
+seriesRepository *data.SeriesRepository,
+cacheRepository *data.CacheRepository,
+) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		view := models.DataPortalCategoryView{}
+		id, ok := getId(w, r)
+		if !ok {
+			return
+		}
+		// Find universe, and child cats by category_id
+		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		view.Categories = categories
+
+		j, err := json.Marshal(CategoryView{Data: view})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error processing JSON has occurred",
+				500,
+			)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
 	}
 }

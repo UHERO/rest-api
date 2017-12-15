@@ -55,6 +55,11 @@ type CategoryWithAncestry struct {
 	ObservationEnd  	NullTime
 }
 
+type DataPortalCategoryView struct {
+	Categories	[]Category		`json:"categories"`
+	// series needed
+}
+
 type SearchSummary struct {
 	SearchText           string                  `json:"q"`
 	DefaultGeo           *DataPortalGeography    `json:"defaultGeo,omitempty"`
