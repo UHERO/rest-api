@@ -31,8 +31,8 @@ type (
 	}
 
 	// GET - /category/view
-	CategoryView struct {
-		Data models.DataPortalCategoryView `json:"data"`
+	CategoryPackage struct {
+		Data models.DataPortalCategoryPackage `json:"data"`
 	}
 
 	// GET - /category

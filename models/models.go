@@ -55,11 +55,15 @@ type CategoryWithAncestry struct {
 	ObservationEnd  	NullTime
 }
 
-type DataPortalCategoryView struct {
-	InflatedSeries	[]InflatedSeries	`json:"series"`
-	ChildCategories	[]Category		`json:"children"`
-	AllCategories	[]Category		`json:"categories"`
+type DataPortalCategoryPackage struct {
+	ChildCategories	[]InflatedCategorySeries	`json:"children"`
+	AllCategories	[]Category			`json:"categories"`
 	// series needed
+}
+
+type InflatedCategorySeries struct {
+	Category
+	Series []InflatedSeries		`json:"series"`
 }
 
 type SearchSummary struct {
