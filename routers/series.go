@@ -9,7 +9,6 @@ import (
 func SetSeriesRoutes(
 	router *mux.Router,
 	seriesRepository *data.SeriesRepository,
-	categoryRepository *data.CategoryRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
 	router.HandleFunc("/v1/series", controllers.GetSeriesById(seriesRepository, cacheRepository)).Methods("GET").Queries(
