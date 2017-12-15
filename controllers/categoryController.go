@@ -257,17 +257,16 @@ func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *dat
 }
 
 func GetCategoryView(
-categoryRepository *data.CategoryRepository,
-seriesRepository *data.SeriesRepository,
-cacheRepository *data.CacheRepository,
+	categoryRepository *data.CategoryRepository,
+	seriesRepository *data.SeriesRepository,
+	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		view := models.DataPortalCategoryView{}
-		id, ok := getId(w, r)
+		id, geoHandle, freq, ok := getIdGeoAndFreq(w, r)
 		if !ok {
 			return
 		}
-		// Find universe, and child cats by category_id
 		kids, err := categoryRepository.GetChildrenOf(id)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
@@ -281,7 +280,13 @@ cacheRepository *data.CacheRepository,
 				return
 			}
 			universe = category.Universe
-			// add category to view
+			seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, data.Category)
+			if err != nil {
+				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+				return
+			}
+			view.InflatedSeries = seriesList
+			// then shove it in the view or something
 		}
 		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
 		if err != nil {
