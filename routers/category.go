@@ -112,13 +112,5 @@ func SetCategoryRoutes(
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}"
 	)
-	router.HandleFunc(
-		"/v1/category/view",
-		controllers.GetCategoryView(categoryRepository, seriesRepository, cacheRepository),
-	).Methods("GET").Queries(
-		"id", "{id:[0-9]+}",
-		"geo", "{geo:[A-Za-z0-9]+}",
-		"freq", "{freq:[ASQMWDasqmwd]}",
-	)
 	return router
 }
