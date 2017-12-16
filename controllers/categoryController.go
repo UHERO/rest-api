@@ -256,13 +256,13 @@ func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *dat
 	}
 }
 
-func GetCategoryView(
+func GetCategoryPackage(
 	categoryRepository *data.CategoryRepository,
 	seriesRepository *data.SeriesRepository,
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		pkg := models.CategoryPackage{}
+		pkg := models.DataPortalCategoryPackage{}
 		id, geoHandle, freq, ok := getIdGeoAndFreq(w, r)
 		if !ok {
 			return
@@ -273,19 +273,23 @@ func GetCategoryView(
 			return
 		}
 		var universe string
-		for kid_id := range kids {
-			category, err := categoryRepository.GetCategoryById(kid_id)
+		for kidId := range kids {
+			inflatedCat := models.InflatedCategoryAndSeries{}
+			category, err := categoryRepository.GetCategoryById(kidId)
 			if err != nil {
 				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 				return
 			}
-			pkg.ChildCategories = append(pkg.ChildCategories, category)
+			inflatedCat.Category = category
+
 			seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, data.Category)
 			if err != nil {
 				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 				return
 			}
-			pkg.InflatedSeries = seriesList
+			inflatedCat.Series = seriesList
+
+			pkg.ChildCategories = append(pkg.ChildCategories, inflatedCat)
 			universe = category.Universe
 		}
 		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
@@ -293,9 +297,9 @@ func GetCategoryView(
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
-		pkg.Categories = categories
+		pkg.AllCategories = categories
 
-		j, err := json.Marshal(Categ{Data: view})
+		j, err := json.Marshal(CategoryPackage{Data: pkg})
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
 			return

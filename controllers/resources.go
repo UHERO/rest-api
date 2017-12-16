@@ -30,7 +30,7 @@ type (
 		Data models.Category `json:"data"`
 	}
 
-	// GET - /category/view
+	// GET - /package/category
 	CategoryPackage struct {
 		Data models.DataPortalCategoryPackage `json:"data"`
 	}
