@@ -130,7 +130,7 @@ var transformations map[string]transformation = map[string]transformation{
 }
 
 var seriesPrefix = `SELECT
-	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
@@ -159,7 +159,7 @@ var seriesPrefix = `SELECT
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var measurementSeriesPrefix = `SELECT
-	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
@@ -189,7 +189,7 @@ var measurementPostfix = ` GROUP BY series.id;`
 var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
 var siblingSortStmt = ` GROUP BY series.id;`
 var siblingsPrefix = `SELECT
-    series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+    series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
@@ -613,7 +613,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row, err := r.DB.Query(`SELECT DISTINCT
-	series.id, series.name, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(measurement_units.short_label, '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,

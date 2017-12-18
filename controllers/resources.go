@@ -77,4 +77,9 @@ type (
 	FeedbackResource struct {
 		Data models.Feedback `json:"data"`
 	}
+
+	// GET - /package/series
+	SeriesPackage struct {
+		Data models.DataPortalSeriesPackage `json:"data"`
+	}
 )
