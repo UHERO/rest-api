@@ -22,6 +22,7 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 	rows, err := r.DB.Query(
 		`SELECT categories.id,
 			ANY_VALUE(categories.name) AS catname,
+			ANY_VALUE(categories.universe) AS universe,
 			ANY_VALUE(categories.ancestry) AS ancest,
 			categories.default_freq AS catfreq,
 			ANY_VALUE(geographies.handle) AS catgeo,
@@ -53,6 +54,7 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		err = rows.Scan(
 			&category.Id,
 			&category.Name,
+			&category.Universe,
 			&category.Ancestry,
 			&category.DefaultFrequency,
 			&category.DefaultGeoHandle,
@@ -70,6 +72,7 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		dataPortalCategory := models.Category{
 			Id:       category.Id,
 			Name:     category.Name,
+			Universe: category.Universe,
 			ParentId: parentId,
 		}
 		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid || category.ObservationStart.Valid || category.ObservationEnd.Valid {
@@ -120,7 +123,7 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 }
 
 func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT id, name FROM categories
+	rows, err := r.DB.Query(`SELECT id, name, universe FROM categories
 				WHERE ancestry IS NULL
 				AND NOT hidden
 				ORDER BY list_order;`)
@@ -132,6 +135,7 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 		err = rows.Scan(
 			&category.Id,
 			&category.Name,
+			&category.Universe,
 		)
 		if err != nil {
 			return
@@ -150,6 +154,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	rows, err := r.DB.Query(
 		`SELECT categories.id,
 			ANY_VALUE(categories.name) AS catname,
+			ANY_VALUE(categories.universe) AS universe,
 			ANY_VALUE(parentcat.id) AS parent_id,
 			ANY_VALUE(COALESCE(mygeo.handle, parentgeo.handle)) AS def_geo,
 			ANY_VALUE(COALESCE(categories.default_freq, parentcat.default_freq)) AS def_freq,
@@ -187,6 +192,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		err = rows.Scan(
 			&category.Id,
 			&category.Name,
+			&category.Universe,
 			&category.ParentId,
 			&category.DefaultGeoHandle,
 			&category.DefaultFrequency,
@@ -202,6 +208,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			// Store Category-level information
 			dataPortalCategory.Id = category.Id
 			dataPortalCategory.Name = category.Name
+			dataPortalCategory.Universe = category.Universe
 			if category.ParentId.Valid {
 				dataPortalCategory.ParentId = category.ParentId.Int64
 			}
@@ -266,7 +273,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 
 func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
 	fuzzyString := "%" + name + "%"
-	rows, err := r.DB.Query(`SELECT id, name, ancestry FROM categories
+	rows, err := r.DB.Query(`SELECT id, name, universe, ancestry FROM categories
 							 WHERE LOWER(name) LIKE ? AND NOT hidden
 							 ORDER BY list_order;`, fuzzyString)
 	if err != nil {
@@ -277,6 +284,7 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 		err = rows.Scan(
 			&category.Id,
 			&category.Name,
+			&category.Universe,
 			&category.Ancestry,
 		)
 		if err != nil {
@@ -286,6 +294,7 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 		categories = append(categories, models.Category{
 			Id:       category.Id,
 			Name:     category.Name,
+			Universe: category.Universe,
 			ParentId: parentId,
 		})
 	}
