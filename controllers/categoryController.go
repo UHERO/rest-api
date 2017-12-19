@@ -274,7 +274,7 @@ func GetCategoryPackage(
 		}
 		var universe string
 		for _, kidId := range kids {
-			inflatedCat := models.InflatedCategoryAndSeries{}
+			inflatedCat := models.CategoryWithInflatedSeries{}
 			category, err := categoryRepository.GetCategoryById(kidId)
 			if err != nil {
 				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
