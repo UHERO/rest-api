@@ -104,13 +104,13 @@ func SetCategoryRoutes(
 		"/v1/category/series",
 		controllers.GetSeriesByGroupId(seriesRepository, cacheRepository, data.Category),
 	).Methods("GET").Queries(
-		"id", "{id:[0-9]+}"
+		"id", "{id:[0-9]+}",
 	)
 	router.HandleFunc(
 		"/v1/category/measurements",
 		controllers.GetMeasurementByCategoryId(measurementRepository, cacheRepository),
 	).Methods("GET").Queries(
-		"id", "{id:[0-9]+}"
+		"id", "{id:[0-9]+}",
 	)
 	return router
 }

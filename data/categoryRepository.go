@@ -309,12 +309,12 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []int64, err erro
 		return
 	}
 	for rows.Next() {
-		var child_id int64
-		err = rows.Scan(&child_id)
+		var childId int64
+		err = rows.Scan(&childId)
 		if err != nil {
 			return
 		}
-		children = append(children, child_id)
+		children = append(children, childId)
 	}
 	return
 }

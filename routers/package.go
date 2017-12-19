@@ -18,5 +18,11 @@ func SetPackageRoutes(
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
+	router.HandleFunc(
+		"/v1/package/category",
+		controllers.GetCategoryPackage(categoryRepository, seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+	)
 	return router
 }

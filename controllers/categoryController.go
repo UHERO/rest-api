@@ -273,7 +273,7 @@ func GetCategoryPackage(
 			return
 		}
 		var universe string
-		for kidId := range kids {
+		for _, kidId := range kids {
 			inflatedCat := models.InflatedCategoryAndSeries{}
 			category, err := categoryRepository.GetCategoryById(kidId)
 			if err != nil {
