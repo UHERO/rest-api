@@ -18,5 +18,14 @@ func SetPackageRoutes(
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
+	router.HandleFunc(
+		"/v1/package/search",
+		controllers.GetSearchPackage(seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"q", "{search_text:.+}",
+		"geo", "{geo:[A-Za-z-0-9]+}",
+		"freq", "{freq:[ASQMWDasqmwd]}",
+		"u", "{universe_text:.+}",
+	)
 	return router
 }

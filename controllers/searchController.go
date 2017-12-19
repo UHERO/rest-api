@@ -151,24 +151,8 @@ func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository, c *dat
 			)
 			return
 		}
-		geo, ok := mux.Vars(r)["geo"]
+		geo, freq, ok := getGeoAndFreq(w, r)
 		if !ok {
-			common.DisplayAppError(
-				w,
-				errors.New("Couldn't get geography from request"),
-				"Bad request.",
-				400,
-			)
-			return
-		}
-		freq, ok := mux.Vars(r)["freq"]
-		if !ok {
-			common.DisplayAppError(
-				w,
-				errors.New("Couldn't get frequency from request"),
-				"Bad request.",
-				400,
-			)
 			return
 		}
 		seriesList, err := searchRepository.GetSearchResultsByGeoAndFreq(searchText, geo, freq)
@@ -198,24 +182,8 @@ func GetSearchResultByGeoAndFreqAndUniverse(searchRepository *data.SeriesReposit
 			)
 			return
 		}
-		geo, ok := mux.Vars(r)["geo"]
+		geo, freq, ok := getGeoAndFreq(w, r)
 		if !ok {
-			common.DisplayAppError(
-				w,
-				errors.New("Couldn't get geography from request"),
-				"Bad request.",
-				400,
-			)
-			return
-		}
-		freq, ok := mux.Vars(r)["freq"]
-		if !ok {
-			common.DisplayAppError(
-				w,
-				errors.New("Couldn't get frequency from request"),
-				"Bad request.",
-				400,
-			)
 			return
 		}
 		seriesList, err := searchRepository.GetSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, universeText)
@@ -235,24 +203,8 @@ func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository
 			)
 			return
 		}
-		geo, ok := mux.Vars(r)["geo"]
+		geo, freq, ok := getGeoAndFreq(w, r)
 		if !ok {
-			common.DisplayAppError(
-				w,
-				errors.New("Couldn't get geography from request"),
-				"Bad request.",
-				400,
-			)
-			return
-		}
-		freq, ok := mux.Vars(r)["freq"]
-		if !ok {
-			common.DisplayAppError(
-				w,
-				errors.New("Couldn't get frequency from request"),
-				"Bad request.",
-				400,
-			)
 			return
 		}
 		seriesList, err := searchRepository.GetInflatedSearchResultsByGeoAndFreq(searchText, geo, freq)
@@ -282,27 +234,33 @@ func GetInflatedSearchResultByGeoAndFreqAndUniverse(searchRepository *data.Serie
 			)
 			return
 		}
-		geo, ok := mux.Vars(r)["geo"]
+		geo, freq, ok := getGeoAndFreq(w, r)
 		if !ok {
-			common.DisplayAppError(
-				w,
-				errors.New("Couldn't get geography from request"),
-				"Bad request.",
-				400,
-			)
-			return
-		}
-		freq, ok := mux.Vars(r)["freq"]
-		if !ok {
-			common.DisplayAppError(
-				w,
-				errors.New("Couldn't get frequency from request"),
-				"Bad request.",
-				400,
-			)
 			return
 		}
 		seriesList, err := searchRepository.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, universeText)
 		returnInflatedSeriesList(seriesList, err, w, r, c)
+	}
+}
+
+func GetSearchPackage(
+	searchRepository *data.SeriesRepository,
+	cacheRepository *data.CacheRepository,
+) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		searchText, ok := mux.Vars(r)["search_text"]
+		if !ok {
+			common.DisplayAppError(w, errors.New("Couldn't get searchText from request"), "Bad request.", 400)
+			return
+		}
+		universeText, ok := mux.Vars(r)["universe_text"]
+		if !ok {
+			common.DisplayAppError(w, errors.New("Couldn't get universeText from request"), "Bad request.", 400)
+			return
+		}
+		geo, freq, ok := getGeoAndFreq(w, r)
+		if !ok {
+			return
+		}
 	}
 }

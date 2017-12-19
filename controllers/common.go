@@ -202,6 +202,23 @@ func getIdAndFreq(w http.ResponseWriter, r *http.Request) (id int64, freq string
 	return
 }
 
+func getGeoAndFreq(w http.ResponseWriter, r *http.Request) (geo string, freq string, ok bool) {
+	ok = true
+	geo, gotGeo := mux.Vars(r)["geo"]
+	if !gotGeo {
+		common.DisplayAppError(w, errors.New("Couldn't get geography handle from request"), "Bad request.", 400)
+		ok = false
+		return
+	}
+	freq, gotFreq := mux.Vars(r)["freq"]
+	if !gotFreq {
+		common.DisplayAppError(w, errors.New("Couldn't get frequency from request"), "Bad request.", 400)
+		ok = false
+		return
+	}
+	return
+}
+
 func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo string, freq string, ok bool) {
 	ok = true
 	idParam, gotId := mux.Vars(r)["id"]
