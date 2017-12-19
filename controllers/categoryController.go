@@ -282,7 +282,7 @@ func GetCategoryPackage(
 			}
 			inflatedCat.Category = category
 
-			seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, data.Category)
+			seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geoHandle, freq, data.Category)
 			if err != nil {
 				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 				return

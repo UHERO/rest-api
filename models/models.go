@@ -60,7 +60,6 @@ type CategoryWithAncestry struct {
 type DataPortalCategoryPackage struct {
 	ChildCategories	[]InflatedCategoryAndSeries	`json:"children"`
 	AllCategories	[]Category			`json:"categories"`
-	// series needed
 }
 
 type InflatedCategoryAndSeries struct {
