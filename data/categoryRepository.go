@@ -301,6 +301,27 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 	return
 }
 
+func (r *CategoryRepository) GetNavCategories(universe string) (children []int64, err error) {
+	rows, err := r.DB.Query(`SELECT id FROM categories
+	                         WHERE SUBSTRING_INDEX(ancestry, '/', -1) = (
+	                         	SELECT id FROM categories WHERE universe = ? AND ancestry IS NULL
+	                         )
+	                         AND NOT hidden
+	                         ORDER BY list_order;`, universe)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		var childId int64
+		err = rows.Scan(&childId)
+		if err != nil {
+			return
+		}
+		children = append(children, childId)
+	}
+	return
+}
+
 func (r *CategoryRepository) GetChildrenOf(id int64) (children []int64, err error) {
 	rows, err := r.DB.Query(`SELECT id FROM categories
 	                         WHERE SUBSTRING_INDEX(ancestry, '/', -1) = ?

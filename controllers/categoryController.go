@@ -289,15 +289,15 @@ func GetCategoryPackage(
 			}
 			inflatedCat.Series = seriesList
 
-			pkg.ChildCategories = append(pkg.ChildCategories, inflatedCat)
+			pkg.Children = append(pkg.Children, inflatedCat)
 			universe = category.Universe
 		}
-		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+		navCats, err := categoryRepository.GetNavCategories(universe)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
-		pkg.AllCategories = categories
+		pkg.NavCategories = navCats
 
 		j, err := json.Marshal(CategoryPackage{Data: pkg})
 		if err != nil {
