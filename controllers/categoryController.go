@@ -262,42 +262,21 @@ func GetCategoryPackage(
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		pkg := models.DataPortalCategoryPackage{}
 		id, geoHandle, freq, ok := getIdGeoAndFreq(w, r)
 		if !ok {
-			return
-		}
-		kids, err := categoryRepository.GetChildrenOf(id)
-		if err != nil {
-			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
-			return
-		}
-		var universe string
-		for _, kidId := range kids {
-			inflatedCat := models.CategoryWithInflatedSeries{}
-			category, err := categoryRepository.GetCategoryById(kidId)
-			if err != nil {
-				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			// Handling for /package/category?u= endpoint
+			universe, ok := mux.Vars(r)["universe_text"]
+			if !ok {
+				common.DisplayAppError(w, errors.New("Couldn't get universe handle from request"), "Bad request.", 400)
 				return
 			}
-			inflatedCat.Category = category
-
-			seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geoHandle, freq, data.Category)
-			if err != nil {
-				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
-				return
-			}
-			inflatedCat.Series = seriesList
-
-			pkg.Children = append(pkg.Children, inflatedCat)
-			universe = category.Universe
+			id, geoHandle, freq, ok = categoryRepository.getDefaultNavCategory(universe)
 		}
-		navCats, err := categoryRepository.GetNavCategories(universe)
+
+		pkg, err := categoryRepository.CreateCategoryPackage(id, geoHandle, freq)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
-			return
 		}
-		pkg.NavCategories = navCats
 
 		j, err := json.Marshal(CategoryPackage{Data: pkg})
 		if err != nil {

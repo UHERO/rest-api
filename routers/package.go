@@ -29,7 +29,8 @@ func SetPackageRoutes(
 	router.HandleFunc(
 		"/v1/package/category",
 		controllers.GetCategoryPackage(categoryRepository, seriesRepository, cacheRepository),
-	).Methods("GET")
-
+	).Methods("GET").Queries(
+		"u", "{universe_text:.+}",
+	)
 	return router
 }
