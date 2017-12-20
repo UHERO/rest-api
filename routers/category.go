@@ -38,6 +38,13 @@ func SetCategoryRoutes(
 		controllers.GetCategoriesByUniverse(categoryRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"u", "{universe_text:.+}",
+		"type", "nav",
+	)
+	router.HandleFunc(
+		"/v1/category",
+		controllers.GetCategoriesByUniverse(categoryRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"u", "{universe_text:.+}",
 	)
 	router.HandleFunc(
 		"/v1/category",

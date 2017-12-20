@@ -231,15 +231,21 @@ func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *dat
 			ok = false
 			return
 		}
-		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
+		catType := mux.Vars(r)["type"]
+		var categories []models.Category
+		var err error
+		if catType == "nav" {
+			categories, err = categoryRepository.GetNavCategoriesByUniverse(universe)
+			if err != nil {
+				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+				return
+			}
+		} else {
+			categories, err = categoryRepository.GetAllCategoriesByUniverse(universe)
+			if err != nil {
+				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+				return
+			}
 		}
 		j, err := json.Marshal(CategoriesResource{Data: categories})
 		if err != nil {
@@ -270,12 +276,19 @@ func GetCategoryPackage(
 				common.DisplayAppError(w, errors.New("Couldn't get universe handle from request"), "Bad request.", 400)
 				return
 			}
-			id, geoHandle, freq, ok = categoryRepository.getDefaultNavCategory(universe)
+			defCat, err := categoryRepository.GetDefaultNavCategory(universe)
+			if err != nil {
+				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+				return
+			}
+			id = defCat.Id
+			geoHandle = defCat.Defaults.Geography.Handle
+			freq = defCat.Defaults.Frequency.Freq
 		}
-
-		pkg, err := categoryRepository.CreateCategoryPackage(id, geoHandle, freq)
+		pkg, err := categoryRepository.CreateCategoryPackage(id, geoHandle, freq, seriesRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			return
 		}
 
 		j, err := json.Marshal(CategoryPackage{Data: pkg})

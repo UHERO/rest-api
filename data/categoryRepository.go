@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/UHERO/rest-api/common"
 )
 
 type CategoryRepository struct {
@@ -18,6 +17,7 @@ func (r *CategoryRepository) GetNavCategories() (categories []models.Category, e
 	categories, err = r.GetNavCategoriesByUniverse("UHERO")
 	return
 }
+
 func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (categories []models.Category, err error) {
 	rows, err := r.DB.Query(
 		`SELECT categories.id,
@@ -87,6 +87,15 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 		}
 		categories = append(categories, dataPortalCategory)
 	}
+	return
+}
+
+func (r *CategoryRepository) GetDefaultNavCategory(universe string) (category models.Category, err error) {
+	categories, err := r.GetNavCategoriesByUniverse(universe)
+	if err != nil {
+		return
+	}
+	category = categories[0]
 	return
 }
 
@@ -396,7 +405,12 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []int64, err erro
 	return
 }
 
-func (r *CategoryRepository) CreateCategoryPackage(id int64, geoHandle string, freq string) (pkg models.DataPortalCategoryPackage, err error) {
+func (r *CategoryRepository) CreateCategoryPackage(
+	id int64,
+	geoHandle string,
+	freq string,
+	seriesRepository *SeriesRepository,
+) (pkg models.DataPortalCategoryPackage, err error) {
 	kids, err := r.GetChildrenOf(id)
 	if err != nil {
 
@@ -407,14 +421,12 @@ func (r *CategoryRepository) CreateCategoryPackage(id int64, geoHandle string, f
 		inflatedCat := models.CategoryWithInflatedSeries{}
 		category, err := r.GetCategoryById(kidId)
 		if err != nil {
-			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
 		inflatedCat.Category = category
 
 		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geoHandle, freq, Category)
 		if err != nil {
-			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
 		inflatedCat.Series = seriesList
@@ -424,7 +436,6 @@ func (r *CategoryRepository) CreateCategoryPackage(id int64, geoHandle string, f
 	}
 	navCats, err := r.GetNavCategoriesByUniverse(universe)
 	if err != nil {
-		common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 		return
 	}
 	pkg.NavCategories = navCats
