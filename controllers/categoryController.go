@@ -231,10 +231,10 @@ func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *dat
 			ok = false
 			return
 		}
-		catType := mux.Vars(r)["type"]
 		var categories []models.Category
 		var err error
-		if catType == "nav" {
+		catType, gotType := mux.Vars(r)["type_text"]
+		if gotType && catType == "nav" {
 			categories, err = categoryRepository.GetNavCategoriesByUniverse(universe)
 			if err != nil {
 				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)

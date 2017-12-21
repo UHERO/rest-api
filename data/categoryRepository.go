@@ -411,9 +411,9 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	freq string,
 	seriesRepository *SeriesRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
+
 	kids, err := r.GetChildrenOf(id)
 	if err != nil {
-
 		return
 	}
 	var universe string
