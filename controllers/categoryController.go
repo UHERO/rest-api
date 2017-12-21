@@ -268,24 +268,29 @@ func GetCategoryPackage(
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, geoHandle, freq, ok := getIdGeoAndFreq(w, r)
-		if !ok {
+		var id int64
+		var geo, freq string
+		universe, ok := mux.Vars(r)["universe_text"]
+		if ok {
 			// Handling for /package/category?u= endpoint
-			universe, ok := mux.Vars(r)["universe_text"]
-			if !ok {
-				common.DisplayAppError(w, errors.New("Couldn't get universe handle from request"), "Bad request.", 400)
-				return
-			}
 			defCat, err := categoryRepository.GetDefaultNavCategory(universe)
 			if err != nil {
 				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 				return
 			}
 			id = defCat.Id
-			geoHandle = defCat.Defaults.Geography.Handle
-			freq = defCat.Defaults.Frequency.Freq
+			if defCat.Defaults != nil {
+				geo = defCat.Defaults.Geography.Handle
+				freq = defCat.Defaults.Frequency.Freq
+			}
+		} else {
+			// Handling for /package/category?id=&geo=&freq= endpoint
+			id, geo, freq, ok = getIdGeoAndFreq(w, r)
+			if !ok {
+				return
+			}
 		}
-		pkg, err := categoryRepository.CreateCategoryPackage(id, geoHandle, freq, seriesRepository)
+		pkg, err := categoryRepository.CreateCategoryPackage(id, geo, freq, seriesRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return

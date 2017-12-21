@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"errors"
 )
 
 type CategoryRepository struct {
@@ -93,6 +94,10 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 func (r *CategoryRepository) GetDefaultNavCategory(universe string) (category models.Category, err error) {
 	categories, err := r.GetNavCategoriesByUniverse(universe)
 	if err != nil {
+		return
+	}
+	if len(categories) < 1 {
+		err = errors.New("No categories found for universe " + universe)
 		return
 	}
 	category = categories[0]
@@ -407,7 +412,7 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []int64, err erro
 
 func (r *CategoryRepository) CreateCategoryPackage(
 	id int64,
-	geoHandle string,
+	geo string,
 	freq string,
 	seriesRepository *SeriesRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
@@ -426,13 +431,14 @@ func (r *CategoryRepository) CreateCategoryPackage(
 		}
 		inflatedCat.Category = category
 
-		seriesList, an_err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geoHandle, freq, Category)
-		if an_err != nil {
-			err = an_err
-			return
+		if geo != "" && freq != "" {
+			seriesList, an_err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geo, freq, Category)
+			if an_err != nil {
+				err = an_err
+				return
+			}
+			inflatedCat.Series = seriesList
 		}
-		inflatedCat.Series = seriesList
-
 		pkg.Children = append(pkg.Children, inflatedCat)
 		universe = category.Universe
 	}
