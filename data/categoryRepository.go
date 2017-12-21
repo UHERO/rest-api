@@ -419,14 +419,16 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	var universe string
 	for _, kidId := range kids {
 		inflatedCat := models.CategoryWithInflatedSeries{}
-		category, err := r.GetCategoryById(kidId)
-		if err != nil {
+		category, an_err := r.GetCategoryById(kidId)
+		if an_err != nil {
+			err = an_err
 			return
 		}
 		inflatedCat.Category = category
 
-		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geoHandle, freq, Category)
-		if err != nil {
+		seriesList, an_err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geoHandle, freq, Category)
+		if an_err != nil {
+			err = an_err
 			return
 		}
 		inflatedCat.Series = seriesList
