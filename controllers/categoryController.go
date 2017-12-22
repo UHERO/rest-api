@@ -7,9 +7,9 @@ import (
 	"errors"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
+	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
 	"strconv"
-	"github.com/UHERO/rest-api/models"
 )
 
 func GetCategory(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {

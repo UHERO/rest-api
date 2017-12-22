@@ -59,12 +59,12 @@ type CategoryWithAncestry struct {
 
 type DataPortalCategoryPackage struct {
 	CatSubTree	[]CategoryWithInflatedSeries	`json:"categories"`
-	NavCategories	[]Category			`json:"navCategories"`
+	NavCategories	[]Category			`json:"navCategories,omitempty"`
 }
 
 type CategoryWithInflatedSeries struct {
 	Category
-	Series []InflatedSeries		`json:"series"`
+	Series []InflatedSeries		`json:"series,omitempty"`
 }
 
 type SearchSummary struct {
