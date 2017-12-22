@@ -417,29 +417,29 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	seriesRepository *SeriesRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
 
-	kids, err := r.GetChildrenOf(id)
+	kidIds, err := r.GetChildrenOf(id)
 	if err != nil {
 		return
 	}
 	var universe string
-	for _, kidId := range kids {
+	for _, kidId := range kidIds {
 		inflatedCat := models.CategoryWithInflatedSeries{}
-		category, an_err := r.GetCategoryById(kidId)
-		if an_err != nil {
-			err = an_err
+		category, anErr := r.GetCategoryById(kidId)
+		if anErr != nil {
+			err = anErr
 			return
 		}
 		inflatedCat.Category = category
 
 		if geo != "" && freq != "" {
-			seriesList, an_err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geo, freq, Category)
-			if an_err != nil {
-				err = an_err
+			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geo, freq, Category)
+			if anErr != nil {
+				err = anErr
 				return
 			}
 			inflatedCat.Series = seriesList
 		}
-		pkg.Children = append(pkg.Children, inflatedCat)
+		pkg.CatSubTree = append(pkg.CatSubTree, inflatedCat)
 		universe = category.Universe
 	}
 	navCats, err := r.GetNavCategoriesByUniverse(universe)
@@ -447,5 +447,13 @@ func (r *CategoryRepository) CreateCategoryPackage(
 		return
 	}
 	pkg.NavCategories = navCats
+
+	// Add parent nav category to the "categories" array
+	for _, navCat := range navCats {
+		if navCat.Id == id {
+			pkg.CatSubTree = append(pkg.CatSubTree, models.CategoryWithInflatedSeries{Category: navCat})
+			break
+		}
+	}
 	return
 }
