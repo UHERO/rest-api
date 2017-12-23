@@ -262,5 +262,18 @@ func GetSearchPackage(
 		if !ok {
 			return
 		}
+		pkg, err := searchRepository.CreateSearchPackage(searchText, geo, freq, universeText)
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			return
+		}
+
+		j, err := json.Marshal(SearchPackage{Data: pkg})
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
 	}
 }

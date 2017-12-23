@@ -23,6 +23,7 @@ func SetPackageRoutes(
 		controllers.GetSearchPackage(seriesRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"q", "{search_text:.+}",
+		"u", "{universe_text:.+}",
 		"geo", "{geo:[A-Za-z-0-9]+}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
 	)

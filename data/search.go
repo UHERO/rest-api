@@ -350,3 +350,12 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(searchText strin
 	seriesList, err = r.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
 	return
 }
+
+func (r *SeriesRepository) CreateSearchPackage(
+	searchText string,
+	geo string,
+	freq string,
+	universe string,
+) (pkg models.DataPortalSearchPackage, err error) {
+	return
+}

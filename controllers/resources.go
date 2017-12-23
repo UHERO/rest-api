@@ -87,4 +87,9 @@ type (
 	SeriesPackage struct {
 		Data models.DataPortalSeriesPackage `json:"data"`
 	}
+
+	// GET - /package/search
+	SearchPackage struct {
+		Data models.DataPortalSearchPackage `json:"data"`
+	}
 )
