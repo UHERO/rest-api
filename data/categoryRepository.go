@@ -7,10 +7,101 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"errors"
 )
 
 type CategoryRepository struct {
 	DB *sql.DB
+}
+
+func (r *CategoryRepository) GetNavCategories() (categories []models.Category, err error) {
+	categories, err = r.GetNavCategoriesByUniverse("UHERO")
+	return
+}
+
+func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (categories []models.Category, err error) {
+	rows, err := r.DB.Query(
+		`SELECT categories.id,
+			categories.name,
+			categories.universe,
+			categories.ancestry,
+			categories.default_freq AS catfreq,
+			geographies.handle AS catgeo,
+			geographies.fips AS catgeofips,
+			geographies.display_name AS catgeoname,
+			geographies.display_name_short AS catgeonameshort
+		FROM categories
+		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
+		WHERE NOT categories.hidden
+		AND categories.ancestry = CONVERT(
+			(SELECT id from categories WHERE universe = ? AND ancestry IS NULL), CHAR)
+		ORDER BY categories.list_order;`, universe)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		category := models.CategoryWithAncestry{}
+		err = rows.Scan(
+			&category.Id,
+			&category.Name,
+			&category.Universe,
+			&category.Ancestry,
+			&category.DefaultFrequency,
+			&category.DefaultGeoHandle,
+			&category.DefaultGeoFIPS,
+			&category.DefaultGeoName,
+			&category.DefaultGeoShortName,
+		)
+		if err != nil {
+			return
+		}
+		parentId := getParentId(category.Ancestry)
+		dataPortalCategory := models.Category{
+			Id:       category.Id,
+			Name:     category.Name,
+			Universe: category.Universe,
+			ParentId: parentId,
+		}
+		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid {
+			// Only initialize Defaults struct if any defaults values are available
+			dataPortalCategory.Defaults = &models.CategoryDefaults{}
+		}
+		if category.DefaultFrequency.Valid {
+			dataPortalCategory.Defaults.Frequency = &models.DataPortalFrequency{
+				Freq: category.DefaultFrequency.String,
+				Label: freqLabel[category.DefaultFrequency.String],
+			}
+		}
+		if category.DefaultGeoHandle.Valid {
+			dataPortalCategory.Defaults.Geography = &models.DataPortalGeography{
+				Handle: category.DefaultGeoHandle.String,
+			}
+			if category.DefaultGeoFIPS.Valid {
+				dataPortalCategory.Defaults.Geography.FIPS = category.DefaultGeoFIPS.String
+			}
+			if category.DefaultGeoName.Valid {
+				dataPortalCategory.Defaults.Geography.Name = category.DefaultGeoName.String
+			}
+			if category.DefaultGeoShortName.Valid {
+				dataPortalCategory.Defaults.Geography.ShortName = category.DefaultGeoShortName.String
+			}
+		}
+		categories = append(categories, dataPortalCategory)
+	}
+	return
+}
+
+func (r *CategoryRepository) GetDefaultNavCategory(universe string) (category models.Category, err error) {
+	categories, err := r.GetNavCategoriesByUniverse(universe)
+	if err != nil {
+		return
+	}
+	if len(categories) < 1 {
+		err = errors.New("No categories found for universe " + universe)
+		return
+	}
+	category = categories[0]
+	return
 }
 
 func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
@@ -297,6 +388,72 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 			Universe: category.Universe,
 			ParentId: parentId,
 		})
+	}
+	return
+}
+
+func (r *CategoryRepository) GetChildrenOf(id int64) (children []int64, err error) {
+	rows, err := r.DB.Query(`SELECT id FROM categories
+	                         WHERE SUBSTRING_INDEX(ancestry, '/', -1) = ?
+	                         AND NOT hidden ORDER BY list_order;`, id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		var childId int64
+		err = rows.Scan(&childId)
+		if err != nil {
+			return
+		}
+		children = append(children, childId)
+	}
+	return
+}
+
+func (r *CategoryRepository) CreateCategoryPackage(
+	id int64,
+	geo string,
+	freq string,
+	seriesRepository *SeriesRepository,
+) (pkg models.DataPortalCategoryPackage, err error) {
+
+	kidIds, err := r.GetChildrenOf(id)
+	if err != nil {
+		return
+	}
+	var universe string
+	for _, kidId := range kidIds {
+		inflatedCat := models.CategoryWithInflatedSeries{}
+		category, anErr := r.GetCategoryById(kidId)
+		if anErr != nil {
+			err = anErr
+			return
+		}
+		inflatedCat.Category = category
+
+		if geo != "" && freq != "" {
+			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geo, freq, Category)
+			if anErr != nil {
+				err = anErr
+				return
+			}
+			inflatedCat.Series = seriesList
+		}
+		pkg.CatSubTree = append(pkg.CatSubTree, inflatedCat)
+		universe = category.Universe
+	}
+	navCats, err := r.GetNavCategoriesByUniverse(universe)
+	if err != nil {
+		return
+	}
+	pkg.NavCategories = navCats
+
+	// Add parent nav category to the "categories" array
+	for _, navCat := range navCats {
+		if navCat.Id == id {
+			pkg.CatSubTree = append(pkg.CatSubTree, models.CategoryWithInflatedSeries{Category: navCat})
+			break
+		}
 	}
 	return
 }
