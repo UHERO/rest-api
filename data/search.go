@@ -357,5 +357,16 @@ func (r *SeriesRepository) CreateSearchPackage(
 	freq string,
 	universe string,
 ) (pkg models.DataPortalSearchPackage, err error) {
+	searchSummary, err := r.GetSearchSummaryByUniverse(searchText, universe)
+	if err != nil {
+		return
+	}
+	pkg.SearchSummary = searchSummary
+
+	seriesList, err := r.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, universe)
+	if err != nil {
+		return
+	}
+	pkg.Series = seriesList
 	return
 }
