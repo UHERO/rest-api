@@ -57,6 +57,16 @@ type CategoryWithAncestry struct {
 	ObservationEnd  	NullTime
 }
 
+type DataPortalCategoryPackage struct {
+	CatSubTree	[]CategoryWithInflatedSeries	`json:"categories"`
+	NavCategories	[]Category			`json:"navCategories,omitempty"`
+}
+
+type CategoryWithInflatedSeries struct {
+	Category
+	Series []InflatedSeries		`json:"series,omitempty"`
+}
+
 type SearchSummary struct {
 	SearchText           string                  `json:"q"`
 	DefaultGeo           *DataPortalGeography    `json:"defaultGeo,omitempty"`

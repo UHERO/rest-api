@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
+	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
 	"strconv"
 )
@@ -230,15 +231,21 @@ func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *dat
 			ok = false
 			return
 		}
-		categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
-		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
-			return
+		var categories []models.Category
+		var err error
+		catType, gotType := mux.Vars(r)["type_text"]
+		if gotType && catType == "nav" {
+			categories, err = categoryRepository.GetNavCategoriesByUniverse(universe)
+			if err != nil {
+				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+				return
+			}
+		} else {
+			categories, err = categoryRepository.GetAllCategoriesByUniverse(universe)
+			if err != nil {
+				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+				return
+			}
 		}
 		j, err := json.Marshal(CategoriesResource{Data: categories})
 		if err != nil {
@@ -252,5 +259,49 @@ func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *dat
 		}
 		WriteResponse(w, j)
 		WriteCache(r, c, j)
+	}
+}
+
+func GetCategoryPackage(
+	categoryRepository *data.CategoryRepository,
+	seriesRepository *data.SeriesRepository,
+	cacheRepository *data.CacheRepository,
+) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var id int64
+		var geo, freq string
+		universe, ok := mux.Vars(r)["universe_text"]
+		if ok {
+			// Handling for /package/category?u= endpoint
+			defCat, err := categoryRepository.GetDefaultNavCategory(universe)
+			if err != nil {
+				common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+				return
+			}
+			id = defCat.Id
+			if defCat.Defaults != nil {
+				geo = defCat.Defaults.Geography.Handle
+				freq = defCat.Defaults.Frequency.Freq
+			}
+		} else {
+			// Handling for /package/category?id=&geo=&freq= endpoint
+			id, geo, freq, ok = getIdGeoAndFreq(w, r)
+			if !ok {
+				return
+			}
+		}
+		pkg, err := categoryRepository.CreateCategoryPackage(id, geo, freq, seriesRepository)
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			return
+		}
+
+		j, err := json.Marshal(CategoryPackage{Data: pkg})
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
 	}
 }
