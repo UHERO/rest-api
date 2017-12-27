@@ -363,6 +363,13 @@ func (r *SeriesRepository) CreateSearchPackage(
 	}
 	pkg.SearchSummary = searchSummary
 
+	// WILL WE NEED THE geo AND freq PARAMETERS IN THE LONG RUN? OR, HOW WILL WE USE THEM??
+	if searchSummary.DefaultGeo != nil {
+		geo = searchSummary.DefaultGeo.Handle
+	}
+	if searchSummary.DefaultFreq != nil {
+		freq = searchSummary.DefaultFreq.Freq
+	}
 	seriesList, err := r.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, universe)
 	if err != nil {
 		return
