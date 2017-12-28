@@ -11,6 +11,45 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func GetSearchPackage(
+searchRepository *data.SeriesRepository,
+cacheRepository *data.CacheRepository,
+) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		searchText, ok := mux.Vars(r)["search_text"]
+		if !ok {
+			common.DisplayAppError(w, errors.New("Couldn't get searchText from request"), "Bad request.", 400)
+			return
+		}
+		universeText, ok := mux.Vars(r)["universe_text"]
+		if !ok {
+			common.DisplayAppError(w, errors.New("Couldn't get universeText from request"), "Bad request.", 400)
+			return
+		}
+		var geo, freq string
+		_, gotGeo := mux.Vars(r)["geo"]
+		if gotGeo {
+			geo, freq, ok = getGeoAndFreq(w, r)
+			if !ok {
+				return
+			}
+		}
+		pkg, err := searchRepository.CreateSearchPackage(searchText, geo, freq, universeText)
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			return
+		}
+
+		j, err := json.Marshal(SearchPackage{Data: pkg})
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
+	}
+}
+
 func GetSeriesBySearchText(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
@@ -240,44 +279,5 @@ func GetInflatedSearchResultByGeoAndFreqAndUniverse(searchRepository *data.Serie
 		}
 		seriesList, err := searchRepository.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, universeText)
 		returnInflatedSeriesList(seriesList, err, w, r, c)
-	}
-}
-
-func GetSearchPackage(
-	searchRepository *data.SeriesRepository,
-	cacheRepository *data.CacheRepository,
-) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		searchText, ok := mux.Vars(r)["search_text"]
-		if !ok {
-			common.DisplayAppError(w, errors.New("Couldn't get searchText from request"), "Bad request.", 400)
-			return
-		}
-		universeText, ok := mux.Vars(r)["universe_text"]
-		if !ok {
-			common.DisplayAppError(w, errors.New("Couldn't get universeText from request"), "Bad request.", 400)
-			return
-		}
-		var geo, freq string
-		_, gotGeo := mux.Vars(r)["geo"]
-		if gotGeo {
-			geo, freq, ok = getGeoAndFreq(w, r)
-			if !ok {
-				return
-			}
-		}
-		pkg, err := searchRepository.CreateSearchPackage(searchText, geo, freq, universeText)
-		if err != nil {
-			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
-			return
-		}
-
-		j, err := json.Marshal(SearchPackage{Data: pkg})
-		if err != nil {
-			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
-			return
-		}
-		WriteResponse(w, j)
-		WriteCache(r, cacheRepository, j)
 	}
 }
