@@ -258,9 +258,13 @@ func GetSearchPackage(
 			common.DisplayAppError(w, errors.New("Couldn't get universeText from request"), "Bad request.", 400)
 			return
 		}
-		geo, freq, ok := getGeoAndFreq(w, r)
-		if !ok {
-			return
+		var geo, freq string
+		_, gotGeo := mux.Vars(r)["geo"]
+		if gotGeo {
+			geo, freq, ok = getGeoAndFreq(w, r)
+			if !ok {
+				return
+			}
 		}
 		pkg, err := searchRepository.CreateSearchPackage(searchText, geo, freq, universeText)
 		if err != nil {

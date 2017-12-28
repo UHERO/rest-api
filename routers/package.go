@@ -28,6 +28,13 @@ func SetPackageRoutes(
 		"freq", "{freq:[ASQMWDasqmwd]}",
 	)
 	router.HandleFunc(
+		"/v1/package/search",
+		controllers.GetSearchPackage(seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"q", "{search_text:.+}",
+		"u", "{universe_text:.+}",
+	)
+	router.HandleFunc(
 		"/v1/package/category",
 		controllers.GetCategoryPackage(categoryRepository, seriesRepository, cacheRepository),
 	).Methods("GET").Queries(
