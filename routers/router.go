@@ -11,6 +11,7 @@ func InitRoutes(
 	applicationRepository *data.ApplicationRepository,
 	categoryRepository *data.CategoryRepository,
 	seriesRepository *data.SeriesRepository,
+	searchRepository *data.SearchRepository,
 	measurementRepository *data.MeasurementRepository,
 	geographyRepository *data.GeographyRepository,
 	feedbackRepository *data.FeedbackRepository,
@@ -23,10 +24,10 @@ func InitRoutes(
 	apiRouter = SetCategoryRoutes(apiRouter, categoryRepository, seriesRepository, measurementRepository, cacheRepository)
 	apiRouter = SetSeriesRoutes(apiRouter, seriesRepository, cacheRepository)
 	apiRouter = SetMeasurementRoutes(apiRouter, seriesRepository, cacheRepository)
-	apiRouter = SetSearchRoutes(apiRouter, seriesRepository, cacheRepository)
+	apiRouter = SetSearchRoutes(apiRouter, searchRepository, seriesRepository, cacheRepository)
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
 	apiRouter = SetFeedbackRoutes(apiRouter, feedbackRepository)
-	apiRouter = SetPackageRoutes(apiRouter, seriesRepository, categoryRepository, cacheRepository)
+	apiRouter = SetPackageRoutes(apiRouter, seriesRepository, searchRepository, categoryRepository, cacheRepository)
 
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),

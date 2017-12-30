@@ -12,8 +12,8 @@ import (
 )
 
 func GetSearchPackage(
-searchRepository *data.SeriesRepository,
-cacheRepository *data.CacheRepository,
+	searchRepository *data.SearchRepository,
+	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
@@ -94,7 +94,7 @@ func GetSeriesBySearchTextAndUniverse(searchRepository *data.SeriesRepository, c
 	}
 }
 
-func GetSearchSummary(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetSearchSummary(searchRepository *data.SearchRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
@@ -131,7 +131,7 @@ func GetSearchSummary(searchRepository *data.SeriesRepository, c *data.CacheRepo
 	}
 }
 
-func GetSearchSummaryByUniverse(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetSearchSummaryByUniverse(searchRepository *data.SearchRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {

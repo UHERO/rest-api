@@ -9,6 +9,7 @@ import (
 func SetPackageRoutes(
 	router *mux.Router,
 	seriesRepository *data.SeriesRepository,
+	searchRepository *data.SearchRepository,
 	categoryRepository *data.CategoryRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
@@ -20,7 +21,7 @@ func SetPackageRoutes(
 	)
 	router.HandleFunc(
 		"/v1/package/search",
-		controllers.GetSearchPackage(seriesRepository, cacheRepository),
+		controllers.GetSearchPackage(searchRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"q", "{search_text:.+}",
 		"u", "{universe_text:.+}",
@@ -29,7 +30,7 @@ func SetPackageRoutes(
 	)
 	router.HandleFunc(
 		"/v1/package/search",
-		controllers.GetSearchPackage(seriesRepository, cacheRepository),
+		controllers.GetSearchPackage(searchRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"q", "{search_text:.+}",
 		"u", "{universe_text:.+}",
