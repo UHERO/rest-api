@@ -39,13 +39,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -86,13 +87,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category?top_level=true",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?top_level=true",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -141,13 +143,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category?top_level=false",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?top_level=false",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -196,13 +199,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category?id=16",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?id=16",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -251,13 +255,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category?id=999",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?id=999",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -304,13 +309,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category?search_text=summary",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?search_text=summary",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -355,13 +361,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category?search_text=nosuchtext",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?search_text=nosuchtext",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -408,13 +415,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category/freq?id=16",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/freq?id=16",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -462,13 +470,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category/geo?id=22",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/geo?id=22",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -516,13 +525,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category/measurements?id=34",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/measurements?id=34",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -570,13 +580,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category/series?id=34",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -624,13 +635,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category/series?id=18&expand=true",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=18&expand=true",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -682,13 +694,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category/series?id=34&geo=HAW",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34&geo=HAW",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -740,13 +753,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category/series?id=34&freq=Q",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34&freq=Q",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -798,13 +812,14 @@
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu/v1/category/series?id=34&geo=HI&freq=Q",
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34&geo=HI&freq=Q",
 					"host": [
 						"uhero-bamboo",
 						"colo",
 						"hawaii",
 						"edu"
 					],
+                    "port": "3030",
 					"path": [
 						"v1",
 						"category",
