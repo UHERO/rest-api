@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+type SearchRepository struct {
+	Categories *CategoryRepository
+	Series *SeriesRepository
+}
+
 func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
@@ -69,11 +74,11 @@ func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList 
 	return
 }
 
-func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, universeText string) (searchSummary models.SearchSummary, err error) {
+func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, universeText string) (searchSummary models.SearchSummary, err error) {
 	searchSummary.SearchText = searchText
 
 	var observationStart, observationEnd models.NullTime
-	err = r.DB.QueryRow(`
+	err = r.Series.DB.QueryRow(`
 	    SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
 	    FROM public_data_points
 	    JOIN series ON series.id = public_data_points.series_id
@@ -110,7 +115,15 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 		searchSummary.ObservationEnd = &observationEnd.Time
 	}
 
-	rows, err := r.DB.Query(`
+	rootCat, err := r.Categories.GetCategoryRootByUniverse(universeText)
+	if rootCat.Defaults != nil && rootCat.Defaults.Geography != nil {
+		searchSummary.DefaultGeo = rootCat.Defaults.Geography
+	}
+	if rootCat.Defaults != nil && rootCat.Defaults.Frequency != nil {
+		searchSummary.DefaultFreq = rootCat.Defaults.Frequency
+	}
+
+	rows, err := r.Series.DB.Query(`
 	SELECT DISTINCT geo.fips, geo.display_name, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
 	FROM series
 	LEFT JOIN geographies geo on geo.id = series.geography_id
@@ -190,7 +203,7 @@ func (r *SeriesRepository) GetSearchSummaryByUniverse(searchText string, univers
 	return
 }
 
-func (r *SeriesRepository) GetSearchSummary(searchText string) (searchSummary models.SearchSummary, err error) {
+func (r *SearchRepository) GetSearchSummary(searchText string) (searchSummary models.SearchSummary, err error) {
 	searchSummary, err = r.GetSearchSummaryByUniverse(searchText, "UHERO")
 	return
 }
@@ -348,5 +361,31 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 
 func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.InflatedSeries, err error) {
 	seriesList, err = r.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
+	return
+}
+
+func (r *SearchRepository) CreateSearchPackage(
+	searchText string,
+	geo string,
+	freq string,
+	universe string,
+) (pkg models.DataPortalSearchPackage, err error) {
+	searchSummary, err := r.GetSearchSummaryByUniverse(searchText, universe)
+	if err != nil {
+		return
+	}
+	pkg.SearchSummary = searchSummary
+
+	if geo == "" {
+		geo = searchSummary.DefaultGeo.Handle
+	}
+	if freq == "" {
+		freq = searchSummary.DefaultFreq.Freq
+	}
+	seriesList, err := r.Series.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, universe)
+	if err != nil {
+		return
+	}
+	pkg.Series = seriesList
 	return
 }

@@ -236,6 +236,52 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 	return
 }
 
+func (r *CategoryRepository) GetCategoryRootByUniverse(universe string) (category models.Category, err error) {
+	rows, err := r.DB.Query(`SELECT categories.id, categories.name, categories.universe, categories.default_freq,
+					geographies.handle, geographies.display_name, geographies.display_name_short
+				FROM categories
+				  LEFT JOIN geographies on geographies.id = categories.default_geo_id
+				WHERE categories.universe = ?
+				AND categories.ancestry IS NULL
+				AND NOT categories.hidden;`, universe)
+	if err != nil {
+		return
+	}
+	scanCat := models.CategoryWithAncestry{}
+	for rows.Next() {
+		err = rows.Scan(
+			&category.Id,
+			&category.Name,
+			&category.Universe,
+			&scanCat.DefaultFrequency,
+			&scanCat.DefaultGeoHandle,
+			&scanCat.DefaultGeoName,
+			&scanCat.DefaultGeoShortName,
+		)
+		if err != nil {
+			return
+		}
+		if scanCat.DefaultFrequency.Valid || scanCat.DefaultGeoHandle.Valid {
+			category.Defaults = &models.CategoryDefaults{}
+		}
+		if scanCat.DefaultFrequency.Valid {
+			category.Defaults.Frequency = &models.DataPortalFrequency{
+				Freq: scanCat.DefaultFrequency.String,
+				Label: freqLabel[scanCat.DefaultFrequency.String],
+			}
+		}
+		if scanCat.DefaultGeoHandle.Valid {
+			category.Defaults.Geography = &models.DataPortalGeography{
+				Handle: scanCat.DefaultGeoHandle.String,
+				Name: scanCat.DefaultGeoName.String,
+				ShortName: scanCat.DefaultGeoShortName.String,
+			}
+		}
+		return
+	}
+	return
+}
+
 func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
 	return r.GetCategoryByIdGeoFreq(id, "", "")
 }

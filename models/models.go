@@ -77,6 +77,11 @@ type SearchSummary struct {
 	ObservationEnd       *time.Time              `json:"observationEnd"`
 }
 
+type DataPortalSearchPackage struct {
+	SearchSummary
+	Series []InflatedSeries		`json:"series,omitempty"`
+}
+
 type Geography struct {
 	FIPS             sql.NullString `json:"fips"`
 	Name             sql.NullString `json:"name"`

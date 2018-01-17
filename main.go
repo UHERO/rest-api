@@ -95,6 +95,7 @@ func main() {
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
+	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
 	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{}
@@ -105,6 +106,7 @@ func main() {
 		applicationRepository,
 		categoryRepository,
 		seriesRepository,
+		searchRepository,
 		measurementRepository,
 		geographyRepository,
 		feedbackRepository,
