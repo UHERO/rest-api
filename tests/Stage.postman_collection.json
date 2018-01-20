@@ -1,0 +1,848 @@
+{
+	"info": {
+		"name": "Stage tests",
+		"_postman_id": "f29dca15-d740-572c-e870-e46566936d5a",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET all categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response array has length > 5\"] = data.length > 5",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category"
+					]
+				},
+				"description": "See all categories"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Top-level categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?top_level=true",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category"
+					],
+					"query": [
+						{
+							"key": "top_level",
+							"value": "true"
+						}
+					]
+				},
+				"description": "Get all categories with no parent"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Non-top-level categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response array has length > 5\"] = data.length > 5",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?top_level=false",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category"
+					],
+					"query": [
+						{
+							"key": "top_level",
+							"value": "false"
+						}
+					]
+				},
+				"description": "Get all categories WITH a parent"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Existing category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"//tests[\"Response is array\"] = Array.isArray(data)",
+							"//tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response data is object with name\"] = data.name !== undefined",
+							"tests[\"Response has geos and freqs\"] = Array.isArray(data.geos) && Array.isArray(data.freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?id=16",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "16"
+						}
+					]
+				},
+				"description": "See all categories"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Non-existing category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"//tests[\"Response is array\"] = Array.isArray(data)",
+							"//tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response data is object with empty name\"] = data.name === ''",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?id=999",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "999"
+						}
+					]
+				},
+				"description": "See all categories"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Categories by search text",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?search_text=summary",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category"
+					],
+					"query": [
+						{
+							"key": "search_text",
+							"value": "summary"
+						}
+					]
+				},
+				"description": "Get all categories with the word \"summary\" in the name"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Categories by search non-exist text",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is null\"] = data === null"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?search_text=nosuchtext",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category"
+					],
+					"query": [
+						{
+							"key": "search_text",
+							"value": "nosuchtext"
+						}
+					]
+				},
+				"description": "Get all categories with the word \"summary\" in the name"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category freq",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response contains a valid freq\"] = ['A','S','Q','M','W','D'].indexOf(data[0].freq) !== -1"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/freq?id=16",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category",
+						"freq"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "16"
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category geo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response contains a valid Hawaii geo\"] = ['HI','HON','HAW','MAU','KAU','MAUI','HAWH','HAWK','MOL','LAN','NBI'].indexOf(data[0].handle) !== -1"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/geo?id=22",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category",
+						"geo"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "22"
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category measurements",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/measurements?id=34",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category",
+						"measurements"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34"
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34"
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id, expand",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=18&expand=true",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "18"
+						},
+						{
+							"key": "expand",
+							"value": "true"
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id/geo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34&geo=HAW",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34"
+						},
+						{
+							"key": "geo",
+							"value": "HAW"
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id/freq",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34&freq=Q",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34"
+						},
+						{
+							"key": "freq",
+							"value": "Q"
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id/geo/freq",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34&geo=HI&freq=Q",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+                    "port": "3030",
+					"path": [
+						"v1",
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34"
+						},
+						{
+							"key": "geo",
+							"value": "HI"
+						},
+						{
+							"key": "freq",
+							"value": "Q"
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		}
+	]
+}
