@@ -49,5 +49,11 @@ func SetPackageRoutes(
 	).Methods("GET").Queries(
 		"u", "{universe_text:.+}",
 	)
+	router.HandleFunc(
+		"/v1/package/analyzer",
+		controllers.GetAnalyzerPackage(categoryRepository, seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"u", "{universe_text:.+}",
+	)
 	return router
 }
