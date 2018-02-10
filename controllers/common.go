@@ -126,8 +126,8 @@ func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
 	return
 }
 
-func getIdsList(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
-	getId(w, r) //placeholder for now
+func getIdsList(w http.ResponseWriter, r *http.Request) (ids []int64, ok bool) {
+	return
 }
 
 func getIdAndGeo(w http.ResponseWriter, r *http.Request) (id int64, geo string, ok bool) {

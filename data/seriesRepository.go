@@ -1,13 +1,11 @@
 package data
 
 import (
+	"github.com/UHERO/rest-api/models"
 	"database/sql"
 	"strings"
 	"time"
-
-	"github.com/UHERO/rest-api/models"
 	"strconv"
-	"github.com/UHERO/rest-api/common"
 )
 
 type SeriesRepository struct {
@@ -790,13 +788,20 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 		return
 	}
 	pkg.Categories = categories
+	pkg.InflatedSeries = []models.InflatedSeries{}
 
 	for _, id := range ids {
-		series, err := r.GetSeriesById(id)
-		if err != nil {
+		series, anErr := r.GetSeriesById(id)
+		if anErr != nil {
+			err = anErr
 			return
 		}
-		pkg.Series = append(pkg.Series, series)
+		observations, anErr := r.GetSeriesObservations(id)
+		if anErr != nil {
+			err = anErr
+			return
+		}
+		pkg.InflatedSeries = append(pkg.InflatedSeries, models.InflatedSeries{DataPortalSeries: series, Observations: observations})
 	}
-
+	return
 }

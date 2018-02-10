@@ -83,8 +83,8 @@ type DataPortalSearchPackage struct {
 }
 
 type DataPortalAnalyzerPackage struct {
-	Categories	[]Category			`json:"categories,omitempty"`
-	Series		[]DataPortalSeries	`json:"series,omitempty"`
+	Categories		[]Category				`json:"categories,omitempty"`
+	InflatedSeries	[]InflatedSeries		`json:"series,omitempty"`
 }
 
 type Geography struct {
