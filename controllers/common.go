@@ -126,6 +126,10 @@ func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
 	return
 }
 
+func getIdsList(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
+	getId(w, r) //placeholder for now
+}
+
 func getIdAndGeo(w http.ResponseWriter, r *http.Request) (id int64, geo string, ok bool) {
 	ok = true
 	idParam, gotId := mux.Vars(r)["id"]
