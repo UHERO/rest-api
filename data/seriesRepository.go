@@ -7,6 +7,7 @@ import (
 
 	"github.com/UHERO/rest-api/models"
 	"strconv"
+	"github.com/UHERO/rest-api/common"
 )
 
 type SeriesRepository struct {
@@ -777,4 +778,25 @@ func (r *SeriesRepository) GetTransformation(
 	transformationResult.ObservationValues = obsValues
 	transformationResult.ObservationPHist = obsPseudoHist
 	return
+}
+
+func (r *SeriesRepository) CreateAnalyzerPackage(
+	universe string,
+	ids []int64,
+	categoryRepository *CategoryRepository,
+)  (pkg models.DataPortalAnalyzerPackage, err error) {
+	categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+	if err != nil {
+		return
+	}
+	pkg.Categories = categories
+
+	for _, id := range ids {
+		series, err := r.GetSeriesById(id)
+		if err != nil {
+			return
+		}
+		pkg.Series = append(pkg.Series, series)
+	}
+
 }
