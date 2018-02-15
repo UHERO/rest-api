@@ -783,6 +783,7 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 	ids []int64,
 	categoryRepository *CategoryRepository,
 )  (pkg models.DataPortalAnalyzerPackage, err error) {
+
 	categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
 	if err != nil {
 		return

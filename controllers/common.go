@@ -128,13 +128,13 @@ func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
 }
 
 func getIdsList(w http.ResponseWriter, r *http.Request) (ids []int64, ok bool) {
-	idsParam, gotIds := mux.Vars(r)["ids"]
+	idsList, gotIds := mux.Vars(r)["ids_list"]
 	if !gotIds {
 		common.DisplayAppError(w, errors.New("Couldn't get id from request"),"Bad request.", 400)
 		ok = false
 		return
 	}
-	idStrArr := strings.Split(idsParam, ",")
+	idStrArr := strings.Split(idsList, ",")
 	for _, idStr := range idStrArr {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {

@@ -330,7 +330,6 @@ func GetAnalyzerPackage(
 		}
 		ids, ok := getIdsList(w, r)
 		if !ok {
-			common.DisplayAppError(w, errors.New("Couldn't get id list from request"),"Bad request.",400)
 			return
 		}
 		pkg, err := seriesRepository.CreateAnalyzerPackage(universe, ids, categoryRepository)
