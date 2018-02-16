@@ -779,16 +779,11 @@ func (r *SeriesRepository) GetTransformation(
 }
 
 func (r *SeriesRepository) CreateAnalyzerPackage(
-	universe string,
 	ids []int64,
 	categoryRepository *CategoryRepository,
 )  (pkg models.DataPortalAnalyzerPackage, err error) {
 
-	categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
-	if err != nil {
-		return
-	}
-	pkg.Categories = categories
+	var universe string
 	pkg.InflatedSeries = []models.InflatedSeries{}
 
 	for _, id := range ids {
@@ -797,6 +792,8 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 			err = anErr
 			return
 		}
+		universe = series.Universe
+
 		observations, anErr := r.GetSeriesObservations(id)
 		if anErr != nil {
 			err = anErr
@@ -804,5 +801,11 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 		}
 		pkg.InflatedSeries = append(pkg.InflatedSeries, models.InflatedSeries{DataPortalSeries: series, Observations: observations})
 	}
+
+	categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+	if err != nil {
+		return
+	}
+	pkg.Categories = categories
 	return
 }

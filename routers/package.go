@@ -53,8 +53,7 @@ func SetPackageRoutes(
 		"/v1/package/analyzer",
 		controllers.GetAnalyzerPackage(categoryRepository, seriesRepository, cacheRepository),
 	).Methods("GET").Queries(
-		"u", "{universe_text:.+}",
-		    "ids", "{ids_list:[0-9,]+}",
+		"ids", "{ids_list:[0-9,]+}",
 	)
 	return router
 }

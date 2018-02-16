@@ -6,8 +6,6 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/models"
-	"github.com/gorilla/mux"
-	"errors"
 )
 
 func GetSeriesByGroupId(
@@ -323,16 +321,12 @@ func GetAnalyzerPackage(
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		universe, ok := mux.Vars(r)["universe_text"]
-		if !ok {
-			common.DisplayAppError(w, errors.New("Couldn't get universe handle from request"),"Bad request.",400)
-			return
-		}
+
 		ids, ok := getIdsList(w, r)
 		if !ok {
 			return
 		}
-		pkg, err := seriesRepository.CreateAnalyzerPackage(universe, ids, categoryRepository)
+		pkg, err := seriesRepository.CreateAnalyzerPackage(ids, categoryRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return

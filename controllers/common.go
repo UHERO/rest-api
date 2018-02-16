@@ -128,6 +128,7 @@ func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
 }
 
 func getIdsList(w http.ResponseWriter, r *http.Request) (ids []int64, ok bool) {
+	ok = true
 	idsList, gotIds := mux.Vars(r)["ids_list"]
 	if !gotIds {
 		common.DisplayAppError(w, errors.New("Couldn't get id from request"),"Bad request.", 400)
