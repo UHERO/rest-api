@@ -1,11 +1,10 @@
 package data
 
 import (
+	"github.com/UHERO/rest-api/models"
 	"database/sql"
 	"strings"
 	"time"
-
-	"github.com/UHERO/rest-api/models"
 	"strconv"
 )
 
@@ -776,5 +775,37 @@ func (r *SeriesRepository) GetTransformation(
 	transformationResult.ObservationDates = obsDates
 	transformationResult.ObservationValues = obsValues
 	transformationResult.ObservationPHist = obsPseudoHist
+	return
+}
+
+func (r *SeriesRepository) CreateAnalyzerPackage(
+	ids []int64,
+	categoryRepository *CategoryRepository,
+)  (pkg models.DataPortalAnalyzerPackage, err error) {
+
+	var universe string
+	pkg.InflatedSeries = []models.InflatedSeries{}
+
+	for _, id := range ids {
+		series, anErr := r.GetSeriesById(id)
+		if anErr != nil {
+			err = anErr
+			return
+		}
+		universe = series.Universe
+
+		observations, anErr := r.GetSeriesObservations(id)
+		if anErr != nil {
+			err = anErr
+			return
+		}
+		pkg.InflatedSeries = append(pkg.InflatedSeries, models.InflatedSeries{DataPortalSeries: series, Observations: observations})
+	}
+
+	categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+	if err != nil {
+		return
+	}
+	pkg.Categories = categories
 	return
 }

@@ -92,4 +92,9 @@ type (
 	SearchPackage struct {
 		Data models.DataPortalSearchPackage `json:"data"`
 	}
+
+	// GET - /package/analyzer
+	AnalyzerPackage struct {
+		Data models.DataPortalAnalyzerPackage `json:"data"`
+	}
 )

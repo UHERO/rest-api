@@ -82,6 +82,11 @@ type DataPortalSearchPackage struct {
 	Series []InflatedSeries		`json:"series,omitempty"`
 }
 
+type DataPortalAnalyzerPackage struct {
+	Categories		[]Category				`json:"categories,omitempty"`
+	InflatedSeries	[]InflatedSeries		`json:"series,omitempty"`
+}
+
 type Geography struct {
 	FIPS             sql.NullString `json:"fips"`
 	Name             sql.NullString `json:"name"`

@@ -314,3 +314,30 @@ func GetSeriesPackage(
 		WriteCache(r, cacheRepository, j)
 	}
 }
+
+func GetAnalyzerPackage(
+	categoryRepository *data.CategoryRepository,
+	seriesRepository *data.SeriesRepository,
+	cacheRepository *data.CacheRepository,
+) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ids, ok := getIdsList(w, r)
+		if !ok {
+			return
+		}
+		pkg, err := seriesRepository.CreateAnalyzerPackage(ids, categoryRepository)
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			return
+		}
+
+		j, err := json.Marshal(AnalyzerPackage{Data: pkg})
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
+	}
+}

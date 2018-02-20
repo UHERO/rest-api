@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
@@ -122,6 +123,27 @@ func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
 		)
 		ok = false
 		return
+	}
+	return
+}
+
+func getIdsList(w http.ResponseWriter, r *http.Request) (ids []int64, ok bool) {
+	ok = true
+	idsList, gotIds := mux.Vars(r)["ids_list"]
+	if !gotIds {
+		common.DisplayAppError(w, errors.New("Couldn't get id from request"),"Bad request.", 400)
+		ok = false
+		return
+	}
+	idStrArr := strings.Split(idsList, ",")
+	for _, idStr := range idStrArr {
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			common.DisplayAppError(w, err,"An unexpected error has occurred",500)
+			ok = false
+			return
+		}
+		ids = append(ids, id)
 	}
 	return
 }
