@@ -1,7 +1,7 @@
 {
 	"info": {
 		"name": "Stage tests",
-		"_postman_id": "f29dca15-d740-572c-e870-e46566936d5a",
+		"_postman_id": "ed987593-a16e-e51d-b1dd-d54eb1e265c1",
 		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -46,7 +46,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -94,7 +94,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -150,7 +150,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -206,7 +206,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -262,7 +262,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -316,7 +316,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -368,7 +368,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category"
@@ -422,7 +422,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -477,7 +477,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -532,7 +532,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -587,7 +587,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -642,7 +642,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -701,7 +701,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -760,7 +760,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -819,7 +819,7 @@
 						"hawaii",
 						"edu"
 					],
-                    "port": "3030",
+					"port": "3030",
 					"path": [
 						"v1",
 						"category",
@@ -841,6 +841,254 @@
 					]
 				},
 				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Analyzer Package",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0240baa3-284e-4ddb-8b4c-653daeb7ef52",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response has categories and series\"] = Array.isArray(data.categories) && Array.isArray(data.series);",
+							"tests[\"Response categories is array\"] = Array.isArray(data.categories);",
+							"tests[\"Response series contains an element with name\"] = data.series[0].name !== undefined;",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/analyzer?ids=152239,152240",
+					"protocol": "http",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+					"port": "3030",
+					"path": [
+						"v1",
+						"package",
+						"analyzer"
+					],
+					"query": [
+						{
+							"key": "ids",
+							"value": "152239,152240",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Search Package",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6fb4d8a3-417f-4c29-95cd-554a00f4cd58",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response q is string\"] = typeof(data.q) === 'string';",
+							"tests[\"Response geos is array\"] = Array.isArray(data.geos);",
+							"tests[\"Response freqs is array\"] = Array.isArray(data.freqs);",
+							"tests[\"Response series contains observationStart\"] = data.observationStart !== undefined;",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/search?u=uhero&q=manp&geo=HON&freq=Q",
+					"protocol": "http",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+					"port": "3030",
+					"path": [
+						"v1",
+						"package",
+						"search"
+					],
+					"query": [
+						{
+							"key": "u",
+							"value": "uhero",
+							"equals": true
+						},
+						{
+							"key": "q",
+							"value": "manp",
+							"equals": true
+						},
+						{
+							"key": "geo",
+							"value": "HON",
+							"equals": true
+						},
+						{
+							"key": "freq",
+							"value": "Q",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Category Package",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "2f143695-f6f9-45ac-943c-634168756a1f",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
+							"tests[\"Response navCategories is non-empty array\"] = Array.isArray(data.navCategories) && data.navCategories.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/category?id=36&geo=US&freq=A",
+					"protocol": "http",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+					"port": "3030",
+					"path": [
+						"v1",
+						"package",
+						"category"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "36",
+							"equals": true
+						},
+						{
+							"key": "geo",
+							"value": "US",
+							"equals": true
+						},
+						{
+							"key": "freq",
+							"value": "A",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get Series Package",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0dbfcea9-c357-4670-a206-e5576c5853e4",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response contains a series object\"] = data.series !== undefined;",
+							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/series?id=148863",
+					"protocol": "http",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+					"port": "3030",
+					"path": [
+						"v1",
+						"package",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "148863",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
 			},
 			"response": []
 		}
