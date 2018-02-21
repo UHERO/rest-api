@@ -845,7 +845,7 @@
 			"response": []
 		},
 		{
-			"name": "Get Analyzer Package",
+			"name": "GET Analyzer Package",
 			"event": [
 				{
 					"listen": "test",
@@ -901,7 +901,7 @@
 			"response": []
 		},
 		{
-			"name": "Get Search Package",
+			"name": "GET Search Package 1",
 			"event": [
 				{
 					"listen": "test",
@@ -931,7 +931,7 @@
 				],
 				"body": {},
 				"url": {
-					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/search?u=uhero&q=manp&geo=HON&freq=Q",
+					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/search?u=uhero&q=exp&geo=HON&freq=Q",
 					"protocol": "http",
 					"host": [
 						"uhero-bamboo",
@@ -953,7 +953,7 @@
 						},
 						{
 							"key": "q",
-							"value": "manp",
+							"value": "exp",
 							"equals": true
 						},
 						{
@@ -973,7 +973,7 @@
 			"response": []
 		},
 		{
-			"name": "Get Category Package",
+			"name": "GET Category Package 1",
 			"event": [
 				{
 					"listen": "test",
@@ -1038,7 +1038,62 @@
 			"response": []
 		},
 		{
-			"name": "Get Series Package",
+			"name": "GET Category Package 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "2f143695-f6f9-45ac-943c-634168756a1f",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
+							"tests[\"Response navCategories is non-empty array\"] = Array.isArray(data.navCategories) && data.navCategories.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/category?u=uhero",
+					"protocol": "http",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+					"port": "3030",
+					"path": [
+						"v1",
+						"package",
+						"category"
+					],
+					"query": [
+						{
+							"key": "u",
+							"value": "uhero",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Series Package",
 			"event": [
 				{
 					"listen": "test",
@@ -1084,6 +1139,68 @@
 						{
 							"key": "id",
 							"value": "148863",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Search Package 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6fb4d8a3-417f-4c29-95cd-554a00f4cd58",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response q is string\"] = typeof(data.q) === 'string';",
+							"tests[\"Response geos is array\"] = Array.isArray(data.geos);",
+							"tests[\"Response freqs is array\"] = Array.isArray(data.freqs);",
+							"tests[\"Response series contains observationStart\"] = data.observationStart !== undefined;",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+					}
+				],
+				"body": {},
+				"url": {
+					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/search?u=uhero&q=exp",
+					"protocol": "http",
+					"host": [
+						"uhero-bamboo",
+						"colo",
+						"hawaii",
+						"edu"
+					],
+					"port": "3030",
+					"path": [
+						"v1",
+						"package",
+						"search"
+					],
+					"query": [
+						{
+							"key": "u",
+							"value": "uhero",
+							"equals": true
+						},
+						{
+							"key": "q",
+							"value": "exp",
 							"equals": true
 						}
 					]
