@@ -673,67 +673,6 @@
 			"response": []
 		},
 		{
-			"name": "GET Category series by id, expand",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							"var data = JSON.parse(responseBody).data",
-							"tests[\"Status code is 200\"] = responseCode.code === 200;",
-							"tests[\"Response contains data\"] = typeof(data) === 'object'",
-							"tests[\"Response is array\"] = Array.isArray(data)",
-							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
-							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
-						]
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{uhero_auth_token}}",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": ""
-				},
-				"url": {
-					"raw": "{{url}}/category/series?id=18&expand=true",
-					"host": [
-						"{{url}}"
-					],
-					"path": [
-						"category",
-						"series"
-					],
-					"query": [
-						{
-							"key": "id",
-							"value": "18",
-							"equals": true
-						},
-						{
-							"key": "expand",
-							"value": "true",
-							"equals": true
-						}
-					]
-				},
-				"description": "Geo List by Category ID"
-			},
-			"response": []
-		},
-		{
 			"name": "GET Category series by id/geo",
 			"event": [
 				{
@@ -1277,6 +1216,67 @@
 					]
 				},
 				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id, expand",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category/series?id=18&expand=true",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "18",
+							"equals": true
+						},
+						{
+							"key": "expand",
+							"value": "true",
+							"equals": true
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
 			},
 			"response": []
 		}
