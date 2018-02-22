@@ -17,5 +17,10 @@ before_script:
   - npm --version
   - node_modules/.bin/newman --version
 
-script:
-  - node_modules/.bin/newman run tests/Category.postman_collection.json
+# default script is used: go test -v ./...
+
+# if that succeeds, then
+after_success:
+  - nohup go run ./main.go --scheme=http --host=127.0.0.1 --port=8080 &
+  - sleep 3
+  - node_modules/.bin/newman run tests/Category.postman_collection.json -e tests/travis.environment.json
