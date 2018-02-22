@@ -1,6 +1,6 @@
 {
 	"info": {
-		"name": "Stage tests",
+		"name": "Full test suite",
 		"_postman_id": "ed987593-a16e-e51d-b1dd-d54eb1e265c1",
 		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -27,28 +27,28 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category",
+					"raw": "{{url}}/category",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category"
 					]
 				},
@@ -75,34 +75,35 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?top_level=true",
+					"raw": "{{url}}/category?top_level=true",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category"
 					],
 					"query": [
 						{
 							"key": "top_level",
-							"value": "true"
+							"value": "true",
+							"equals": true
 						}
 					]
 				},
@@ -116,12 +117,12 @@
 				{
 					"listen": "test",
 					"script": {
+						"id": "c7210ef9-1dd7-4b6a-9b6d-1dfdefdfdde9",
 						"type": "text/javascript",
 						"exec": [
 							"var data = JSON.parse(responseBody).data",
 							"tests[\"Status code is 200\"] = responseCode.code === 200;",
 							"tests[\"Response contains data\"] = typeof(data) === 'object'",
-							"//tests[\"Response is null\"] = data === null",
 							"tests[\"Response is array\"] = Array.isArray(data)",
 							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
 							"tests[\"Response array has length > 5\"] = data.length > 5",
@@ -131,34 +132,35 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?top_level=false",
+					"raw": "{{url}}/category?top_level=false",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category"
 					],
 					"query": [
 						{
 							"key": "top_level",
-							"value": "false"
+							"value": "false",
+							"equals": true
 						}
 					]
 				},
@@ -172,40 +174,39 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "2f143695-f6f9-45ac-943c-634168756a1f",
+						"id": "0c8e40f3-cbe4-42ab-9228-993a335b43d9",
 						"type": "text/javascript",
 						"exec": [
 							"var data = JSON.parse(responseBody).data;",
 							"tests[\"Status code is 200\"] = responseCode.code === 200;",
 							"tests[\"Response contains data\"] = typeof(data) === 'object';",
-							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
-							"tests[\"Response navCategories is non-empty array\"] = Array.isArray(data.navCategories) && data.navCategories.length > 0;",
-							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+							"tests[\"Response is non-empty array\"] = Array.isArray(data) && data.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data[0].name !== undefined;",
+							""
 						]
 					}
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {},
 				"url": {
-					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/category?u=uhero&type=nav",
-					"protocol": "http",
+					"raw": "{{url}}/category?u=uhero&type=nav",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category"
 					],
 					"query": [
@@ -246,34 +247,35 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?id=16",
+					"raw": "{{url}}/category?id=16",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "16"
+							"value": "16",
+							"equals": true
 						}
 					]
 				},
@@ -302,34 +304,35 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?id=999",
+					"raw": "{{url}}/category?id=999",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "999"
+							"value": "999",
+							"equals": true
 						}
 					]
 				},
@@ -356,34 +359,35 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?search_text=summary",
+					"raw": "{{url}}/category?search_text=summary",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category"
 					],
 					"query": [
 						{
 							"key": "search_text",
-							"value": "summary"
+							"value": "summary",
+							"equals": true
 						}
 					]
 				},
@@ -408,34 +412,35 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category?search_text=nosuchtext",
+					"raw": "{{url}}/category?search_text=nosuchtext",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category"
 					],
 					"query": [
 						{
 							"key": "search_text",
-							"value": "nosuchtext"
+							"value": "nosuchtext",
+							"equals": true
 						}
 					]
 				},
@@ -462,35 +467,36 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/freq?id=16",
+					"raw": "{{url}}/category/freq?id=16",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category",
 						"freq"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "16"
+							"value": "16",
+							"equals": true
 						}
 					]
 				},
@@ -517,35 +523,36 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/geo?id=22",
+					"raw": "{{url}}/category/geo?id=22",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category",
 						"geo"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "22"
+							"value": "22",
+							"equals": true
 						}
 					]
 				},
@@ -572,35 +579,36 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/measurements?id=34",
+					"raw": "{{url}}/category/measurements?id=34",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category",
 						"measurements"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "34"
+							"value": "34",
+							"equals": true
 						}
 					]
 				},
@@ -627,35 +635,36 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34",
+					"raw": "{{url}}/category/series?id=34",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category",
 						"series"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "34"
+							"value": "34",
+							"equals": true
 						}
 					]
 				},
@@ -682,39 +691,41 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=18&expand=true",
+					"raw": "{{url}}/category/series?id=18&expand=true",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category",
 						"series"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "18"
+							"value": "18",
+							"equals": true
 						},
 						{
 							"key": "expand",
-							"value": "true"
+							"value": "true",
+							"equals": true
 						}
 					]
 				},
@@ -741,39 +752,41 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34&geo=HAW",
+					"raw": "{{url}}/category/series?id=34&geo=HAW",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category",
 						"series"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "34"
+							"value": "34",
+							"equals": true
 						},
 						{
 							"key": "geo",
-							"value": "HAW"
+							"value": "HAW",
+							"equals": true
 						}
 					]
 				},
@@ -800,39 +813,41 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34&freq=Q",
+					"raw": "{{url}}/category/series?id=34&freq=Q",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category",
 						"series"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "34"
+							"value": "34",
+							"equals": true
 						},
 						{
 							"key": "freq",
-							"value": "Q"
+							"value": "Q",
+							"equals": true
 						}
 					]
 				},
@@ -859,43 +874,46 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": ""
 				},
 				"url": {
-					"raw": "uhero-bamboo.colo.hawaii.edu:3030/v1/category/series?id=34&geo=HI&freq=Q",
+					"raw": "{{url}}/category/series?id=34&geo=HI&freq=Q",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"category",
 						"series"
 					],
 					"query": [
 						{
 							"key": "id",
-							"value": "34"
+							"value": "34",
+							"equals": true
 						},
 						{
 							"key": "geo",
-							"value": "HI"
+							"value": "HI",
+							"equals": true
 						},
 						{
 							"key": "freq",
-							"value": "Q"
+							"value": "Q",
+							"equals": true
 						}
 					]
 				},
@@ -924,26 +942,25 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {},
 				"url": {
-					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/analyzer?ids=152239,152240",
-					"protocol": "http",
+					"raw": "{{url}}/package/analyzer?ids=152239,152240",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"package",
 						"analyzer"
 					],
@@ -981,26 +998,25 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {},
 				"url": {
-					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/search?u=uhero&q=exp&geo=HON&freq=Q",
-					"protocol": "http",
+					"raw": "{{url}}/package/search?u=uhero&q=exp&geo=HON&freq=Q",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"package",
 						"search"
 					],
@@ -1053,26 +1069,25 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {},
 				"url": {
-					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/search?u=uhero&q=exp",
-					"protocol": "http",
+					"raw": "{{url}}/package/search?u=uhero&q=exp",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"package",
 						"search"
 					],
@@ -1113,26 +1128,25 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {},
 				"url": {
-					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/category?id=36&geo=US&freq=A",
-					"protocol": "http",
+					"raw": "{{url}}/package/category?id=36&geo=US&freq=A",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"package",
 						"category"
 					],
@@ -1178,26 +1192,25 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {},
 				"url": {
-					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/category?u=uhero",
-					"protocol": "http",
+					"raw": "{{url}}/package/category?u=uhero",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"package",
 						"category"
 					],
@@ -1233,26 +1246,25 @@
 				}
 			],
 			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": [
-					{
-						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
-					}
-				],
+				"header": [],
 				"body": {},
 				"url": {
-					"raw": "http://uhero-bamboo.colo.hawaii.edu:3030/v1/package/series?id=148863",
-					"protocol": "http",
+					"raw": "{{url}}/package/series?id=148863",
 					"host": [
-						"uhero-bamboo",
-						"colo",
-						"hawaii",
-						"edu"
+						"{{url}}"
 					],
-					"port": "3030",
 					"path": [
-						"v1",
 						"package",
 						"series"
 					],
@@ -1267,6 +1279,28 @@
 				"description": ""
 			},
 			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "0f9db3d1-a358-4348-aa9e-1504c3d2bfda",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "74132088-dd4b-4226-8e2c-bbbd3ccb2342",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
 		}
 	]
 }
