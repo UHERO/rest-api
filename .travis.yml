@@ -3,14 +3,14 @@ language: go
 go:
   - 1.9
 
-#node_js:
-  #- 8.9.4
+node_js:
+  - 8.9.4
 
 services:
   - redis-server
 
-# install:
-  #- npm install newman
+install:
+  - npm install newman
 
 #before_script:
   #- node --version
