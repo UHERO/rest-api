@@ -21,7 +21,7 @@ before_script:
 # default script is used: go test -v ./...
 
 # if that succeeds, then
-#after_success:
-  #- nohup go run ./main.go --scheme=http --host=127.0.0.1 --port=8080 &
-  #- sleep 3
-  #- node_modules/.bin/newman run tests/Full_suite.postman_collection.json -e tests/Travis.postman_environment.json
+after_success:
+  - nohup go run ./main.go --scheme=http --host=127.0.0.1 --port=8080 &
+  - sleep 3
+  - node_modules/.bin/newman run tests/Full_suite.postman_collection.json -e tests/Travis.postman_environment.json
