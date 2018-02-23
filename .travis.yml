@@ -12,10 +12,11 @@ services:
 #install:
   #- npm install newman
 
-#before_script:
-  #- node --version
-  #- npm --version
-  #- node_modules/.bin/newman --version
+before_script:
+  - node --version
+  - npm --version
+  - npm install newman
+  - node_modules/.bin/newman --version
 
 # default script is used: go test -v ./...
 
