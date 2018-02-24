@@ -3,19 +3,6 @@ language: go
 go:
   - 1.9
 
-node_js:
-  - 8.9.4
-
 services:
   - redis-server
 
-install:
-  - npm install newman
-
-before_script:
-  - node --version
-  - npm --version
-  - node_modules/.bin/newman --version
-
-script:
-  - node_modules/.bin/newman run tests/Category.postman_collection.json

@@ -1,0 +1,1306 @@
+{
+	"info": {
+		"name": "Full test suite",
+		"_postman_id": "ed987593-a16e-e51d-b1dd-d54eb1e265c1",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET all categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response array has length > 5\"] = data.length > 5",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category"
+					]
+				},
+				"description": "See all categories"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Top-level categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category?top_level=true",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category"
+					],
+					"query": [
+						{
+							"key": "top_level",
+							"value": "true",
+							"equals": true
+						}
+					]
+				},
+				"description": "Get all categories with no parent"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Non-top-level categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c7210ef9-1dd7-4b6a-9b6d-1dfdefdfdde9",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response array has length > 5\"] = data.length > 5",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category?top_level=false",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category"
+					],
+					"query": [
+						{
+							"key": "top_level",
+							"value": "false",
+							"equals": true
+						}
+					]
+				},
+				"description": "Get all categories WITH a parent"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Navigational categories",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0c8e40f3-cbe4-42ab-9228-993a335b43d9",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response is non-empty array\"] = Array.isArray(data) && data.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data[0].name !== undefined;",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/category?u=uhero&type=nav",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category"
+					],
+					"query": [
+						{
+							"key": "u",
+							"value": "uhero",
+							"equals": true
+						},
+						{
+							"key": "type",
+							"value": "nav",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Existing category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"//tests[\"Response is array\"] = Array.isArray(data)",
+							"//tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response data is object with name\"] = data.name !== undefined",
+							"tests[\"Response has geos and freqs\"] = Array.isArray(data.geos) && Array.isArray(data.freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category?id=16",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "16",
+							"equals": true
+						}
+					]
+				},
+				"description": "See all categories"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Non-existing category",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"//tests[\"Response is array\"] = Array.isArray(data)",
+							"//tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response data is object with empty name\"] = data.name === ''",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category?id=999",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "999",
+							"equals": true
+						}
+					]
+				},
+				"description": "See all categories"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Categories by search text",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category?search_text=summary",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category"
+					],
+					"query": [
+						{
+							"key": "search_text",
+							"value": "summary",
+							"equals": true
+						}
+					]
+				},
+				"description": "Get all categories with the word \"summary\" in the name"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Categories by search non-exist text",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is null\"] = data === null"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category?search_text=nosuchtext",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category"
+					],
+					"query": [
+						{
+							"key": "search_text",
+							"value": "nosuchtext",
+							"equals": true
+						}
+					]
+				},
+				"description": "Get all categories with the word \"summary\" in the name"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category freq",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"//tests[\"Response is null\"] = data === null",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response contains a valid freq\"] = ['A','S','Q','M','W','D'].indexOf(data[0].freq) !== -1"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category/freq?id=16",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category",
+						"freq"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "16",
+							"equals": true
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category geo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response contains a valid Hawaii geo\"] = ['HI','HON','HAW','MAU','KAU','MAUI','HAWH','HAWK','MOL','LAN','NBI'].indexOf(data[0].handle) !== -1"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category/geo?id=22",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category",
+						"geo"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "22",
+							"equals": true
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category measurements",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category/measurements?id=34",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category",
+						"measurements"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34",
+							"equals": true
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category/series?id=34",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34",
+							"equals": true
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id/geo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category/series?id=34&geo=HAW",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34",
+							"equals": true
+						},
+						{
+							"key": "geo",
+							"value": "HAW",
+							"equals": true
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id/freq",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category/series?id=34&freq=Q",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34",
+							"equals": true
+						},
+						{
+							"key": "freq",
+							"value": "Q",
+							"equals": true
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id/geo/freq",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category/series?id=34&geo=HI&freq=Q",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "34",
+							"equals": true
+						},
+						{
+							"key": "geo",
+							"value": "HI",
+							"equals": true
+						},
+						{
+							"key": "freq",
+							"value": "Q",
+							"equals": true
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		},
+		{
+			"name": "GET Analyzer Package",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0240baa3-284e-4ddb-8b4c-653daeb7ef52",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response has categories and series\"] = Array.isArray(data.categories) && Array.isArray(data.series);",
+							"tests[\"Response categories is array\"] = Array.isArray(data.categories);",
+							"tests[\"Response series contains an element with name\"] = data.series[0].name !== undefined;",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/package/analyzer?ids=152239,152240",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"package",
+						"analyzer"
+					],
+					"query": [
+						{
+							"key": "ids",
+							"value": "152239,152240",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Search Package 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6fb4d8a3-417f-4c29-95cd-554a00f4cd58",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response q is string\"] = typeof(data.q) === 'string';",
+							"tests[\"Response geos is array\"] = Array.isArray(data.geos);",
+							"tests[\"Response freqs is array\"] = Array.isArray(data.freqs);",
+							"tests[\"Response series contains observationStart\"] = data.observationStart !== undefined;",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/package/search?u=uhero&q=exp&geo=HON&freq=Q",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"package",
+						"search"
+					],
+					"query": [
+						{
+							"key": "u",
+							"value": "uhero",
+							"equals": true
+						},
+						{
+							"key": "q",
+							"value": "exp",
+							"equals": true
+						},
+						{
+							"key": "geo",
+							"value": "HON",
+							"equals": true
+						},
+						{
+							"key": "freq",
+							"value": "Q",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Search Package 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6fb4d8a3-417f-4c29-95cd-554a00f4cd58",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response q is string\"] = typeof(data.q) === 'string';",
+							"tests[\"Response geos is array\"] = Array.isArray(data.geos);",
+							"tests[\"Response freqs is array\"] = Array.isArray(data.freqs);",
+							"tests[\"Response series contains observationStart\"] = data.observationStart !== undefined;",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/package/search?u=uhero&q=exp",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"package",
+						"search"
+					],
+					"query": [
+						{
+							"key": "u",
+							"value": "uhero",
+							"equals": true
+						},
+						{
+							"key": "q",
+							"value": "exp",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category Package 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "2f143695-f6f9-45ac-943c-634168756a1f",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
+							"tests[\"Response navCategories is non-empty array\"] = Array.isArray(data.navCategories) && data.navCategories.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/package/category?id=36&geo=US&freq=A",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"package",
+						"category"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "36",
+							"equals": true
+						},
+						{
+							"key": "geo",
+							"value": "US",
+							"equals": true
+						},
+						{
+							"key": "freq",
+							"value": "A",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category Package 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "2f143695-f6f9-45ac-943c-634168756a1f",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
+							"tests[\"Response navCategories is non-empty array\"] = Array.isArray(data.navCategories) && data.navCategories.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/package/category?u=uhero",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"package",
+						"category"
+					],
+					"query": [
+						{
+							"key": "u",
+							"value": "uhero",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Series Package",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0dbfcea9-c357-4670-a206-e5576c5853e4",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response contains a series object\"] = data.series !== undefined;",
+							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/package/series?id=148863",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"package",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "148863",
+							"equals": true
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET Category series by id, expand",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object'",
+							"tests[\"Response is array\"] = Array.isArray(data)",
+							"tests[\"Response has an element with name\"] = data[0].name !== undefined",
+							"tests[\"Response first element has geos and freqs\"] = Array.isArray(data[0].geos) && Array.isArray(data[0].freqs)"
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{url}}/category/series?id=18&expand=true",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"category",
+						"series"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "18",
+							"equals": true
+						},
+						{
+							"key": "expand",
+							"value": "true",
+							"equals": true
+						}
+					]
+				},
+				"description": "Geo List by Category ID"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "0f9db3d1-a358-4348-aa9e-1504c3d2bfda",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "74132088-dd4b-4226-8e2c-bbbd3ccb2342",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
