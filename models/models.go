@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-	"compress/gzip"
 )
 
 type Application struct {
