@@ -49,7 +49,7 @@ type CategoryWithAncestry struct {
 	Universe		string
 	Ancestry		sql.NullString
 	ParentId		sql.NullInt64
-	Header			sql.NullBool
+	Header			bool
 	DefaultGeoHandle	sql.NullString
 	DefaultGeoFIPS		sql.NullString
 	DefaultGeoName		sql.NullString
