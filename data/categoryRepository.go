@@ -25,6 +25,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 			categories.name,
 			categories.universe,
 			categories.ancestry,
+			categories.header,
 			categories.default_freq AS catfreq,
 			geographies.handle AS catgeo,
 			geographies.fips AS catgeofips,
@@ -46,6 +47,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 			&category.Name,
 			&category.Universe,
 			&category.Ancestry,
+			&category.IsHeader,
 			&category.DefaultFrequency,
 			&category.DefaultGeoHandle,
 			&category.DefaultGeoFIPS,
@@ -60,6 +62,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 			Id:       category.Id,
 			Name:     category.Name,
 			Universe: category.Universe,
+			IsHeader: category.IsHeader,
 			ParentId: parentId,
 		}
 		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid {
@@ -293,6 +296,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			ANY_VALUE(categories.name) AS catname,
 			ANY_VALUE(categories.universe) AS universe,
 			ANY_VALUE(parentcat.id) AS parent_id,
+			ANY_VALUE(categories.header) AS header,
 			ANY_VALUE(COALESCE(mygeo.handle, parentgeo.handle)) AS def_geo,
 			ANY_VALUE(COALESCE(categories.default_freq, parentcat.default_freq)) AS def_freq,
 			ANY_VALUE(geographies.handle) AS series_geo,
@@ -331,6 +335,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			&category.Name,
 			&category.Universe,
 			&category.ParentId,
+			&category.IsHeader,
 			&category.DefaultGeoHandle,
 			&category.DefaultFrequency,
 			&handle,
@@ -346,6 +351,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			dataPortalCategory.Id = category.Id
 			dataPortalCategory.Name = category.Name
 			dataPortalCategory.Universe = category.Universe
+			dataPortalCategory.IsHeader = category.IsHeader
 			if category.ParentId.Valid {
 				dataPortalCategory.ParentId = category.ParentId.Int64
 			}
