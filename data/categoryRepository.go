@@ -47,7 +47,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 			&category.Name,
 			&category.Universe,
 			&category.Ancestry,
-			&category.Header,
+			&category.IsHeader,
 			&category.DefaultFrequency,
 			&category.DefaultGeoHandle,
 			&category.DefaultGeoFIPS,
@@ -62,7 +62,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 			Id:       category.Id,
 			Name:     category.Name,
 			Universe: category.Universe,
-			Header:   category.Header,
+			IsHeader: category.IsHeader,
 			ParentId: parentId,
 		}
 		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid {
@@ -335,7 +335,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			&category.Name,
 			&category.Universe,
 			&category.ParentId,
-			&category.Header,
+			&category.IsHeader,
 			&category.DefaultGeoHandle,
 			&category.DefaultFrequency,
 			&handle,
@@ -351,7 +351,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			dataPortalCategory.Id = category.Id
 			dataPortalCategory.Name = category.Name
 			dataPortalCategory.Universe = category.Universe
-			dataPortalCategory.Header = category.Header
+			dataPortalCategory.IsHeader = category.IsHeader
 			if category.ParentId.Valid {
 				dataPortalCategory.ParentId = category.ParentId.Int64
 			}

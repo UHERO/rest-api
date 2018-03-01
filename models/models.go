@@ -20,7 +20,7 @@ type Category struct {
 	Name                 string                  `json:"name"`
 	Universe             string                  `json:"universe"`
 	ParentId             int64                   `json:"parentId,omitempty"`
-	Header               bool                    `json:"header,omitempty"`
+	IsHeader             bool                    `json:"isHeader,omitempty"`
 	Defaults	     *CategoryDefaults	     `json:"defaults,omitempty"`
 	Current		     *CurrentGeoFreq	     `json:"current,omitempty"`
 	Geographies          *[]DataPortalGeography  `json:"geos,omitempty"`
@@ -49,7 +49,7 @@ type CategoryWithAncestry struct {
 	Universe		string
 	Ancestry		sql.NullString
 	ParentId		sql.NullInt64
-	Header			bool
+	IsHeader		bool
 	DefaultGeoHandle	sql.NullString
 	DefaultGeoFIPS		sql.NullString
 	DefaultGeoName		sql.NullString
