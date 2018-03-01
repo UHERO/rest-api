@@ -445,23 +445,26 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 }
 
 func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
-	if err != nil {
-		return
-		rows, err := r.DB.Query(`SELECT categories.id, categories.name, data_list_id, header,
-												geographies.handle, geographies.fips, geographies.display_name, default_freq
+		rows, err := r.DB.Query(`SELECT categories.id, categories.name, header,
+												geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
 										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
 										AND NOT categories.hidden
 										ORDER BY categories.list_order;`, id)
+	if err != nil {
+		return
 	}
 	for rows.Next() {
 		var child models.CategoryWithAncestry{}
 		err = rows.Scan(
 			&child.Id,
 			&child.Name,
-			nil,
+			&child.DefaultGeoHandle,
+			&child.DefaultGeoFIPS,
+			&child.DefaultGeoName,
+			&child.DefaultGeoShortName,
 			&child.IsHeader,
-			&child.DefaultFrequency
+			&child.DefaultFrequency,
 		)
 		if err != nil {
 			return
@@ -483,18 +486,18 @@ func (r *CategoryRepository) CreateCategoryPackage(
 		return
 	}
 	var universe string
-	for _, kidId := range kids {
+	for _, kid := range kids {
+		if kid.IsHeader {
+		}
 		inflatedCat := models.CategoryWithInflatedSeries{}
-		category, anErr := r.GetCategoryById(kidId)
+		category, anErr := r.GetCategoryById(kid.Id)
 		if anErr != nil {
 			err = anErr
 			return
 		}
 		inflatedCat.Category = category
 
-		if category.IsHeader {
-
-		} else if geo != "" && freq != "" {
+		if geo != "" && freq != "" {
 			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geo, freq, Category)
 			if anErr != nil {
 				err = anErr
