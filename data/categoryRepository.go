@@ -351,6 +351,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			dataPortalCategory.Id = category.Id
 			dataPortalCategory.Name = category.Name
 			dataPortalCategory.Universe = category.Universe
+			dataPortalCategory.Header = category.Header
 			if category.ParentId.Valid {
 				dataPortalCategory.ParentId = category.ParentId.Int64
 			}
