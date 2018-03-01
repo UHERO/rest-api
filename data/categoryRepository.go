@@ -444,16 +444,25 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 	return
 }
 
-func (r *CategoryRepository) GetChildrenOf(id int64) (children []int64, err error) {
-	rows, err := r.DB.Query(`SELECT id FROM categories
-	                         WHERE SUBSTRING_INDEX(ancestry, '/', -1) = ?
-	                         AND NOT hidden ORDER BY list_order;`, id)
+func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
 	if err != nil {
 		return
+		rows, err := r.DB.Query(`SELECT categories.id, categories.name, data_list_id, header,
+												geographies.handle, geographies.fips, geographies.display_name, default_freq
+										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
+										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
+										AND NOT categories.hidden
+										ORDER BY categories.list_order;`, id)
 	}
 	for rows.Next() {
-		var childId int64
-		err = rows.Scan(&childId)
+		var child models.CategoryWithAncestry{}
+		err = rows.Scan(
+			&child.Id,
+			&child.Name,
+			nil,
+			&child.IsHeader,
+			&child.DefaultFrequency
+		)
 		if err != nil {
 			return
 		}
@@ -469,12 +478,12 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	seriesRepository *SeriesRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
 
-	kidIds, err := r.GetChildrenOf(id)
+	kids, err := r.GetChildrenOf(id)
 	if err != nil {
 		return
 	}
 	var universe string
-	for _, kidId := range kidIds {
+	for _, kidId := range kids {
 		inflatedCat := models.CategoryWithInflatedSeries{}
 		category, anErr := r.GetCategoryById(kidId)
 		if anErr != nil {
@@ -483,7 +492,9 @@ func (r *CategoryRepository) CreateCategoryPackage(
 		}
 		inflatedCat.Category = category
 
-		if geo != "" && freq != "" {
+		if category.IsHeader {
+
+		} else if geo != "" && freq != "" {
 			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geo, freq, Category)
 			if anErr != nil {
 				err = anErr
