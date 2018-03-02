@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 	"errors"
-	"reflect"
 )
 
 type CategoryRepository struct {
@@ -460,8 +459,8 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 		category := models.CategoryWithAncestry{}
 		err = rows.Scan(
 			&dataPortalCategory.Id,
-			&dataPortalCategory.Name,
 			&dataPortalCategory.Universe,
+			&dataPortalCategory.Name,
 			&dataPortalCategory.IsHeader,
 			&category.DefaultGeoHandle,
 			&category.DefaultGeoFIPS,
@@ -506,18 +505,21 @@ func (r *CategoryRepository) getCategoryTree(
 	geo string,
 	freq string,
 	seriesRepository *SeriesRepository,
-) (stuff *[]models.CategoryWithInflatedSeries, err error) {
+) (stuff []models.CategoryWithInflatedSeries, err error) {
 	kids, err := r.GetChildrenOf(id)
 	if err != nil {
 		return
 	}
 	for _, kid := range kids {
 		inflatedCat := models.CategoryWithInflatedSeries{}
-		var moreKids []models.CategoryWithInflatedSeries{}
+//		var moreKids []models.CategoryWithInflatedSeries{}
 
 		if kid.IsHeader {
 			inflatedCat.Category = kid
-			moreKids = r.getCategoryTree(kid.Id, geo, freq, seriesRepository)
+			moreKids, anErr := r.getCategoryTree(kid.Id, geo, freq, seriesRepository)
+			if anErr != nil {
+				return
+			}
 		} else {
 			category, anErr := r.GetCategoryById(kid.Id)
 			if anErr != nil {
@@ -540,6 +542,7 @@ func (r *CategoryRepository) getCategoryTree(
 			pkg.CatSubTree = append(pkg.CatSubTree, subKid)
 		}
 	}
+	return
 }
 
 func (r *CategoryRepository) CreateCategoryPackage(
@@ -549,19 +552,22 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	seriesRepository *SeriesRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
 
-	var navCats []models.Category
-
-	pkg.CatSubTree = *(r.getCategoryTree(id, geo, freq, seriesRepository))
-	if pkg.CatSubTree[0] != nil {
-		navCats, err = r.GetNavCategoriesByUniverse(pkg.CatSubTree[0].Category.Universe)
-		if err != nil {
+	theStuff, err := r.getCategoryTree(id, geo, freq, seriesRepository)
+	if err != nil {
+		return
+	}
+	copy(pkg.CatSubTree, theStuff)
+	if len(theStuff) > 0 {
+		navCats, anErr := r.GetNavCategoriesByUniverse(theStuff[0].Category.Universe)
+		if anErr != nil {
+			err = anErr
 			return
 		}
 		pkg.NavCategories = navCats
 	}
 
 	// Add parent nav category to the "categories" array
-	for _, navCat := range navCats {
+	for _, navCat := range pkg.NavCategories {
 		if navCat.Id == id {
 			pkg.CatSubTree = append(pkg.CatSubTree, models.CategoryWithInflatedSeries{Category: navCat})
 			break
