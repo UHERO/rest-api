@@ -445,7 +445,7 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 }
 
 func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
-		rows, err := r.DB.Query(`SELECT categories.id, categories.name, header,
+		rows, err := r.DB.Query(`SELECT categories.id, categories.universe, categories.name, data_list_id, header,
 												geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
 										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
@@ -455,21 +455,48 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 		return
 	}
 	for rows.Next() {
-		var child models.CategoryWithAncestry{}
+		dataPortalCategory := models.Category{}
+		category := models.CategoryWithAncestry{}
 		err = rows.Scan(
-			&child.Id,
-			&child.Name,
-			&child.DefaultGeoHandle,
-			&child.DefaultGeoFIPS,
-			&child.DefaultGeoName,
-			&child.DefaultGeoShortName,
-			&child.IsHeader,
-			&child.DefaultFrequency,
+			&dataPortalCategory.Id,
+			&dataPortalCategory.Name,
+			&dataPortalCategory.Universe,
+			&category.DataListId,
+			&category.IsHeader,
+			&category.DefaultGeoHandle,
+			&category.DefaultGeoFIPS,
+			&category.DefaultGeoName,
+			&category.DefaultGeoShortName,
+			&category.DefaultFrequency,
 		)
 		if err != nil {
 			return
 		}
-		children = append(children, childId)
+		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid || category.ObservationStart.Valid || category.ObservationEnd.Valid {
+			// Only initialize Defaults struct if any defaults values are available
+			dataPortalCategory.Defaults = &models.CategoryDefaults{}
+		}
+		if category.DefaultFrequency.Valid {
+			dataPortalCategory.Defaults.Frequency = &models.DataPortalFrequency{
+				Freq: category.DefaultFrequency.String,
+				Label: freqLabel[category.DefaultFrequency.String],
+			}
+		}
+		if category.DefaultGeoHandle.Valid {
+			dataPortalCategory.Defaults.Geography = &models.DataPortalGeography{
+				Handle: category.DefaultGeoHandle.String,
+			}
+			if category.DefaultGeoFIPS.Valid {
+				dataPortalCategory.Defaults.Geography.FIPS = category.DefaultGeoFIPS.String
+			}
+			if category.DefaultGeoName.Valid {
+				dataPortalCategory.Defaults.Geography.Name = category.DefaultGeoName.String
+			}
+			if category.DefaultGeoShortName.Valid {
+				dataPortalCategory.Defaults.Geography.ShortName = category.DefaultGeoShortName.String
+			}
+		}
+		children = append(children, dataPortalCategory)
 	}
 	return
 }
@@ -487,9 +514,12 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	}
 	var universe string
 	for _, kid := range kids {
-		if kid.IsHeader {
-		}
 		inflatedCat := models.CategoryWithInflatedSeries{}
+		if kid.IsHeader {
+			inflatedCat.Category = kid
+		} else {
+
+		}
 		category, anErr := r.GetCategoryById(kid.Id)
 		if anErr != nil {
 			err = anErr
@@ -498,7 +528,7 @@ func (r *CategoryRepository) CreateCategoryPackage(
 		inflatedCat.Category = category
 
 		if geo != "" && freq != "" {
-			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kidId, geo, freq, Category)
+			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kid.Id, geo, freq, Category)
 			if anErr != nil {
 				err = anErr
 				return
