@@ -473,8 +473,7 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 			return
 		}
 		if category.Ancestry.Valid {
-			parentId := getParentId(category.Ancestry)
-			dataPortalCategory.ParentId = parentId
+			dataPortalCategory.ParentId = getParentId(category.Ancestry)
 		}
 		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid || category.ObservationStart.Valid || category.ObservationEnd.Valid {
 			// Only initialize Defaults struct if any defaults values are available
