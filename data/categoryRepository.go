@@ -511,16 +511,19 @@ func (r *CategoryRepository) getCategoryTree(
 		return
 	}
 	for _, kid := range kids {
-		inflatedCat := models.CategoryWithInflatedSeries{}
-//		var moreKids []models.CategoryWithInflatedSeries{}
-
 		if kid.IsHeader {
-			inflatedCat.Category = kid
+			stuff = append(stuff, models.CategoryWithInflatedSeries{Category: kid})
+
 			moreKids, anErr := r.getCategoryTree(kid.Id, geo, freq, seriesRepository)
 			if anErr != nil {
 				return
 			}
+			for _, k := range moreKids {
+				stuff = append(stuff, k)
+			}
 		} else {
+			inflatedCat := models.CategoryWithInflatedSeries{}
+
 			category, anErr := r.GetCategoryById(kid.Id)
 			if anErr != nil {
 				err = anErr
@@ -536,10 +539,7 @@ func (r *CategoryRepository) getCategoryTree(
 				}
 				inflatedCat.Series = seriesList
 			}
-		}
-		pkg.CatSubTree = append(pkg.CatSubTree, inflatedCat)
-		for _, subKid := range moreKids {
-			pkg.CatSubTree = append(pkg.CatSubTree, subKid)
+			stuff = append(stuff, inflatedCat)
 		}
 	}
 	return
