@@ -556,7 +556,9 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	if err != nil {
 		return
 	}
-	copy(pkg.CatSubTree, theStuff)
+	for _, k := range theStuff {
+		pkg.CatSubTree = append(pkg.CatSubTree, k)
+	}
 	if len(theStuff) > 0 {
 		navCats, anErr := r.GetNavCategoriesByUniverse(theStuff[0].Category.Universe)
 		if anErr != nil {
