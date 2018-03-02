@@ -445,7 +445,7 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 }
 
 func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
-		rows, err := r.DB.Query(`SELECT categories.id, categories.universe, categories.name, data_list_id, header,
+		rows, err := r.DB.Query(`SELECT categories.id, categories.universe, categories.name, header,
 												geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
 										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
@@ -461,8 +461,7 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 			&dataPortalCategory.Id,
 			&dataPortalCategory.Name,
 			&dataPortalCategory.Universe,
-			&category.DataListId,
-			&category.IsHeader,
+			&dataPortalCategory.IsHeader,
 			&category.DefaultGeoHandle,
 			&category.DefaultGeoFIPS,
 			&category.DefaultGeoName,
@@ -517,23 +516,23 @@ func (r *CategoryRepository) CreateCategoryPackage(
 		inflatedCat := models.CategoryWithInflatedSeries{}
 		if kid.IsHeader {
 			inflatedCat.Category = kid
+
 		} else {
-
-		}
-		category, anErr := r.GetCategoryById(kid.Id)
-		if anErr != nil {
-			err = anErr
-			return
-		}
-		inflatedCat.Category = category
-
-		if geo != "" && freq != "" {
-			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kid.Id, geo, freq, Category)
+			category, anErr := r.GetCategoryById(kid.Id)
 			if anErr != nil {
 				err = anErr
 				return
 			}
-			inflatedCat.Series = seriesList
+			inflatedCat.Category = category
+
+			if geo != "" && freq != "" {
+				seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kid.Id, geo, freq, Category)
+				if anErr != nil {
+					err = anErr
+					return
+				}
+				inflatedCat.Series = seriesList
+			}
 		}
 		pkg.CatSubTree = append(pkg.CatSubTree, inflatedCat)
 		universe = category.Universe

@@ -50,7 +50,6 @@ type CategoryWithAncestry struct {
 	Ancestry		sql.NullString
 	ParentId		sql.NullInt64
 	IsHeader		bool
-	DataListId		sql.NullInt64
 	DefaultGeoHandle	sql.NullString
 	DefaultGeoFIPS		sql.NullString
 	DefaultGeoName		sql.NullString
