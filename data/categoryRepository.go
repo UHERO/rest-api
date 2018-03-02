@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 	"errors"
+	"reflect"
 )
 
 type CategoryRepository struct {
@@ -500,23 +501,23 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 	return
 }
 
-func (r *CategoryRepository) CreateCategoryPackage(
+func (r *CategoryRepository) getCategoryTree(
 	id int64,
 	geo string,
 	freq string,
 	seriesRepository *SeriesRepository,
-) (pkg models.DataPortalCategoryPackage, err error) {
-
+) (stuff *[]models.CategoryWithInflatedSeries, err error) {
 	kids, err := r.GetChildrenOf(id)
 	if err != nil {
 		return
 	}
-	var universe string
 	for _, kid := range kids {
 		inflatedCat := models.CategoryWithInflatedSeries{}
+		var moreKids []models.CategoryWithInflatedSeries{}
+
 		if kid.IsHeader {
 			inflatedCat.Category = kid
-
+			moreKids = r.getCategoryTree(kid.Id, geo, freq, seriesRepository)
 		} else {
 			category, anErr := r.GetCategoryById(kid.Id)
 			if anErr != nil {
@@ -535,13 +536,29 @@ func (r *CategoryRepository) CreateCategoryPackage(
 			}
 		}
 		pkg.CatSubTree = append(pkg.CatSubTree, inflatedCat)
-		universe = category.Universe
+		for _, subKid := range moreKids {
+			pkg.CatSubTree = append(pkg.CatSubTree, subKid)
+		}
 	}
-	navCats, err := r.GetNavCategoriesByUniverse(universe)
-	if err != nil {
-		return
+}
+
+func (r *CategoryRepository) CreateCategoryPackage(
+	id int64,
+	geo string,
+	freq string,
+	seriesRepository *SeriesRepository,
+) (pkg models.DataPortalCategoryPackage, err error) {
+
+	var navCats []models.Category
+
+	pkg.CatSubTree = *(r.getCategoryTree(id, geo, freq, seriesRepository))
+	if pkg.CatSubTree[0] != nil {
+		navCats, err = r.GetNavCategoriesByUniverse(pkg.CatSubTree[0].Category.Universe)
+		if err != nil {
+			return
+		}
+		pkg.NavCategories = navCats
 	}
-	pkg.NavCategories = navCats
 
 	// Add parent nav category to the "categories" array
 	for _, navCat := range navCats {
