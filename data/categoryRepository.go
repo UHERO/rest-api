@@ -445,7 +445,7 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 }
 
 func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
-		rows, err := r.DB.Query(`SELECT categories.id, categories.universe, categories.name, header,
+		rows, err := r.DB.Query(`SELECT categories.id, categories.universe, categories.name, header, ancestry,
 												geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
 										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
@@ -462,6 +462,7 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 			&dataPortalCategory.Universe,
 			&dataPortalCategory.Name,
 			&dataPortalCategory.IsHeader,
+			&category.Ancestry,
 			&category.DefaultGeoHandle,
 			&category.DefaultGeoFIPS,
 			&category.DefaultGeoName,
@@ -470,6 +471,10 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 		)
 		if err != nil {
 			return
+		}
+		if category.Ancestry.Valid {
+			parentId := getParentId(category.Ancestry)
+			dataPortalCategory.ParentId = parentId
 		}
 		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid || category.ObservationStart.Valid || category.ObservationEnd.Valid {
 			// Only initialize Defaults struct if any defaults values are available
