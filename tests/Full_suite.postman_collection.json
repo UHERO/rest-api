@@ -1053,7 +1053,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "2f143695-f6f9-45ac-943c-634168756a1f",
+						"id": "22badbc9-fa62-4a07-998e-0925e0acb0af",
 						"type": "text/javascript",
 						"exec": [
 							"var data = JSON.parse(responseBody).data;",
@@ -1061,7 +1061,10 @@
 							"tests[\"Response contains data\"] = typeof(data) === 'object';",
 							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
 							"tests[\"Response navCategories is non-empty array\"] = Array.isArray(data.navCategories) && data.navCategories.length > 0;",
-							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;",
+							"var lastcat = data.categories[data.categories.length-1];",
+							"tests[\"Response categories final entry (parent) has no geos\"] = lastcat.geos === undefined;",
+							"tests[\"Response categories final entry (parent) is not header\"] = lastcat.isHeader === undefined;"
 						]
 					}
 				}
@@ -1117,7 +1120,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "2f143695-f6f9-45ac-943c-634168756a1f",
+						"id": "f01ef2b3-dce0-42fb-b239-e636830d37a8",
 						"type": "text/javascript",
 						"exec": [
 							"var data = JSON.parse(responseBody).data;",
@@ -1125,7 +1128,10 @@
 							"tests[\"Response contains data\"] = typeof(data) === 'object';",
 							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
 							"tests[\"Response navCategories is non-empty array\"] = Array.isArray(data.navCategories) && data.navCategories.length > 0;",
-							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;",
+							"var lastcat = data.categories[data.categories.length-1];",
+							"tests[\"Response categories final entry (parent) has no geos\"] = lastcat.geos === undefined;",
+							"tests[\"Response categories final entry (parent) is not header\"] = lastcat.isHeader === undefined;"
 						]
 					}
 				}
