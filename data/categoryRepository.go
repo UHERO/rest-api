@@ -509,21 +509,21 @@ func (r *CategoryRepository) getCategoryTree(
 	geo string,
 	freq string,
 	seriesRepository *SeriesRepository,
-) (stuff []models.CategoryWithInflatedSeries, err error) {
+) (tree []models.CategoryWithInflatedSeries, err error) {
 	kids, err := r.GetChildrenOf(id)
 	if err != nil {
 		return
 	}
 	for _, kid := range kids {
 		if kid.IsHeader {
-			stuff = append(stuff, models.CategoryWithInflatedSeries{Category: kid})
+			tree = append(tree, models.CategoryWithInflatedSeries{Category: kid})
 
-			moreKids, anErr := r.getCategoryTree(kid.Id, geo, freq, seriesRepository)
+			subtree, anErr := r.getCategoryTree(kid.Id, geo, freq, seriesRepository) //recursion
 			if anErr != nil {
 				return
 			}
-			for _, k := range moreKids {
-				stuff = append(stuff, k)
+			for _, cat := range subtree {
+				tree = append(tree, cat)
 			}
 		} else {
 			inflatedCat := models.CategoryWithInflatedSeries{}
@@ -543,7 +543,7 @@ func (r *CategoryRepository) getCategoryTree(
 				}
 				inflatedCat.Series = seriesList
 			}
-			stuff = append(stuff, inflatedCat)
+			tree = append(tree, inflatedCat)
 		}
 	}
 	return
@@ -556,15 +556,15 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	seriesRepository *SeriesRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
 
-	theStuff, err := r.getCategoryTree(id, geo, freq, seriesRepository)
+	tree, err := r.getCategoryTree(id, geo, freq, seriesRepository)
 	if err != nil {
 		return
 	}
-	for _, k := range theStuff {
+	for _, k := range tree {
 		pkg.CatSubTree = append(pkg.CatSubTree, k)
 	}
-	if len(theStuff) > 0 {
-		navCats, anErr := r.GetNavCategoriesByUniverse(theStuff[0].Category.Universe)
+	if len(tree) > 0 {
+		navCats, anErr := r.GetNavCategoriesByUniverse(tree[0].Category.Universe)
 		if anErr != nil {
 			err = anErr
 			return
