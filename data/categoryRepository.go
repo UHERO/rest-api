@@ -525,26 +525,26 @@ func (r *CategoryRepository) getCategoryTree(
 			for _, cat := range subtree {
 				tree = append(tree, cat)
 			}
-		} else {
-			inflatedCat := models.CategoryWithInflatedSeries{}
+			continue
+		}
+		inflatedCat := models.CategoryWithInflatedSeries{}
 
-			category, anErr := r.GetCategoryById(kid.Id)
+		category, anErr := r.GetCategoryById(kid.Id)
+		if anErr != nil {
+			err = anErr
+			return
+		}
+		inflatedCat.Category = category
+
+		if geo != "" && freq != "" {
+			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kid.Id, geo, freq, Category)
 			if anErr != nil {
 				err = anErr
 				return
 			}
-			inflatedCat.Category = category
-
-			if geo != "" && freq != "" {
-				seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kid.Id, geo, freq, Category)
-				if anErr != nil {
-					err = anErr
-					return
-				}
-				inflatedCat.Series = seriesList
-			}
-			tree = append(tree, inflatedCat)
+			inflatedCat.Series = seriesList
 		}
+		tree = append(tree, inflatedCat)
 	}
 	return
 }
