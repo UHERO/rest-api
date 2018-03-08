@@ -11,7 +11,7 @@ type GeographyRepository struct {
 }
 
 func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPortalGeography, err error) {
-	rows, err := r.DB.Query(`SELECT fips, display_name, handle FROM geographies;`)
+	rows, err := r.DB.Query(`SELECT fips, display_name, display_name_short, handle FROM geographies;`)
 	if err != nil {
 		return
 	}
@@ -20,6 +20,7 @@ func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPort
 		err = rows.Scan(
 			&geography.FIPS,
 			&geography.Name,
+			&geography.ShortName,
 			&geography.Handle,
 		)
 		if err != nil {
@@ -31,6 +32,9 @@ func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPort
 		}
 		if geography.Name.Valid {
 			dataPortalGeography.Name = geography.Name.String
+		}
+		if geography.ShortName.Valid {
+			dataPortalGeography.ShortName = geography.ShortName.String
 		}
 		geographies = append(geographies, dataPortalGeography)
 	}
