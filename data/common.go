@@ -2,9 +2,9 @@ package data
 
 import (
 	"database/sql"
+	"github.com/UHERO/rest-api/models"
 	"strconv"
 	"strings"
-	"github.com/UHERO/rest-api/models"
 	"time"
 )
 
@@ -68,8 +68,8 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 		return
 	}
 	dataPortalSeries = models.DataPortalSeries{
-		Id:   series.Id,
-		Name: series.Name,
+		Id:       series.Id,
+		Name:     series.Name,
 		Universe: series.Universe,
 	}
 	dataPortalSeries.FrequencyShort = dataPortalSeries.Name[len(dataPortalSeries.Name)-1:]
@@ -187,7 +187,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 	freqsResult := []models.DataPortalFrequency{}
 	for rows.Next() {
 		var gftype sql.NullString
-		temp := models.Geography{}  // Using Geography object as a scan buffer, because it works.
+		temp := models.Geography{} // Using Geography object as a scan buffer, because it works.
 		err = rows.Scan(
 			&gftype,
 			&temp.Handle,
@@ -208,22 +208,22 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 			if temp.ShortName.Valid {
 				g.ShortName = temp.ShortName.String
 			}
-			if temp.ObservationStart.Valid  {
+			if temp.ObservationStart.Valid {
 				g.ObservationStart = &temp.ObservationStart.Time
 			}
-			if temp.ObservationEnd.Valid  {
+			if temp.ObservationEnd.Valid {
 				g.ObservationEnd = &temp.ObservationEnd.Time
 			}
 			geosResult = append(geosResult, g)
 		} else {
 			f := models.DataPortalFrequency{
-				Freq: temp.Handle,
+				Freq:  temp.Handle,
 				Label: freqLabel[temp.Handle],
 			}
-			if temp.ObservationStart.Valid  {
+			if temp.ObservationStart.Valid {
 				f.ObservationStart = &temp.ObservationStart.Time
 			}
-			if temp.ObservationEnd.Valid  {
+			if temp.ObservationEnd.Valid {
 				f.ObservationEnd = &temp.ObservationEnd.Time
 			}
 			freqsResult = append(freqsResult, f)
