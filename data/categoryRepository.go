@@ -2,12 +2,12 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/UHERO/rest-api/models"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"errors"
 )
 
 type CategoryRepository struct {
@@ -71,7 +71,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 		}
 		if category.DefaultFrequency.Valid {
 			dataPortalCategory.Defaults.Frequency = &models.DataPortalFrequency{
-				Freq: category.DefaultFrequency.String,
+				Freq:  category.DefaultFrequency.String,
 				Label: freqLabel[category.DefaultFrequency.String],
 			}
 		}
@@ -175,7 +175,7 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		}
 		if category.DefaultFrequency.Valid {
 			dataPortalCategory.Defaults.Frequency = &models.DataPortalFrequency{
-				Freq: category.DefaultFrequency.String,
+				Freq:  category.DefaultFrequency.String,
 				Label: freqLabel[category.DefaultFrequency.String],
 			}
 		}
@@ -269,14 +269,14 @@ func (r *CategoryRepository) GetCategoryRootByUniverse(universe string) (categor
 		}
 		if scanCat.DefaultFrequency.Valid {
 			category.Defaults.Frequency = &models.DataPortalFrequency{
-				Freq: scanCat.DefaultFrequency.String,
+				Freq:  scanCat.DefaultFrequency.String,
 				Label: freqLabel[scanCat.DefaultFrequency.String],
 			}
 		}
 		if scanCat.DefaultGeoHandle.Valid {
 			category.Defaults.Geography = &models.DataPortalGeography{
-				Handle: scanCat.DefaultGeoHandle.String,
-				Name: scanCat.DefaultGeoName.String,
+				Handle:    scanCat.DefaultGeoHandle.String,
+				Name:      scanCat.DefaultGeoName.String,
 				ShortName: scanCat.DefaultGeoShortName.String,
 			}
 		}
@@ -323,7 +323,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	if err != nil {
 		return dataPortalCategory, err
 	}
-	var geosResult  []models.DataPortalGeography
+	var geosResult []models.DataPortalGeography
 	var freqsResult []models.DataPortalFrequency
 
 	for rows.Next() {
@@ -377,15 +377,15 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		if scangeo.ShortName.Valid {
 			geo.ShortName = scangeo.ShortName.String
 		}
-		if scangeo.ObservationStart.Valid  {
-			 geo.ObservationStart = &scangeo.ObservationStart.Time
+		if scangeo.ObservationStart.Valid {
+			geo.ObservationStart = &scangeo.ObservationStart.Time
 			freq.ObservationStart = &scangeo.ObservationStart.Time
 			if scangeo.ObservationStart.Time.Before(*dataPortalCategory.ObservationStart) {
 				dataPortalCategory.ObservationStart = &scangeo.ObservationStart.Time
 			}
 		}
-		if scangeo.ObservationEnd.Valid  {
-			 geo.ObservationEnd = &scangeo.ObservationEnd.Time
+		if scangeo.ObservationEnd.Valid {
+			geo.ObservationEnd = &scangeo.ObservationEnd.Time
 			freq.ObservationEnd = &scangeo.ObservationEnd.Time
 			if scangeo.ObservationEnd.Time.After(*dataPortalCategory.ObservationEnd) {
 				dataPortalCategory.ObservationEnd = &scangeo.ObservationEnd.Time
@@ -399,10 +399,10 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 
 			if geo.Handle == originGeo {
 				dataPortalCategory.Current = &models.CurrentGeoFreq{
-					Geography: originGeo,
-					Frequency: originFreq,
+					Geography:        originGeo,
+					Frequency:        originFreq,
 					ObservationStart: &scangeo.ObservationStart.Time,
-					ObservationEnd: &scangeo.ObservationEnd.Time,
+					ObservationEnd:   &scangeo.ObservationEnd.Time,
 				}
 			}
 		}
@@ -445,7 +445,7 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 }
 
 func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
-		rows, err := r.DB.Query(`SELECT categories.id, categories.universe, categories.name, header, ancestry,
+	rows, err := r.DB.Query(`SELECT categories.id, categories.universe, categories.name, header, ancestry,
 												geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
 										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
@@ -481,7 +481,7 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 		}
 		if category.DefaultFrequency.Valid {
 			dataPortalCategory.Defaults.Frequency = &models.DataPortalFrequency{
-				Freq: category.DefaultFrequency.String,
+				Freq:  category.DefaultFrequency.String,
 				Label: freqLabel[category.DefaultFrequency.String],
 			}
 		}

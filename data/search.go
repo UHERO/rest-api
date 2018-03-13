@@ -10,7 +10,7 @@ import (
 
 type SearchRepository struct {
 	Categories *CategoryRepository
-	Series *SeriesRepository
+	Series     *SeriesRepository
 }
 
 func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
@@ -177,7 +177,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 		handle = frequency.Freq
 		if _, ok := seenFreqs[handle]; !ok {
 			freq := &models.DataPortalFrequency{
-				Freq: handle,
+				Freq:  handle,
 				Label: freqLabel[handle],
 			}
 			if searchSummary.DefaultFreq == nil {
@@ -187,13 +187,13 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 		}
 	}
 	geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
-	for  _, value := range seenGeos {
+	for _, value := range seenGeos {
 		geosResult = append(geosResult, value)
 	}
 	sort.Sort(models.ByGeography(geosResult))
 
 	freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
-	for  _, value := range seenFreqs {
+	for _, value := range seenFreqs {
 		freqsResult = append(freqsResult, value)
 	}
 	sort.Sort(models.ByFrequency(freqsResult))
