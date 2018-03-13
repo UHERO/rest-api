@@ -1,11 +1,11 @@
 package data
 
 import (
-	"github.com/UHERO/rest-api/models"
 	"database/sql"
+	"github.com/UHERO/rest-api/models"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 )
 
 type SeriesRepository struct {
@@ -67,13 +67,15 @@ var transformations map[string]transformation = map[string]transformation{
 		Label:            "pc1",
 	},
 	YTDChange: { // ytd change from 1 year ago
-		Statement: `SELECT t1.date, (t1.ytd - t2.last_ytd)/series.units AS ytd,
+		Statement: `SELECT t1.date, (t1.ytd/t1.count - t2.last_ytd/t2.last_count)/series.units AS ytd,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-      FROM (SELECT date, value, series_id, pseudo_history, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
+	  FROM (SELECT date, value, series_id, pseudo_history, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
+	  		  @count := IF(@year = YEAR(date), @count, 0) + 1 AS count,
               @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
             FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
             WHERE series_id = ? ORDER BY date) AS t1
-      LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
+	  LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
+				   @count := IF(@year = YEAR(date), @count, 0) + 1 AS last_count,
                    @year := year(date), pseudo_history
                  FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
                  WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date)
@@ -736,9 +738,9 @@ func (r *SeriesRepository) GetTransformation(
 		return
 	}
 	var (
-		obsDates	[]string
-		obsValues	[]string
-		obsPseudoHist	[]bool
+		obsDates      []string
+		obsValues     []string
+		obsPseudoHist []bool
 	)
 
 	for rows.Next() {
@@ -781,7 +783,7 @@ func (r *SeriesRepository) GetTransformation(
 func (r *SeriesRepository) CreateAnalyzerPackage(
 	ids []int64,
 	categoryRepository *CategoryRepository,
-)  (pkg models.DataPortalAnalyzerPackage, err error) {
+) (pkg models.DataPortalAnalyzerPackage, err error) {
 
 	var universe string
 	pkg.InflatedSeries = []models.InflatedSeries{}
