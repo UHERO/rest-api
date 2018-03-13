@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
-	"github.com/UHERO/rest-api/models"
 	"github.com/gorilla/mux"
 )
 
@@ -273,39 +272,20 @@ func GetSeriesPackage(
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		pkg := models.DataPortalSeriesPackage{}
+
 		id, ok := getId(w, r)
 		if !ok {
 			return
 		}
-		series, err := seriesRepository.GetSeriesById(id)
+		universe, ok := mux.Vars(r)["universe_text"]
+		if !ok {
+			return
+		}
+		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, categoryRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
-		pkg.Series = series
-
-		categories, err := categoryRepository.GetAllCategoriesByUniverse(series.Universe)
-		if err != nil {
-			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
-			return
-		}
-		pkg.Categories = categories
-
-		observations, err := seriesRepository.GetSeriesObservations(id)
-		if err != nil {
-			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
-			return
-		}
-		pkg.Observations = observations
-
-		siblings, err := seriesRepository.GetSeriesSiblingsById(id)
-		if err != nil {
-			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
-			return
-		}
-		pkg.Siblings = siblings
-
 		j, err := json.Marshal(SeriesPackage{Data: pkg})
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)

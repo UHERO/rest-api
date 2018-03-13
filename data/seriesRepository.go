@@ -778,6 +778,38 @@ func (r *SeriesRepository) GetTransformation(
 	return
 }
 
+func (r *SeriesRepository) CreateSeriesPackage(
+	id int64,
+	universe string,
+	categoryRepository *CategoryRepository,
+)  (pkg models.DataPortalSeriesPackage, err error) {
+
+	series, err := r.GetSeriesById(id)
+	if err != nil {
+		return
+	}
+	pkg.Series = series
+
+	categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+	if err != nil {
+		return
+	}
+	pkg.Categories = categories
+
+	observations, err := r.GetSeriesObservations(id)
+	if err != nil {
+		return
+	}
+	pkg.Observations = observations
+
+	siblings, err := r.GetSeriesSiblingsById(id)
+	if err != nil {
+		return
+	}
+	pkg.Siblings = siblings
+	return
+}
+
 func (r *SeriesRepository) CreateAnalyzerPackage(
 	ids []int64,
 	universe string,
