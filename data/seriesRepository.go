@@ -181,7 +181,7 @@ var measurementSeriesPrefix = `SELECT
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = measurements.universe AND feature_toggles.name = 'filter_by_quarantine'
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE measurements.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var geoFilter = ` AND geographies.handle = UPPER(?) `
@@ -780,12 +780,44 @@ func (r *SeriesRepository) GetTransformation(
 	return
 }
 
+func (r *SeriesRepository) CreateSeriesPackage(
+	id int64,
+	universe string,
+	categoryRepository *CategoryRepository,
+)  (pkg models.DataPortalSeriesPackage, err error) {
+
+	series, err := r.GetSeriesById(id)
+	if err != nil {
+		return
+	}
+	pkg.Series = series
+
+	categories, err := categoryRepository.GetAllCategoriesByUniverse(universe)
+	if err != nil {
+		return
+	}
+	pkg.Categories = categories
+
+	observations, err := r.GetSeriesObservations(id)
+	if err != nil {
+		return
+	}
+	pkg.Observations = observations
+
+	siblings, err := r.GetSeriesSiblingsById(id)
+	if err != nil {
+		return
+	}
+	pkg.Siblings = siblings
+	return
+}
+
 func (r *SeriesRepository) CreateAnalyzerPackage(
 	ids []int64,
+	universe string,
 	categoryRepository *CategoryRepository,
 ) (pkg models.DataPortalAnalyzerPackage, err error) {
 
-	var universe string
 	pkg.InflatedSeries = []models.InflatedSeries{}
 
 	for _, id := range ids {
@@ -794,8 +826,6 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 			err = anErr
 			return
 		}
-		universe = series.Universe
-
 		observations, anErr := r.GetSeriesObservations(id)
 		if anErr != nil {
 			err = anErr

@@ -18,6 +18,7 @@ func SetPackageRoutes(
 		controllers.GetSeriesPackage(seriesRepository, categoryRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
+		"u", "{universe_text:.+}",
 	)
 	router.HandleFunc(
 		"/v1/package/search",
@@ -54,6 +55,7 @@ func SetPackageRoutes(
 		controllers.GetAnalyzerPackage(categoryRepository, seriesRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"ids", "{ids_list:[0-9,]+}",
+		"u", "{universe_text:.+}",
 	)
 	return router
 }
