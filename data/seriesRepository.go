@@ -780,10 +780,10 @@ func (r *SeriesRepository) GetTransformation(
 
 func (r *SeriesRepository) CreateAnalyzerPackage(
 	ids []int64,
+	universe string,
 	categoryRepository *CategoryRepository,
 )  (pkg models.DataPortalAnalyzerPackage, err error) {
 
-	var universe string
 	pkg.InflatedSeries = []models.InflatedSeries{}
 
 	for _, id := range ids {
@@ -792,8 +792,6 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 			err = anErr
 			return
 		}
-		universe = series.Universe
-
 		observations, anErr := r.GetSeriesObservations(id)
 		if anErr != nil {
 			err = anErr
