@@ -3,12 +3,11 @@ package data
 import (
 	"database/sql"
 	"errors"
+	"github.com/UHERO/rest-api/models"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/UHERO/rest-api/models"
 )
 
 type CategoryRepository struct {
