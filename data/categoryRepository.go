@@ -529,7 +529,7 @@ func (r *CategoryRepository) getCategoryTree(
 		}
 		inflatedCat := models.CategoryWithInflatedSeries{}
 
-		category, anErr := r.GetCategoryById(kid.Id)
+		category, anErr := r.GetCategoryByIdGeoFreq(kid.Id, geo, freq)
 		if anErr != nil {
 			err = anErr
 			return
