@@ -10,7 +10,7 @@ import (
 
 type SearchRepository struct {
 	Categories *CategoryRepository
-	Series *SeriesRepository
+	Series     *SeriesRepository
 }
 
 func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
@@ -39,7 +39,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.universe = UPPER(?)
+	WHERE series.universe LIKE CONCAT('%',?,'%')
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
@@ -86,14 +86,14 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	      SELECT series_id FROM measurement_series WHERE measurement_id IN (
 		SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
 		  SELECT data_list_id FROM categories
-		  WHERE universe = UPPER(?)
+		  WHERE universe LIKE CONCAT('%',?,'%')
 		  AND ((MATCH(name) AGAINST(? IN NATURAL LANGUAGE MODE))
 		    OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
 		)
 	      )
 	      UNION
 	      SELECT id AS series_id FROM series
-	      WHERE universe = UPPER(?)
+	      WHERE universe LIKE CONCAT('%',?,'%')
 	      AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	        OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	    ) AS s ON s.series_id = series.id
@@ -131,7 +131,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurement_series.measurement_id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.universe = UPPER(?)
+	WHERE series.universe LIKE CONCAT('%',?,'%')
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT quarantined)
 	AND ((MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
@@ -177,7 +177,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 		handle = frequency.Freq
 		if _, ok := seenFreqs[handle]; !ok {
 			freq := &models.DataPortalFrequency{
-				Freq: handle,
+				Freq:  handle,
 				Label: freqLabel[handle],
 			}
 			if searchSummary.DefaultFreq == nil {
@@ -187,13 +187,13 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 		}
 	}
 	geosResult := make([]models.DataPortalGeography, 0, len(seenGeos))
-	for  _, value := range seenGeos {
+	for _, value := range seenGeos {
 		geosResult = append(geosResult, value)
 	}
 	sort.Sort(models.ByGeography(geosResult))
 
 	freqsResult := make([]models.DataPortalFrequency, 0, len(seenFreqs))
-	for  _, value := range seenFreqs {
+	for _, value := range seenFreqs {
 		freqsResult = append(freqsResult, value)
 	}
 	sort.Sort(models.ByFrequency(freqsResult))
@@ -239,7 +239,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.universe = UPPER(?)
+	WHERE series.universe LIKE concat('%',?,'%')
 	AND geo.handle = ?
 	AND series.frequency = ?
 	AND NOT series.restricted
@@ -315,7 +315,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.universe = UPPER(?)
+	WHERE series.universe LIKE CONCAT('%',?,'%')
 	AND geo.handle = ?
 	AND series.frequency = ?
 	AND NOT series.restricted

@@ -866,14 +866,14 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "0240baa3-284e-4ddb-8b4c-653daeb7ef52",
+						"id": "82ae0a1a-8baf-4ccd-a8ea-0241d216e10b",
 						"type": "text/javascript",
 						"exec": [
 							"var data = JSON.parse(responseBody).data;",
 							"tests[\"Status code is 200\"] = responseCode.code === 200;",
 							"tests[\"Response contains data\"] = typeof(data) === 'object';",
-							"tests[\"Response has categories and series\"] = Array.isArray(data.categories) && Array.isArray(data.series);",
-							"tests[\"Response categories is array\"] = Array.isArray(data.categories);",
+							"tests[\"Response series is non-empty array\"] = Array.isArray(data.series) && data.series.length > 0;",
+							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
 							"tests[\"Response series contains an element with name\"] = data.series[0].name !== undefined;",
 							""
 						]
@@ -895,7 +895,7 @@
 				"header": [],
 				"body": {},
 				"url": {
-					"raw": "{{url}}/package/analyzer?ids=152239,152240",
+					"raw": "{{url}}/package/analyzer?u=uhero&ids=152239,152240",
 					"host": [
 						"{{url}}"
 					],
@@ -904,6 +904,11 @@
 						"analyzer"
 					],
 					"query": [
+						{
+							"key": "u",
+							"value": "uhero",
+							"equals": true
+						},
 						{
 							"key": "ids",
 							"value": "152239,152240",
@@ -1177,7 +1182,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "0dbfcea9-c357-4670-a206-e5576c5853e4",
+						"id": "95517110-0f7a-4af9-83f6-e33b123d27b3",
 						"type": "text/javascript",
 						"exec": [
 							"var data = JSON.parse(responseBody).data;",
@@ -1185,7 +1190,9 @@
 							"tests[\"Response contains data\"] = typeof(data) === 'object';",
 							"tests[\"Response contains a series object\"] = data.series !== undefined;",
 							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
-							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;"
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;",
+							"tests[\"Response contains an observations object\"] = data.observations !== undefined;",
+							"tests[\"Response siblings is non-empty array\"] = Array.isArray(data.siblings) && data.siblings.length > 0;"
 						]
 					}
 				}
@@ -1205,7 +1212,7 @@
 				"header": [],
 				"body": {},
 				"url": {
-					"raw": "{{url}}/package/series?id=148863",
+					"raw": "{{url}}/package/series?u=uhero&id=148863",
 					"host": [
 						"{{url}}"
 					],
@@ -1214,6 +1221,11 @@
 						"series"
 					],
 					"query": [
+						{
+							"key": "u",
+							"value": "uhero",
+							"equals": true
+						},
 						{
 							"key": "id",
 							"value": "148863",

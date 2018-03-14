@@ -1,11 +1,11 @@
 package data
 
 import (
+	"fmt"
 	"github.com/UHERO/rest-api/models"
+	"github.com/andygrunwald/go-jira"
 	"log"
 	"os"
-	"fmt"
-	"github.com/andygrunwald/go-jira"
 )
 
 type FeedbackRepository struct {
