@@ -3,11 +3,12 @@ package data
 import (
 	"database/sql"
 	"errors"
-	"github.com/UHERO/rest-api/models"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/UHERO/rest-api/models"
 )
 
 type CategoryRepository struct {
@@ -529,7 +530,7 @@ func (r *CategoryRepository) getCategoryTree(
 		}
 		inflatedCat := models.CategoryWithInflatedSeries{}
 
-		category, anErr := r.GetCategoryById(kid.Id)
+		category, anErr := r.GetCategoryByIdGeoFreq(kid.Id, geo, freq)
 		if anErr != nil {
 			err = anErr
 			return
