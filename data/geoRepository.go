@@ -11,7 +11,7 @@ type GeographyRepository struct {
 }
 
 func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPortalGeography, err error) {
-	rows, err := r.DB.Query(`SELECT fips, display_name, handle FROM geographies;`)
+	rows, err := r.DB.Query(`SELECT fips, display_name, display_name_short, handle FROM geographies;`)
 	if err != nil {
 		return
 	}
@@ -20,6 +20,7 @@ func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPort
 		err = rows.Scan(
 			&geography.FIPS,
 			&geography.Name,
+			&geography.ShortName,
 			&geography.Handle,
 		)
 		if err != nil {
@@ -32,6 +33,9 @@ func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPort
 		if geography.Name.Valid {
 			dataPortalGeography.Name = geography.Name.String
 		}
+		if geography.ShortName.Valid {
+			dataPortalGeography.ShortName = geography.ShortName.String
+		}
 		geographies = append(geographies, dataPortalGeography)
 	}
 	return
@@ -39,7 +43,7 @@ func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPort
 
 func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geographies []models.DataPortalGeography, err error) {
 	rows, err := r.DB.Query(
-		`SELECT DISTINCT geographies.fips, geographies.display_name_short, geographies.handle
+		`SELECT DISTINCT geographies.fips, geographies.display_name, geographies.display_name_short, geographies.handle
 		FROM categories
 		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
@@ -61,6 +65,7 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 		err = rows.Scan(
 			&geography.FIPS,
 			&geography.Name,
+			&geography.ShortName,
 			&geography.Handle,
 		)
 		if err != nil {
@@ -73,6 +78,9 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 		if geography.Name.Valid {
 			dataPortalGeography.Name = geography.Name.String
 		}
+		if geography.ShortName.Valid {
+			dataPortalGeography.ShortName = geography.ShortName.String
+		}
 		geographies = append(geographies, dataPortalGeography)
 	}
 	return
@@ -80,7 +88,7 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 
 func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []models.DataPortalGeography, err error) {
 	rows, err := r.DB.Query(
-		`SELECT DISTINCT geographies.fips, geographies.display_name_short, geographies.handle
+		`SELECT DISTINCT geographies.fips, geographies.display_name, geographies.display_name_short, geographies.handle
 		FROM series
 		JOIN (SELECT name, universe FROM series where id = ?) AS original_series
 		LEFT JOIN geographies ON geographies.id = series.geography_id
@@ -97,6 +105,7 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 		err = rows.Scan(
 			&geography.FIPS,
 			&geography.Name,
+			&geography.ShortName,
 			&geography.Handle,
 		)
 		if err != nil {
@@ -108,6 +117,9 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 		}
 		if geography.Name.Valid {
 			dataPortalGeography.Name = geography.Name.String
+		}
+		if geography.ShortName.Valid {
+			dataPortalGeography.ShortName = geography.ShortName.String
 		}
 		geographies = append(geographies, dataPortalGeography)
 	}
