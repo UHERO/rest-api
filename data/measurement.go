@@ -19,7 +19,7 @@ func (r *MeasurementRepository) GetMeasurementsByCategory(categoryId int64) (
 		LEFT JOIN data_list_measurements ON categories.data_list_id = data_list_measurements.data_list_id
 		LEFT JOIN measurements ON data_list_measurements.measurement_id = measurements.id
 		WHERE categories.id = ?
-		AND NOT categories.hidden
+		AND NOT (categories.hidden OR categories.masked)
 		AND measurements.id IS NOT NULL
 		ORDER BY data_list_measurements.list_order;`,
 		categoryId,
