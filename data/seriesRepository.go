@@ -36,6 +36,7 @@ const (
 )
 
 var transformations map[string]transformation = map[string]transformation{
+	//language=SQL
 	Levels: { // untransformed value
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
 		FROM public_data_points
@@ -44,6 +45,7 @@ var transformations map[string]transformation = map[string]transformation{
 		PlaceholderCount: 1,
 		Label:            "lvl",
 	},
+	//language=SQL
 	YOYPercentChange: { // percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
@@ -55,6 +57,7 @@ var transformations map[string]transformation = map[string]transformation{
 		PlaceholderCount: 2,
 		Label:            "pc1",
 	},
+	//language=SQL
 	YOYChange: { // change from 1 year ago
 		Statement: `SELECT t1.date, (t1.value - t2.last_value)/series.units AS yoy,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
@@ -66,6 +69,7 @@ var transformations map[string]transformation = map[string]transformation{
 		PlaceholderCount: 2,
 		Label:            "pc1",
 	},
+	//language=SQL
 	YTDChange: { // ytd change from 1 year ago
 		Statement: `SELECT t1.date, (t1.ytd/t1.count - t2.last_ytd/t2.last_count)/series.units AS ytd,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
@@ -83,6 +87,7 @@ var transformations map[string]transformation = map[string]transformation{
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
+	//language=SQL
 	YTDPercentChange: { // ytd percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.ytd/t2.last_ytd - 1)*100 AS ytd,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
@@ -98,6 +103,7 @@ var transformations map[string]transformation = map[string]transformation{
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
+	//language=SQL
 	C5MAPercentChange: { // c5ma percent change from 1 year ago
 		Statement: `SELECT t1.date, (t1.c5ma/t2.last_c5ma - 1)*100 AS c5ma, 
 			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
@@ -113,6 +119,7 @@ var transformations map[string]transformation = map[string]transformation{
 		PlaceholderCount: 4,
 		Label:            "c5ma",
 	},
+	//language=SQL
 	C5MAChange: { // cm5a change from 1 year ago
 		Statement: `SELECT t1.date, (t1.c5ma - t2.last_c5ma)/series.units AS c5ma, 
 			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
@@ -130,6 +137,7 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 }
 
+//language=SQL
 var seriesPrefix = `SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
@@ -159,6 +167,7 @@ var seriesPrefix = `SELECT
 	AND NOT categories.hidden
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
+//language=SQL
 var measurementSeriesPrefix = `SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
@@ -189,6 +198,7 @@ var freqFilter = ` AND series.frequency = ? `
 var measurementPostfix = ` GROUP BY series.id;`
 var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
 var siblingSortStmt = ` GROUP BY series.id;`
+//language=SQL
 var siblingsPrefix = `SELECT
     series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
