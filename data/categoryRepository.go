@@ -33,7 +33,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 			geographies.display_name_short AS catgeonameshort
 		FROM categories
 		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
-		WHERE NOT categories.hidden
+		WHERE NOT (categories.hidden OR categories.masked)
 		AND categories.ancestry = CONVERT(
 			(SELECT id from categories WHERE universe = ? AND ancestry IS NULL), CHAR)
 		ORDER BY categories.list_order;`, universe)
@@ -137,7 +137,7 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 		WHERE categories.universe = ?
 		AND categories.ancestry IS NOT NULL
-		AND NOT categories.hidden
+		AND NOT (categories.hidden OR categories.masked)
 		GROUP BY categories.id, categories.default_geo_id, categories.default_freq
 		ORDER BY categories.list_order;`, universe)
 	if err != nil {
@@ -217,10 +217,7 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 }
 
 func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT id, name, universe FROM categories
-				WHERE ancestry IS NULL
-				AND NOT hidden
-				ORDER BY list_order;`)
+	rows, err := r.DB.Query(`SELECT id, name, universe FROM categories WHERE ancestry IS NULL ORDER BY list_order;`)
 	if err != nil {
 		return
 	}
@@ -245,8 +242,7 @@ func (r *CategoryRepository) GetCategoryRootByUniverse(universe string) (categor
 				FROM categories
 				  LEFT JOIN geographies on geographies.id = categories.default_geo_id
 				WHERE categories.universe = ?
-				AND categories.ancestry IS NULL
-				AND NOT categories.hidden;`, universe)
+				AND categories.ancestry IS NULL;`, universe)
 	if err != nil {
 		return
 	}
@@ -417,7 +413,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
 	fuzzyString := "%" + name + "%"
 	rows, err := r.DB.Query(`SELECT id, name, universe, ancestry FROM categories
-							 WHERE LOWER(name) LIKE ? AND NOT hidden
+							 WHERE LOWER(name) LIKE ? AND NOT (hidden OR masked)
 							 ORDER BY list_order;`, fuzzyString)
 	if err != nil {
 		return
@@ -449,7 +445,7 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 												geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
 										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
-										AND NOT categories.hidden
+										AND NOT (categories.hidden OR categories.masked)
 										ORDER BY categories.list_order;`, id)
 	if err != nil {
 		return

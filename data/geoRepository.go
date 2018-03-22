@@ -51,7 +51,7 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 		LEFT JOIN geographies ON geographies.id = series.geography_id
 		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 		WHERE (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]'))
-		AND NOT categories.hidden
+		AND NOT (categories.hidden OR categories.masked)
 		AND NOT series.restricted
 		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`,
 		categoryId,
