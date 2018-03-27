@@ -155,9 +155,12 @@ var seriesPrefix = `SELECT
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
-	LEFT JOIN category_geographies cg on cg.category_id = categories.id
-	LEFT JOIN geographies ON geographies.id = cg.geography_id
-						 AND geographies.id = series.geography_id /* ????????? */
+	LEFT JOIN category_geographies cg ON cg.category_id = categories.id
+	LEFT JOIN geographies ON
+	    (CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
+	          THEN geographies.id = cg.geography_id
+	          ELSE 0 = 0
+	    END)
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -167,6 +170,7 @@ var seriesPrefix = `SELECT
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
 	AND NOT (categories.hidden OR categories.masked)
+	AND series.geography_id = geographies.id
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 //language=MySQL
