@@ -129,22 +129,13 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	rows, err := r.Series.DB.Query(`
 	SELECT DISTINCT geo.fips, geo.display_name, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
 	FROM series
+	LEFT JOIN geographies geo on geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurement_series.measurement_id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
-	LEFT JOIN category_geographies cg ON cg.category_id = categories.id
-	LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
-	LEFT JOIN geographies geo ON
-		(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
-			  THEN geo.id = cg.geography_id ELSE true
-		 END)
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe LIKE CONCAT('%',?,'%')
 	AND NOT series.restricted
-	AND series.geography_id = geo.id
-	AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
-			  THEN series.frequency = cf.frequency ELSE true
-		 END)
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT quarantined)
 	AND ((MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
