@@ -14,6 +14,7 @@ type SearchRepository struct {
 }
 
 func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
+	//language=MySQL
 	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
@@ -78,24 +79,25 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	searchSummary.SearchText = searchText
 
 	var observationStart, observationEnd models.NullTime
+	//language=MySQL
 	err = r.Series.DB.QueryRow(`
 	    SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
 	    FROM public_data_points
 	    JOIN series ON series.id = public_data_points.series_id
 	    JOIN (
-	      SELECT series_id FROM measurement_series WHERE measurement_id IN (
-		SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
-		  SELECT data_list_id FROM categories
-		  WHERE universe LIKE CONCAT('%',?,'%')
-		  AND ((MATCH(name) AGAINST(? IN NATURAL LANGUAGE MODE))
-		    OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
-		)
-	      )
-	      UNION
-	      SELECT id AS series_id FROM series
-	      WHERE universe LIKE CONCAT('%',?,'%')
-	      AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	        OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+			SELECT series_id FROM measurement_series WHERE measurement_id IN (
+				SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
+					SELECT data_list_id FROM categories
+					WHERE universe LIKE CONCAT('%',?,'%')
+					AND ((MATCH(name) AGAINST(? IN NATURAL LANGUAGE MODE))
+						OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
+				)
+			)
+			UNION
+			SELECT id AS series_id FROM series
+			WHERE universe LIKE CONCAT('%',?,'%')
+			AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
+				OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	    ) AS s ON s.series_id = series.id
 	    LEFT JOIN feature_toggles ft ON ft.universe = series.universe AND ft.name = 'filter_by_quarantine'
 	    WHERE NOT series.restricted
@@ -123,6 +125,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 		searchSummary.DefaultFreq = rootCat.Defaults.Frequency
 	}
 
+	//language=MySQL
 	rows, err := r.Series.DB.Query(`
 	SELECT DISTINCT geo.fips, geo.display_name, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
 	FROM series
@@ -214,6 +217,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	freq string,
 	universeText string,
 ) (seriesList []models.DataPortalSeries, err error) {
+	//language=MySQL
 	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
@@ -290,6 +294,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	freq string,
 	universeText string,
 ) (seriesList []models.InflatedSeries, err error) {
+	//language=MySQL
 	rows, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),

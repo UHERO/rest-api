@@ -37,6 +37,7 @@ const (
 
 var transformations map[string]transformation = map[string]transformation{
 	Levels: { // untransformed value
+		//language=MySQL
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
 		FROM public_data_points
 		LEFT JOIN series ON public_data_points.series_id = series.id
@@ -45,6 +46,7 @@ var transformations map[string]transformation = map[string]transformation{
 		Label:            "lvl",
 	},
 	YOYPercentChange: { // percent change from 1 year ago
+		//language=MySQL
 		Statement: `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
 				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
@@ -56,6 +58,7 @@ var transformations map[string]transformation = map[string]transformation{
 		Label:            "pc1",
 	},
 	YOYChange: { // change from 1 year ago
+		//language=MySQL
 		Statement: `SELECT t1.date, (t1.value - t2.last_value)/series.units AS yoy,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
 				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
@@ -67,6 +70,7 @@ var transformations map[string]transformation = map[string]transformation{
 		Label:            "pc1",
 	},
 	YTDChange: { // ytd change from 1 year ago
+		//language=MySQL
 		Statement: `SELECT t1.date, (t1.ytd/t1.count - t2.last_ytd/t2.last_count)/series.units AS ytd,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
 	  FROM (SELECT date, value, series_id, pseudo_history, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
@@ -84,6 +88,7 @@ var transformations map[string]transformation = map[string]transformation{
 		Label:            "ytd",
 	},
 	YTDPercentChange: { // ytd percent change from 1 year ago
+		//language=MySQL
 		Statement: `SELECT t1.date, (t1.ytd/t2.last_ytd - 1)*100 AS ytd,
 				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
       FROM (SELECT series_id, date, value, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
@@ -99,6 +104,7 @@ var transformations map[string]transformation = map[string]transformation{
 		Label:            "ytd",
 	},
 	C5MAPercentChange: { // c5ma percent change from 1 year ago
+		//language=MySQL
 		Statement: `SELECT t1.date, (t1.c5ma/t2.last_c5ma - 1)*100 AS c5ma, 
 			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
 			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
@@ -114,6 +120,7 @@ var transformations map[string]transformation = map[string]transformation{
 		Label:            "c5ma",
 	},
 	C5MAChange: { // cm5a change from 1 year ago
+		//language=MySQL
 		Statement: `SELECT t1.date, (t1.c5ma - t2.last_c5ma)/series.units AS c5ma, 
 			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
 			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
@@ -130,8 +137,9 @@ var transformations map[string]transformation = map[string]transformation{
 	},
 }
 
+//language=MySQL
 var seriesPrefix = `SELECT
-	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+	series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
@@ -147,7 +155,12 @@ var seriesPrefix = `SELECT
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
-	LEFT JOIN geographies ON geographies.id = series.geography_id
+	LEFT JOIN category_geographies cg ON cg.category_id = categories.id
+	LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
+	LEFT JOIN geographies ON
+	    (CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
+	          THEN geographies.id = cg.geography_id ELSE true
+	     END)
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -158,7 +171,12 @@ var seriesPrefix = `SELECT
 	WHERE categories.id = ?
 	AND NOT (categories.hidden OR categories.masked)
 	AND NOT series.restricted
+	AND series.geography_id = geographies.id
+	AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
+	          THEN series.frequency = cf.frequency ELSE true
+	     END)
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
+//language=MySQL
 var measurementSeriesPrefix = `SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
@@ -189,6 +207,7 @@ var freqFilter = ` AND series.frequency = ? `
 var measurementPostfix = ` GROUP BY series.id;`
 var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
 var siblingSortStmt = ` GROUP BY series.id;`
+//language=MySQL
 var siblingsPrefix = `SELECT
     series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
@@ -444,10 +463,14 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 	LEFT JOIN series ON series.id = measurement_series.series_id
+	LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
 	AND NOT (categories.hidden OR categories.masked)
 	AND NOT series.restricted
+	AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
+	          THEN series.frequency = cf.frequency ELSE true
+	     END)
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
