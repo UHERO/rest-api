@@ -200,8 +200,7 @@ var measurementSeriesPrefix = `SELECT
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE measurements.id = ?
-	AND NOT series.restricted
+	WHERE measurements.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var geoFilter = ` AND geographies.handle = UPPER(?) `
 var freqFilter = ` AND series.frequency = ? `
