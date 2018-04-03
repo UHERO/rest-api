@@ -164,16 +164,10 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
-		LEFT JOIN categories ON categories.universe = ?
-		LEFT JOIN category_geographies cg ON cg.category_id = categories.id
-		LEFT JOIN geographies geo ON
-			(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
-				  THEN geo.id = cg.geography_id ELSE true
-			 END)
+		LEFT JOIN geographies geo on geo.id = series.geography_id
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		AND series.geography_id = geo.geography_id
 		GROUP BY geo.id
 		   UNION
 		SELECT DISTINCT 'freq' AS gftype,
@@ -181,14 +175,9 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
-		LEFT JOIN categories ON categories.universe = ?
-		LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
-				  THEN series.frequency = cf.frequency ELSE true
-			 END)
 		GROUP BY RIGHT(series.name, 1)
 		ORDER BY 1,2 ;`, seriesId, seriesId)
 	if err != nil {
