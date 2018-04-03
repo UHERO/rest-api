@@ -637,6 +637,10 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 }
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
+	return r.GetSeriesByIdAndUniverse(seriesId, "UHERO")
+}
+
+func (r *SeriesRepository) GetSeriesByIdAndUniverse(seriesId int64, universe string) (dataPortalSeries models.DataPortalSeries, err error) {
 	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
@@ -670,7 +674,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 		if err != nil {
 			return
 		}
-		geos, freqs, err := getAllFreqsGeos(r, seriesId)
+		geos, freqs, err := getAllFreqsGeosByUniverse(r, seriesId, universe)
 		if err != nil {
 			return dataPortalSeries, err
 		}
@@ -810,7 +814,7 @@ func (r *SeriesRepository) CreateSeriesPackage(
 	categoryRepository *CategoryRepository,
 )  (pkg models.DataPortalSeriesPackage, err error) {
 
-	series, err := r.GetSeriesById(id)
+	series, err := r.GetSeriesByIdAndUniverse(id, universe)
 	if err != nil {
 		return
 	}

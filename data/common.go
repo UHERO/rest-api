@@ -154,6 +154,14 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 	[]models.DataPortalFrequency,
 	error,
 ) {
+	return getAllFreqsGeosByUniverse(r, seriesId, "UHERO")
+}
+
+func getAllFreqsGeosByUniverse(r *SeriesRepository, seriesId int64, universe string) (
+	[]models.DataPortalGeography,
+	[]models.DataPortalFrequency,
+	error,
+) {
 	rows, err := r.DB.Query(
 		`SELECT DISTINCT 'geo' AS gftype,
 			ANY_VALUE(geo.handle) AS handle,
@@ -173,7 +181,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		AND series.geography_id = geo.geography_id
+		AND series.geography_id = geo.id
 		GROUP BY geo.id
 		   UNION
 		SELECT DISTINCT 'freq' AS gftype,
@@ -190,7 +198,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 				  THEN series.frequency = cf.frequency ELSE true
 			 END)
 		GROUP BY RIGHT(series.name, 1)
-		ORDER BY 1,2 ;`, seriesId, seriesId)
+		ORDER BY 1,2 ;`, universe, seriesId, universe, seriesId)
 	if err != nil {
 		return nil, nil, err
 	}
