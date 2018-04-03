@@ -172,10 +172,9 @@ func getAllFreqsGeosByUniverse(r *SeriesRepository, seriesId int64, universe str
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
-		LEFT JOIN categories ON categories.universe = ?
-		LEFT JOIN category_geographies cg ON cg.category_id = categories.id
+		LEFT JOIN category_geographies cg ON cg.category_id in (select id from categories where universe = ?)
 		LEFT JOIN geographies geo ON
-			(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
+			(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id in (select id from categories where universe = ?))
 				  THEN geo.id = cg.geography_id ELSE true
 			 END)
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
@@ -189,16 +188,15 @@ func getAllFreqsGeosByUniverse(r *SeriesRepository, seriesId int64, universe str
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series ON series.id = ms.series_id
-		LEFT JOIN categories ON categories.universe = ?
-		LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
+		LEFT JOIN category_frequencies cf ON  cf.category_id in (select id from categories where universe = ?)
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
+		AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id in (select id from categories where universe = ?))
 				  THEN series.frequency = cf.frequency ELSE true
 			 END)
 		GROUP BY RIGHT(series.name, 1)
-		ORDER BY 1,2 ;`, universe, seriesId, universe, seriesId)
+		ORDER BY 1,2 ;`, universe, universe, seriesId, universe, seriesId, universe)
 	if err != nil {
 		return nil, nil, err
 	}
