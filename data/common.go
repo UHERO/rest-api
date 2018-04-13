@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"sort"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -229,6 +230,8 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64) (
 			freqsResult = append(freqsResult, f)
 		}
 	}
+	sort.Sort(models.ByGeography(geosResult))
+	sort.Sort(models.ByFrequency(freqsResult))
 	return geosResult, freqsResult, err
 }
 
