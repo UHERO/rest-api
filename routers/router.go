@@ -28,6 +28,7 @@ func InitRoutes(
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
 	apiRouter = SetFeedbackRoutes(apiRouter, feedbackRepository)
 	apiRouter = SetPackageRoutes(apiRouter, seriesRepository, searchRepository, categoryRepository, cacheRepository)
+	apiRouter = SetAcsProxyRoute(apiRouter)
 
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),
