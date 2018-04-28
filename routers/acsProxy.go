@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Proxy for ACS 5-Year Data (2009 - 2016)
 func SetAcsProxyRoute(
 	router *mux.Router,
 ) *mux.Router {
@@ -12,7 +13,7 @@ func SetAcsProxyRoute(
 		"/v1/acs",
 		controllers.GetAcsData(),
 	).Methods("GET").Queries(
-		"id", "{ids_list:.+}",
+		"get", "{ids_list:.+}",
 	)
 	return router
 }
