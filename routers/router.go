@@ -3,8 +3,8 @@ package routers
 import (
 	"github.com/UHERO/rest-api/controllers"
 	"github.com/UHERO/rest-api/data"
-	"github.com/urfave/negroni"
 	"github.com/gorilla/mux"
+	"github.com/urfave/negroni"
 )
 
 func InitRoutes(
@@ -28,7 +28,7 @@ func InitRoutes(
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
 	apiRouter = SetFeedbackRoutes(apiRouter, feedbackRepository)
 	apiRouter = SetPackageRoutes(apiRouter, seriesRepository, searchRepository, categoryRepository, cacheRepository)
-	apiRouter = SetAcsProxyRoute(apiRouter)
+	apiRouter = SetAcsProxyRoute(apiRouter, cacheRepository)
 
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),

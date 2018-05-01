@@ -2,8 +2,9 @@ package data
 
 import (
 	"errors"
-	"github.com/garyburd/redigo/redis"
 	"log"
+
+	"github.com/garyburd/redigo/redis"
 )
 
 type CacheRepository struct {
@@ -32,18 +33,26 @@ func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("SET", key, value)
-	c.Send("EXPIRE", key, r.TTL)
+	c.Send("SET", key+":fresh", value)
+	c.Send("EXPIRE", key+":fresh", r.TTL)
 	response, err := redis.Values(c.Do("EXEC"))
+	log.Print(response)
 	if err != nil {
 		log.Printf("Redis error on SET or EXPIRE: %v", err)
 		return
 	}
 	var setResponse string
+	var setResponseFresh string
 	var expireResponse int
-	if _, err := redis.Scan(response, &setResponse, &expireResponse); err != nil {
+	if _, err := redis.Scan(response, &setResponse, &setResponseFresh, &expireResponse); err != nil {
 		log.Print("Error on scan of redis response")
 	}
 	if setResponse != "OK" {
+		err = errors.New("Did not get OK from Redis SET")
+		log.Print(err)
+		return
+	}
+	if setResponseFresh != "OK" {
 		err = errors.New("Did not get OK from Redis SET")
 		log.Print(err)
 		return

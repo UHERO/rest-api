@@ -17,7 +17,7 @@ import (
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := GetFullRelativeURL(r)
-		cached_val, _ := c.GetCache(url)
+		cached_val, _ := c.GetCache(url + ":fresh")
 		if cached_val != nil {
 			//log.Printf("DEBUG: Cache HIT: " + url)
 			WriteResponse(w, cached_val)
@@ -47,10 +47,13 @@ func WriteCache(r *http.Request, c *data.CacheRepository, payload []byte) {
 
 func GetFullRelativeURL(r *http.Request) string {
 	path := r.URL.Path
+	log.Print(r.RequestURI)
 	if r.URL.RawQuery == "" {
 		return path
 	}
-	return path + "?" + r.URL.RawQuery
+	log.Print(r.RequestURI + "?" + r.URL.RawQuery)
+	// return path + "?" + r.URL.RawQuery
+	return r.RequestURI
 }
 
 func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter, r *http.Request, c *data.CacheRepository) {
