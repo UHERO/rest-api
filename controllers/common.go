@@ -17,7 +17,7 @@ import (
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := GetFullRelativeURL(r)
-		cached_val, _ := c.GetCache(url + ":fresh")
+		cached_val, _ := c.GetCache(url)
 		if cached_val != nil {
 			//log.Printf("DEBUG: Cache HIT: " + url)
 			WriteResponse(w, cached_val)
@@ -38,6 +38,16 @@ func WriteResponse(w http.ResponseWriter, payload []byte) {
 func WriteCache(r *http.Request, c *data.CacheRepository, payload []byte) {
 	url := GetFullRelativeURL(r)
 	err := c.SetCache(url, payload)
+	if err != nil {
+		log.Printf("Cache store FAILURE: %s", url)
+		return
+	}
+	//log.Printf("DEBUG: Stored in cache: %s", url)
+}
+
+func WriteCachePair(r *http.Request, c *data.CacheRepository, payload []byte) {
+	url := GetFullRelativeURL(r)
+	err := c.SetCachePair(url, payload)
 	if err != nil {
 		log.Printf("Cache store FAILURE: %s", url)
 		return

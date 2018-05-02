@@ -6,16 +6,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Proxy for ACS 5-Year Data (2009 - 2016)
-func SetAcsProxyRoute(
+// Proxy for census.gov
+func SetCensusProxyRoute(
 	router *mux.Router,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
 	router.HandleFunc(
-		"/v1/acs",
-		controllers.GetAcsData(cacheRepository),
-	).Methods("GET").Queries(
-		"get", "{ids_list:.+}",
-	)
+		`/v1/census/{census_endpoint:[a-zA-Z0-9=\-\/]+}`,
+		controllers.GetCensusData(cacheRepository),
+	).Methods("GET")
 	return router
 }
