@@ -28,8 +28,14 @@ func InitRoutes(
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
 	apiRouter = SetFeedbackRoutes(apiRouter, feedbackRepository)
 	apiRouter = SetPackageRoutes(apiRouter, seriesRepository, searchRepository, categoryRepository, cacheRepository)
-	apiRouter = SetCensusProxyRoute(apiRouter, cacheRepository)
+	censusRouter := SetCensusProxyRoute(mux.NewRouter().StrictSlash(false), cacheRepository)
 
+	router.PathPrefix("/v1/census").Handler(negroni.New(
+		negroni.HandlerFunc(controllers.CORSOptionsHandler),
+		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
+		negroni.HandlerFunc(controllers.CheckCacheFresh(cacheRepository)),
+		negroni.Wrap(censusRouter),
+	))
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),

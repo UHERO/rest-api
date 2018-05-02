@@ -29,6 +29,21 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 	}
 }
 
+func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		url := GetFullRelativeURL(r)
+		cached_val_fresh, _ := c.GetCache(url + ":fresh")
+		if cached_val_fresh != nil {
+			//log.Printf("DEBUG: Cache HIT: " + url)
+			WriteResponse(w, cached_val_fresh)
+			return
+		}
+		//log.Printf("DEBUG: Cache miss: url=%s", url)
+		next(w, r)
+		return
+	}
+}
+
 func WriteResponse(w http.ResponseWriter, payload []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -57,11 +72,11 @@ func WriteCachePair(r *http.Request, c *data.CacheRepository, payload []byte) {
 
 func GetFullRelativeURL(r *http.Request) string {
 	path := r.URL.Path
-	log.Print(r.RequestURI)
+	// log.Print(r.RequestURI)
 	if r.URL.RawQuery == "" {
 		return path
 	}
-	log.Print(r.RequestURI + "?" + r.URL.RawQuery)
+	// log.Print(r.RequestURI + "?" + r.URL.RawQuery)
 	// return path + "?" + r.URL.RawQuery
 	return r.RequestURI
 }

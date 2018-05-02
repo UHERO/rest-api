@@ -59,42 +59,9 @@ func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
 
 // SetCachePair sets a pair of cache keys key (w/o expiration) and key:fresh (w/ expiration). Used for caching responses from the census proxy.
 func (r *CacheRepository) SetCachePair(key string, value []byte) (err error) {
+	r.SetCache(key+":fresh", value)
 	r.SetCache(key, value)
 	c := r.Pool.Get()
 	c.Send("PERSIST", key)
-	r.SetCache(key+":fresh", value)
 	return
-	/* c := r.Pool.Get()
-	defer c.Close()
-	c.Send("MULTI")
-	c.Send("SET", key, value)
-	c.Send("SET", key+":fresh", value)
-	c.Send("EXPIRE", key+":fresh", r.TTL)
-	response, err := redis.Values(c.Do("EXEC"))
-	log.Print(response)
-	if err != nil {
-		log.Printf("Redis error on SET or EXPIRE: %v", err)
-		return
-	}
-	var setResponse string
-	var setResponseFresh string
-	var expireResponse int
-	if _, err := redis.Scan(response, &setResponse, &setResponseFresh, &expireResponse); err != nil {
-		log.Print("Error on scan of redis response")
-	}
-	if setResponse != "OK" {
-		err = errors.New("Did not get OK from Redis SET")
-		log.Print(err)
-		return
-	}
-	if setResponseFresh != "OK" {
-		err = errors.New("Did not get OK from Redis SET")
-		log.Print(err)
-		return
-	}
-	if expireResponse != 1 {
-		log.Printf("Did not set expiration to %v", r.TTL)
-	}
-	log.Printf("Redis SET: %s", key)
-	return */
 }
