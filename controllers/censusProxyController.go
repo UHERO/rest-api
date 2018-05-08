@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -24,15 +25,18 @@ func GetCensusData(cacheRepository *data.CacheRepository) func(http.ResponseWrit
 		response, err := http.DefaultTransport.RoundTrip(r)
 		if err != nil {
 			log.Printf("Error retrieving data from census.gov: ", err)
-			cached_val, _ := cacheRepository.GetCache(GetFullRelativeURL(r))
+			cached_val, _ := cacheRepository.GetCache(GetCensusReqURI(r))
 			if cached_val != nil {
 				//log.Printf("DEBUG: Cache HIT: " + url)
 				WriteResponse(w, cached_val)
+				// w.Header().Set("Content-Type", "application/json")
+				// w.Write(cached_val)
 				return
 			}
 			return
 		}
-		body, err := httputil.DumpResponse(response, true)
+		//body, err := httputil.DumpResponse(response, true)
+		body, err := ioutil.ReadAll(response.Body)
 		WriteCachePair(r, cacheRepository, body)
 	}
 }

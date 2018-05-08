@@ -31,7 +31,7 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 
 func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		url := GetFullRelativeURL(r)
+		url := GetCensusReqURI(r)
 		cached_val_fresh, _ := c.GetCache(url + ":fresh")
 		if cached_val_fresh != nil {
 			//log.Printf("DEBUG: Cache HIT: " + url)
@@ -61,7 +61,7 @@ func WriteCache(r *http.Request, c *data.CacheRepository, payload []byte) {
 }
 
 func WriteCachePair(r *http.Request, c *data.CacheRepository, payload []byte) {
-	url := GetFullRelativeURL(r)
+	url := GetCensusReqURI(r)
 	err := c.SetCachePair(url, payload)
 	if err != nil {
 		log.Printf("Cache store FAILURE: %s", url)
@@ -70,15 +70,16 @@ func WriteCachePair(r *http.Request, c *data.CacheRepository, payload []byte) {
 	//log.Printf("DEBUG: Stored in cache: %s", url)
 }
 
+func GetCensusReqURI(r *http.Request) string {
+	return r.RequestURI
+}
+
 func GetFullRelativeURL(r *http.Request) string {
 	path := r.URL.Path
-	// log.Print(r.RequestURI)
 	if r.URL.RawQuery == "" {
 		return path
 	}
-	// log.Print(r.RequestURI + "?" + r.URL.RawQuery)
-	// return path + "?" + r.URL.RawQuery
-	return r.RequestURI
+	return path + "?" + r.URL.RawQuery
 }
 
 func returnSeriesList(seriesList []models.DataPortalSeries, err error, w http.ResponseWriter, r *http.Request, c *data.CacheRepository) {

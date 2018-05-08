@@ -35,7 +35,6 @@ func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
 	c.Send("SET", key, value)
 	c.Send("EXPIRE", key, r.TTL)
 	response, err := redis.Values(c.Do("EXEC"))
-	log.Print(response)
 	if err != nil {
 		log.Printf("Redis error on SET or EXPIRE: %v", err)
 		return
