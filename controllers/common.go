@@ -3,14 +3,15 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
-	"github.com/UHERO/rest-api/common"
-	"github.com/UHERO/rest-api/data"
-	"github.com/UHERO/rest-api/models"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/data"
+	"github.com/UHERO/rest-api/models"
+	"github.com/gorilla/mux"
 )
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
@@ -20,6 +21,21 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 		if cached_val != nil {
 			//log.Printf("DEBUG: Cache HIT: " + url)
 			WriteResponse(w, cached_val)
+			return
+		}
+		//log.Printf("DEBUG: Cache miss: url=%s", url)
+		next(w, r)
+		return
+	}
+}
+
+func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		url := GetCensusReqURI(r)
+		cached_val_fresh, _ := c.GetCache(url + ":fresh")
+		if cached_val_fresh != nil {
+			//log.Printf("DEBUG: Cache HIT: " + url)
+			WriteResponse(w, cached_val_fresh)
 			return
 		}
 		//log.Printf("DEBUG: Cache miss: url=%s", url)
@@ -42,6 +58,20 @@ func WriteCache(r *http.Request, c *data.CacheRepository, payload []byte) {
 		return
 	}
 	//log.Printf("DEBUG: Stored in cache: %s", url)
+}
+
+func WriteCachePair(r *http.Request, c *data.CacheRepository, payload []byte) {
+	url := GetCensusReqURI(r)
+	err := c.SetCachePair(url, payload)
+	if err != nil {
+		log.Printf("Cache store FAILURE: %s", url)
+		return
+	}
+	//log.Printf("DEBUG: Stored in cache: %s", url)
+}
+
+func GetCensusReqURI(r *http.Request) string {
+	return r.RequestURI
 }
 
 func GetFullRelativeURL(r *http.Request) string {
@@ -131,7 +161,7 @@ func getIdsList(w http.ResponseWriter, r *http.Request) (ids []int64, ok bool) {
 	ok = true
 	idsList, gotIds := mux.Vars(r)["ids_list"]
 	if !gotIds {
-		common.DisplayAppError(w, errors.New("Couldn't get id from request"),"Bad request.", 400)
+		common.DisplayAppError(w, errors.New("Couldn't get id from request"), "Bad request.", 400)
 		ok = false
 		return
 	}
@@ -139,7 +169,7 @@ func getIdsList(w http.ResponseWriter, r *http.Request) (ids []int64, ok bool) {
 	for _, idStr := range idStrArr {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			common.DisplayAppError(w, err,"An unexpected error has occurred",500)
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			ok = false
 			return
 		}
@@ -286,6 +316,22 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 		)
 		ok = false
 		return
+	}
+	return
+}
+
+func getAcsIdsList(w http.ResponseWriter, r *http.Request) (ids []string, ok bool) {
+	ok = true
+	idsList, gotIds := mux.Vars(r)["ids_list"]
+	if !gotIds {
+		common.DisplayAppError(w, errors.New("Couldn't get id from request"), "Bad request.", 400)
+		ok = false
+		return
+	}
+	idStrArr := strings.Split(idsList, ",")
+	for _, idStr := range idStrArr {
+		id := idStr
+		ids = append(ids, id)
 	}
 	return
 }
