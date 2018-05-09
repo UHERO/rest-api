@@ -13,6 +13,7 @@ type CacheRepository struct {
 }
 
 func (r *CacheRepository) GetCache(key string) ([]byte, error) {
+	log.Print("get cache")
 	c := r.Pool.Get()
 	defer c.Close()
 	value, err := c.Do("GET", key)
