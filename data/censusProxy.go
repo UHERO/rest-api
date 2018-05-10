@@ -14,27 +14,12 @@ type CensusTransport struct {
 func (t *CensusTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	response, err := http.DefaultTransport.RoundTrip(r)
 	if err != nil {
-		// Check cache
-		cachedVal, _ := t.CacheRepository.GetCache(GetCensusReqURI(r))
-		if cachedVal != nil {
-			rBody := bytes.NewBuffer(cachedVal)
-			resp := SetCensusResponse(rBody)
-			resp.Header.Set("Content-Type", "application/json")
-			return resp, nil
-		}
-		// If cache is empty, return error message
-		rBody := bytes.NewBufferString("Error retrieving data")
-		resp := SetCensusResponse(rBody)
-		resp.Header.Set("Content-Type", "plain/text")
-		return resp, nil
+		return RetrieveCached(t, r)
 	}
 	b, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		log.Print("Error parsing response body")
-		rBody := bytes.NewBufferString("Error retrieving data")
-		resp := SetCensusResponse(rBody)
-		resp.Header.Set("Content-Type", "plain/text")
-		return nil, err
+		log.Print("Error parsing response body", GetCensusReqURI(r))
+		return SetErrorMsg(r)
 	}
 	err = response.Body.Close()
 	if err != nil {
@@ -65,5 +50,24 @@ func WriteCachePair(r *http.Request, c *CacheRepository, payload []byte) {
 		log.Printf("Cache store FAILURE: %s", url)
 		return
 	}
-	//log.Printf("DEBUG: Stored in cache: %s", url)
+}
+
+func RetrieveCached(t *CensusTransport, r *http.Request) (*http.Response, error) {
+	// Check cache
+	cachedVal, _ := t.CacheRepository.GetCache(GetCensusReqURI(r))
+	if cachedVal != nil {
+		rBody := bytes.NewBuffer(cachedVal)
+		resp := SetCensusResponse(rBody)
+		resp.Header.Set("Content-Type", "application/json")
+		return resp, nil
+	}
+	// If cache is empty, return error message
+	return SetErrorMsg(r)
+}
+
+func SetErrorMsg(r *http.Request) (*http.Response, error) {
+	rBody := bytes.NewBufferString("Error retrieving data")
+	resp := SetCensusResponse(rBody)
+	resp.Header.Set("Content-Type", "plain/text")
+	return resp, nil
 }

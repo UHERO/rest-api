@@ -19,11 +19,9 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 		url := GetFullRelativeURL(r)
 		cached_val, _ := c.GetCache(url)
 		if cached_val != nil {
-			//log.Printf("DEBUG: Cache HIT: " + url)
 			WriteResponse(w, cached_val)
 			return
 		}
-		//log.Printf("DEBUG: Cache miss: url=%s", url)
 		next(w, r)
 		return
 	}
@@ -34,11 +32,9 @@ func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Re
 		url := data.GetCensusReqURI(r)
 		cached_val_fresh, _ := c.GetCache(url + ":fresh")
 		if cached_val_fresh != nil {
-			//log.Printf("DEBUG: Cache HIT: " + url)
 			WriteResponse(w, cached_val_fresh)
 			return
 		}
-		//log.Printf("DEBUG: Cache miss: url=%s", url)
 		next(w, r)
 		return
 	}
@@ -57,7 +53,6 @@ func WriteCache(r *http.Request, c *data.CacheRepository, payload []byte) {
 		log.Printf("Cache store FAILURE: %s", url)
 		return
 	}
-	//log.Printf("DEBUG: Stored in cache: %s", url)
 }
 
 func GetFullRelativeURL(r *http.Request) string {
