@@ -305,19 +305,3 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 	}
 	return
 }
-
-func getAcsIdsList(w http.ResponseWriter, r *http.Request) (ids []string, ok bool) {
-	ok = true
-	idsList, gotIds := mux.Vars(r)["ids_list"]
-	if !gotIds {
-		common.DisplayAppError(w, errors.New("Couldn't get id from request"), "Bad request.", 400)
-		ok = false
-		return
-	}
-	idStrArr := strings.Split(idsList, ",")
-	for _, idStr := range idStrArr {
-		id := idStr
-		ids = append(ids, id)
-	}
-	return
-}
