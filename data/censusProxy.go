@@ -31,11 +31,12 @@ func (t *CensusTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	return response, err
 }
 
-func SetCensusResponse(body *bytes.Buffer) *http.Response {
+func SetCensusResponse(body *bytes.Buffer, contentType string) *http.Response {
 	resp := &http.Response{}
 	resp.StatusCode = 200
 	resp.Body = ioutil.NopCloser(body)
 	resp.Header = make(http.Header, 0)
+	resp.Header.Set("Content-Type", contentType)
 	return resp
 }
 
@@ -56,9 +57,7 @@ func RetrieveCached(t *CensusTransport, r *http.Request) (*http.Response, error)
 	// Check cache
 	cachedVal, _ := t.CacheRepository.GetCache(GetCensusReqURI(r))
 	if cachedVal != nil {
-		rBody := bytes.NewBuffer(cachedVal)
-		resp := SetCensusResponse(rBody)
-		resp.Header.Set("Content-Type", "application/json")
+		resp := SetCensusResponse(bytes.NewBuffer(cachedVal), "application/json")
 		return resp, nil
 	}
 	// If cache is empty, return error message
@@ -66,8 +65,7 @@ func RetrieveCached(t *CensusTransport, r *http.Request) (*http.Response, error)
 }
 
 func SetErrorMsg(r *http.Request) (*http.Response, error) {
-	rBody := bytes.NewBufferString("Error retrieving data")
-	resp := SetCensusResponse(rBody)
-	resp.Header.Set("Content-Type", "plain/text")
+	resp := SetCensusResponse(bytes.NewBufferString("Error retrieving data"), "plain/text")
+	resp.StatusCode = 404
 	return resp, nil
 }
