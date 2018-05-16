@@ -4,18 +4,19 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/UHERO/rest-api/common"
-	"github.com/UHERO/rest-api/data"
-	"github.com/UHERO/rest-api/routers"
-	"github.com/garyburd/redigo/redis"
-	"github.com/go-sql-driver/mysql"
-	"github.com/urfave/negroni"
 	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/data"
+	"github.com/UHERO/rest-api/routers"
+	"github.com/garyburd/redigo/redis"
+	"github.com/go-sql-driver/mysql"
+	"github.com/urfave/negroni"
 )
 
 func main() {

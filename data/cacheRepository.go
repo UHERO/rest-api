@@ -2,8 +2,9 @@ package data
 
 import (
 	"errors"
-	"github.com/garyburd/redigo/redis"
 	"log"
+
+	"github.com/garyburd/redigo/redis"
 )
 
 type CacheRepository struct {
@@ -52,5 +53,14 @@ func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
 		log.Printf("Did not set expiration to %v", r.TTL)
 	}
 	log.Printf("Redis SET: %s", key)
+	return
+}
+
+// SetCachePair sets a pair of cache keys key (w/o expiration) and key:fresh (w/ expiration). Used for caching responses from the census proxy.
+func (r *CacheRepository) SetCachePair(key string, value []byte) (err error) {
+	r.SetCache(key+":fresh", value)
+	r.SetCache(key, value)
+	c := r.Pool.Get()
+	c.Send("PERSIST", key)
 	return
 }
