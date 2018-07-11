@@ -25,8 +25,7 @@ func (t *CensusTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	body := ioutil.NopCloser(bytes.NewReader(b))
-	response.Body = body
+	response = SetCensusResponse(bytes.NewBuffer(b), "application/json")
 	WriteCachePair(r, t.CacheRepository, b)
 	return response, err
 }
