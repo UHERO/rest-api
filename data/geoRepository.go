@@ -41,6 +41,38 @@ func (r *GeographyRepository) GetAllGeographies() (geographies []models.DataPort
 	return
 }
 
+func (r *GeographyRepository) GetGeographiesByUniverse(universe string) (geographies []models.DataPortalGeography, err error) {
+	rows, err := r.DB.Query(`SELECT DISTINCT fips, display_name, display_name_short, handle
+									FROM categories WHERE universe = ?; `, universe)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		geography := models.Geography{}
+		err = rows.Scan(
+			&geography.FIPS,
+			&geography.Name,
+			&geography.ShortName,
+			&geography.Handle,
+		)
+		if err != nil {
+			return
+		}
+		dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
+		if geography.FIPS.Valid {
+			dataPortalGeography.FIPS = geography.FIPS.String
+		}
+		if geography.Name.Valid {
+			dataPortalGeography.Name = geography.Name.String
+		}
+		if geography.ShortName.Valid {
+			dataPortalGeography.ShortName = geography.ShortName.String
+		}
+		geographies = append(geographies, dataPortalGeography)
+	}
+	return
+}
+
 func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geographies []models.DataPortalGeography, err error) {
 	rows, err := r.DB.Query(
 		`SELECT DISTINCT geographies.fips, geographies.display_name, geographies.display_name_short, geographies.handle
@@ -78,7 +110,7 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 			&geography.Handle,
 		)
 		if err != nil {
-			continue
+			return
 		}
 		dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 		if geography.FIPS.Valid {
