@@ -635,7 +635,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
+func (r *SeriesRepository) GetSeriesById(seriesId int64, catId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
@@ -659,7 +659,8 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.id = ? AND NOT series.restricted
+	WHERE series.id = ?
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
 	if err != nil {
 		return
@@ -669,7 +670,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 		if err != nil {
 			return
 		}
-		geos, freqs, err := getAllFreqsGeos(r, seriesId)
+		geos, freqs, err := getAllFreqsGeos(r, seriesId, catId)
 		if err != nil {
 			return dataPortalSeries, err
 		}
