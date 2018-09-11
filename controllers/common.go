@@ -117,7 +117,7 @@ func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
 	if !gotId {
 		common.DisplayAppError(
 			w,
-			errors.New("Couldn't get id from request"),
+			errors.New("couldn't get id from request"),
 			"Bad request.",
 			400,
 		)
@@ -142,7 +142,7 @@ func getIdsList(w http.ResponseWriter, r *http.Request) (ids []int64, ok bool) {
 	ok = true
 	idsList, gotIds := mux.Vars(r)["ids_list"]
 	if !gotIds {
-		common.DisplayAppError(w, errors.New("Couldn't get id from request"), "Bad request.", 400)
+		common.DisplayAppError(w, errors.New("couldn't get id from request"), "Bad request.", 400)
 		ok = false
 		return
 	}
@@ -165,7 +165,7 @@ func getIdAndGeo(w http.ResponseWriter, r *http.Request) (id int64, geo string, 
 	if !gotId {
 		common.DisplayAppError(
 			w,
-			errors.New("Couldn't get category id from request"),
+			errors.New("couldn't get category id from request"),
 			"Bad request.",
 			400,
 		)
@@ -187,7 +187,7 @@ func getIdAndGeo(w http.ResponseWriter, r *http.Request) (id int64, geo string, 
 	if !gotGeo {
 		common.DisplayAppError(
 			w,
-			errors.New("Couldn't get geography handle from request"),
+			errors.New("couldn't get geography handle from request"),
 			"Bad request.",
 			400,
 		)
@@ -203,7 +203,7 @@ func getIdAndFreq(w http.ResponseWriter, r *http.Request) (id int64, freq string
 	if !gotId {
 		common.DisplayAppError(
 			w,
-			errors.New("Couldn't get category id from request"),
+			errors.New("couldn't get category id from request"),
 			"Bad request.",
 			400,
 		)
@@ -225,7 +225,7 @@ func getIdAndFreq(w http.ResponseWriter, r *http.Request) (id int64, freq string
 	if !gotFreq {
 		common.DisplayAppError(
 			w,
-			errors.New("Couldn't get frequency from request"),
+			errors.New("couldn't get frequency from request"),
 			"Bad request.",
 			400,
 		)
@@ -239,13 +239,13 @@ func getGeoAndFreq(w http.ResponseWriter, r *http.Request) (geo string, freq str
 	ok = true
 	geo, gotGeo := mux.Vars(r)["geo"]
 	if !gotGeo {
-		common.DisplayAppError(w, errors.New("Couldn't get geography handle from request"), "Bad request.", 400)
+		common.DisplayAppError(w, errors.New("couldn't get geography handle from request"), "Bad request.", 400)
 		ok = false
 		return
 	}
 	freq, gotFreq := mux.Vars(r)["freq"]
 	if !gotFreq {
-		common.DisplayAppError(w, errors.New("Couldn't get frequency from request"), "Bad request.", 400)
+		common.DisplayAppError(w, errors.New("couldn't get frequency from request"), "Bad request.", 400)
 		ok = false
 		return
 	}
@@ -258,7 +258,7 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 	if !gotId {
 		common.DisplayAppError(
 			w,
-			errors.New("Couldn't get category id from request"),
+			errors.New("couldn't get category id from request"),
 			"Bad request.",
 			400,
 		)
@@ -280,7 +280,7 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 	if !gotGeo {
 		common.DisplayAppError(
 			w,
-			errors.New("Couldn't get geography handle from request"),
+			errors.New("couldn't get geography handle from request"),
 			"Bad request.",
 			400,
 		)
@@ -291,7 +291,7 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 	if !gotFreq {
 		common.DisplayAppError(
 			w,
-			errors.New("Couldn't get frequency from request"),
+			errors.New("couldn't get frequency from request"),
 			"Bad request.",
 			400,
 		)

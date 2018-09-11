@@ -248,6 +248,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
 		sort = measurementPostfix
+		catId = 0
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, freqFilter, sort}, ""),
@@ -262,7 +263,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
 		if err != nil {
 			return seriesList, err
 		}
