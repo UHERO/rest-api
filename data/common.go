@@ -150,7 +150,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	return
 }
 
-func getAllFreqsGeos(r *SeriesRepository, seriesId int64, catId int64) (
+func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 	[]models.DataPortalGeography,
 	[]models.DataPortalFrequency,
 	error,
@@ -189,7 +189,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, catId int64) (
 						  THEN series.frequency = cf.frequency ELSE true
 					 END)
 		GROUP BY RIGHT(series.name, 1)
-		ORDER BY 1,2 ;`, catId, catId, seriesId, catId, seriesId, catId)
+		ORDER BY 1,2 ;`, categoryId, categoryId, seriesId, categoryId, seriesId, categoryId)
 	if err != nil {
 		return nil, nil, err
 	}

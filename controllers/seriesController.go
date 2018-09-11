@@ -105,7 +105,7 @@ func GetSeriesById(seriesRepository *data.SeriesRepository, cacheRepository *dat
 		if !ok {
 			return
 		}
-		series, err := seriesRepository.GetSeriesById(id)
+		series, err := seriesRepository.GetSeriesById(id, 0)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -278,11 +278,15 @@ func GetSeriesPackage(
 		if !ok {
 			return
 		}
+		catId, ok := getIdByName(w, r, "cat")
+		if !ok {
+			return
+		}
 		universe, ok := mux.Vars(r)["universe_text"]
 		if !ok {
 			return
 		}
-		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, categoryRepository)
+		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, catId, categoryRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return

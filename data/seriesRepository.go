@@ -647,7 +647,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesById(seriesId int64, catId int64) (dataPortalSeries models.DataPortalSeries, err error) {
+func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
@@ -682,7 +682,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, catId int64) (dataPorta
 		if err != nil {
 			return
 		}
-		geos, freqs, err := getAllFreqsGeos(r, seriesId, catId)
+		geos, freqs, err := getAllFreqsGeos(r, seriesId, categoryId)
 		if err != nil {
 			return dataPortalSeries, err
 		}
@@ -819,10 +819,11 @@ func (r *SeriesRepository) GetTransformation(
 func (r *SeriesRepository) CreateSeriesPackage(
 	id int64,
 	universe string,
+	categoryId int64,
 	categoryRepository *CategoryRepository,
 )  (pkg models.DataPortalSeriesPackage, err error) {
 
-	series, err := r.GetSeriesById(id)
+	series, err := r.GetSeriesById(id, categoryId)
 	if err != nil {
 		return
 	}
@@ -857,7 +858,7 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 	pkg.InflatedSeries = []models.InflatedSeries{}
 
 	for _, id := range ids {
-		series, anErr := r.GetSeriesById(id)
+		series, anErr := r.GetSeriesById(id, 0	)
 		if anErr != nil {
 			err = anErr
 			return
