@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/UHERO/rest-api/models"
@@ -111,15 +110,15 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 	WriteCache(r, c, j)
 }
 
-func getIdByName(w http.ResponseWriter, r *http.Request, name string) (id int64, ok bool) {
+func getIntParamByName(w http.ResponseWriter, r *http.Request, name string) (id int64, ok bool) {
 	ok = true
-	idParam, gotId := mux.Vars(r)[name]
-	if !gotId {
-		common.DisplayAppError(w, errors.New("couldn't get id from request"), "Bad request.", 400)
+	param, gotIt := mux.Vars(r)[name]
+	if !gotIt {
+		common.DisplayAppError(w, errors.New("couldn't get parameter " + name + " from request"), "Bad request.", 400)
 		ok = false
 		return
 	}
-	id, err := strconv.ParseInt(idParam, 10, 64)
+	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
 		common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 		ok = false
@@ -129,14 +128,14 @@ func getIdByName(w http.ResponseWriter, r *http.Request, name string) (id int64,
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
-	return getIdByName(w, r, "id")
+	return getIntParamByName(w, r, "id")
 }
 
 func getIdsList(w http.ResponseWriter, r *http.Request) (ids []int64, ok bool) {
 	ok = true
 	idsList, gotIds := mux.Vars(r)["ids_list"]
 	if !gotIds {
-		common.DisplayAppError(w, errors.New("couldn't get id from request"), "Bad request.", 400)
+		common.DisplayAppError(w, errors.New("couldn't get ids_list from request"), "Bad request.", 400)
 		ok = false
 		return
 	}
