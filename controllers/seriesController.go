@@ -280,7 +280,7 @@ func GetSeriesPackage(
 		}
 		catId, ok := getIdByName(w, r, "cat")
 		if !ok {
-			return
+			catId = 0
 		}
 		universe, ok := mux.Vars(r)["universe_text"]
 		if !ok {
