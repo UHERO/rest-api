@@ -137,7 +137,7 @@ func GetSeriesSiblingsById(seriesRepository *data.SeriesRepository, cacheReposit
 		if !ok {
 			return
 		}
-		catId, ok := getIntParamByName(w, r, "cat")
+		catId, ok := getIntParamByName(r, "cat")
 		if !ok {
 			catId = 0
 		}
@@ -283,7 +283,7 @@ func GetSeriesPackage(
 		if !ok {
 			return
 		}
-		catId, ok := getIntParamByName(w, r, "cat")
+		catId, ok := getIntParamByName(r, "cat")
 		if !ok {
 			catId = 0
 		}
