@@ -112,14 +112,12 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 
 func getIntParamByName(w http.ResponseWriter, r *http.Request, name string) (id int64, ok bool) {
 	ok = true
-	param, gotIt := mux.Vars(r)[name]
-	if !gotIt {
-		ok = false
+	param, ok := mux.Vars(r)[name]
+	if !ok {
 		return
 	}
 	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 		ok = false
 		return
 	}
@@ -127,7 +125,11 @@ func getIntParamByName(w http.ResponseWriter, r *http.Request, name string) (id 
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
-	return getIntParamByName(w, r, "id")
+	id, ok = getIntParamByName(w, r, "id")
+	if !ok {
+		common.DisplayAppError(w, errors.New("couldn't get integer id from request"),"Bad request.",400)
+	}
+	return
 }
 
 func getIdsList(w http.ResponseWriter, r *http.Request) (ids []int64, ok bool) {
