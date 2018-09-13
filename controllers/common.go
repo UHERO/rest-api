@@ -114,7 +114,6 @@ func getIntParamByName(w http.ResponseWriter, r *http.Request, name string) (id 
 	ok = true
 	param, gotIt := mux.Vars(r)[name]
 	if !gotIt {
-		common.DisplayAppError(w, errors.New("couldn't get parameter " + name + " from request"), "Bad request.", 400)
 		ok = false
 		return
 	}

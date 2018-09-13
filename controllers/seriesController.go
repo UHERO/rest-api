@@ -283,7 +283,7 @@ func GetSeriesPackage(
 		if !ok {
 			catId = 0
 		}
-		//fmt.Printf(">>>>>>>>>>>>>>>>>>>> category is %d\n",catId)
+		fmt.Printf(">>>>>>>>>>>>>>>>>>>> category is %d\n",catId)
 		universe, ok := mux.Vars(r)["universe_text"]
 		if !ok {
 			return
