@@ -209,7 +209,7 @@ var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_ord
 var siblingSortStmt = ` GROUP BY series.id;`
 //language=MySQL
 var siblingsPrefix = `SELECT
-    series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+    series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
