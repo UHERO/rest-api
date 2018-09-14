@@ -1,8 +1,7 @@
 {
 	"info": {
+		"_postman_id": "bd2846ca-eedb-5b65-fee0-9eccb7e23cd1",
 		"name": "Full test suite",
-		"_postman_id": "ed987593-a16e-e51d-b1dd-d54eb1e265c1",
-		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -102,8 +101,7 @@
 					"query": [
 						{
 							"key": "top_level",
-							"value": "true",
-							"equals": true
+							"value": "true"
 						}
 					]
 				},
@@ -159,8 +157,7 @@
 					"query": [
 						{
 							"key": "top_level",
-							"value": "false",
-							"equals": true
+							"value": "false"
 						}
 					]
 				},
@@ -212,17 +209,14 @@
 					"query": [
 						{
 							"key": "u",
-							"value": "uhero",
-							"equals": true
+							"value": "uhero"
 						},
 						{
 							"key": "type",
-							"value": "nav",
-							"equals": true
+							"value": "nav"
 						}
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -274,8 +268,7 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "16",
-							"equals": true
+							"value": "16"
 						}
 					]
 				},
@@ -331,8 +324,7 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "999",
-							"equals": true
+							"value": "999"
 						}
 					]
 				},
@@ -386,8 +378,7 @@
 					"query": [
 						{
 							"key": "search_text",
-							"value": "summary",
-							"equals": true
+							"value": "summary"
 						}
 					]
 				},
@@ -439,8 +430,7 @@
 					"query": [
 						{
 							"key": "search_text",
-							"value": "nosuchtext",
-							"equals": true
+							"value": "nosuchtext"
 						}
 					]
 				},
@@ -495,8 +485,7 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "16",
-							"equals": true
+							"value": "16"
 						}
 					]
 				},
@@ -551,8 +540,7 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "22",
-							"equals": true
+							"value": "22"
 						}
 					]
 				},
@@ -607,8 +595,7 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "34",
-							"equals": true
+							"value": "34"
 						}
 					]
 				},
@@ -663,8 +650,7 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "34",
-							"equals": true
+							"value": "34"
 						}
 					]
 				},
@@ -719,13 +705,11 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "34",
-							"equals": true
+							"value": "34"
 						},
 						{
 							"key": "geo",
-							"value": "HAW",
-							"equals": true
+							"value": "HAW"
 						}
 					]
 				},
@@ -780,13 +764,11 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "34",
-							"equals": true
+							"value": "34"
 						},
 						{
 							"key": "freq",
-							"value": "Q",
-							"equals": true
+							"value": "Q"
 						}
 					]
 				},
@@ -841,18 +823,15 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "34",
-							"equals": true
+							"value": "34"
 						},
 						{
 							"key": "geo",
-							"value": "HI",
-							"equals": true
+							"value": "HI"
 						},
 						{
 							"key": "freq",
-							"value": "Q",
-							"equals": true
+							"value": "Q"
 						}
 					]
 				},
@@ -906,17 +885,14 @@
 					"query": [
 						{
 							"key": "u",
-							"value": "uhero",
-							"equals": true
+							"value": "uhero"
 						},
 						{
 							"key": "ids",
-							"value": "152239,152240",
-							"equals": true
+							"value": "152239,152240"
 						}
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -967,27 +943,22 @@
 					"query": [
 						{
 							"key": "u",
-							"value": "uhero",
-							"equals": true
+							"value": "uhero"
 						},
 						{
 							"key": "q",
-							"value": "exp",
-							"equals": true
+							"value": "exp"
 						},
 						{
 							"key": "geo",
-							"value": "HON",
-							"equals": true
+							"value": "HON"
 						},
 						{
 							"key": "freq",
-							"value": "Q",
-							"equals": true
+							"value": "Q"
 						}
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -1038,17 +1009,14 @@
 					"query": [
 						{
 							"key": "u",
-							"value": "uhero",
-							"equals": true
+							"value": "uhero"
 						},
 						{
 							"key": "q",
-							"value": "exp",
-							"equals": true
+							"value": "exp"
 						}
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -1100,22 +1068,18 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "36",
-							"equals": true
+							"value": "36"
 						},
 						{
 							"key": "geo",
-							"value": "US",
-							"equals": true
+							"value": "US"
 						},
 						{
 							"key": "freq",
-							"value": "A",
-							"equals": true
+							"value": "A"
 						}
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -1167,12 +1131,10 @@
 					"query": [
 						{
 							"key": "u",
-							"value": "uhero",
-							"equals": true
+							"value": "uhero"
 						}
 					]
-				},
-				"description": ""
+				}
 			},
 			"response": []
 		},
@@ -1223,17 +1185,79 @@
 					"query": [
 						{
 							"key": "u",
-							"value": "uhero",
-							"equals": true
+							"value": "uhero"
 						},
 						{
 							"key": "id",
-							"value": "148863",
-							"equals": true
+							"value": "148863"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Series Package, Limited Geos (COH)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "31cb96ac-6c3f-42cf-bdb5-65d170bf2e29",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response contains a series object\"] = data.series !== undefined;",
+							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;",
+							"tests[\"Response contains an observations object\"] = data.observations !== undefined;",
+							"tests[\"Response series has two geos for COH\"] = Array.isArray(data.series.geos) && data.series.geos.length == 2",
+							"tests[\"Response siblings is non-empty array\"] = Array.isArray(data.siblings) && data.siblings.length > 0;",
+							"tests[\"Response siblings have two geos for COH\"] = Array.isArray(data.siblings[0].geos) && data.siblings[0].geos.length == 2",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
 						}
 					]
 				},
-				"description": ""
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/package/series?u=coh&id=148232&cat=4430",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"package",
+						"series"
+					],
+					"query": [
+						{
+							"key": "u",
+							"value": "coh"
+						},
+						{
+							"key": "id",
+							"value": "148232"
+						},
+						{
+							"key": "cat",
+							"value": "4430"
+						}
+					]
+				}
 			},
 			"response": []
 		},
@@ -1284,13 +1308,11 @@
 					"query": [
 						{
 							"key": "id",
-							"value": "18",
-							"equals": true
+							"value": "18"
 						},
 						{
 							"key": "expand",
-							"value": "true",
-							"equals": true
+							"value": "true"
 						}
 					]
 				},
