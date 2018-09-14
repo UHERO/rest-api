@@ -110,7 +110,7 @@ func returnInflatedSeriesList(seriesList []models.InflatedSeries, err error, w h
 	WriteCache(r, c, j)
 }
 
-func getIntParamByName(r *http.Request, name string) (id int64, ok bool) {
+func getIntParam(r *http.Request, name string) (id int64, ok bool) {
 	ok = true
 	param, ok := mux.Vars(r)[name]
 	if !ok {
@@ -125,7 +125,7 @@ func getIntParamByName(r *http.Request, name string) (id int64, ok bool) {
 }
 
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
-	id, ok = getIntParamByName(r, "id")
+	id, ok = getIntParam(r, "id")
 	if !ok {
 		common.DisplayAppError(w, errors.New("couldn't get integer id from request"),"Bad request.",400)
 	}
