@@ -7,7 +7,6 @@ import (
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
 	"github.com/gorilla/mux"
-	"fmt"
 )
 
 func GetSeriesByGroupId(
@@ -287,7 +286,6 @@ func GetSeriesPackage(
 		if !ok {
 			catId = 0
 		}
-		fmt.Printf(">>>>>>>>>>>>>>>>>>>> category is %d\n",catId)
 		universe, ok := mux.Vars(r)["universe_text"]
 		if !ok {
 			return
