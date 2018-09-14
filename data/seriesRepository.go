@@ -870,7 +870,7 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 	pkg.InflatedSeries = []models.InflatedSeries{}
 
 	for _, id := range ids {
-		series, anErr := r.GetSeriesById(id, 0	)
+		series, anErr := r.GetSeriesById(id, 0)
 		if anErr != nil {
 			err = anErr
 			return
