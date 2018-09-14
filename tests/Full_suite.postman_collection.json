@@ -1262,6 +1262,71 @@
 			"response": []
 		},
 		{
+			"name": "GET Series Package, Unknown category id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "53102755-96d2-44d6-b2ea-889ca8a85c0a",
+						"type": "text/javascript",
+						"exec": [
+							"var data = JSON.parse(responseBody).data;",
+							"tests[\"Status code is 200\"] = responseCode.code === 200;",
+							"tests[\"Response contains data\"] = typeof(data) === 'object';",
+							"tests[\"Response contains a series object\"] = data.series !== undefined;",
+							"tests[\"Response categories is non-empty array\"] = Array.isArray(data.categories) && data.categories.length > 0;",
+							"tests[\"Response categories contains an element with name \"] = data.categories[0].name !== undefined;",
+							"tests[\"Response contains an observations object\"] = data.observations !== undefined;",
+							"tests[\"Response series has All 5 geos because cat unknown\"] = Array.isArray(data.series.geos) && data.series.geos.length == 5",
+							"tests[\"Response siblings is non-empty array\"] = Array.isArray(data.siblings) && data.siblings.length > 0;",
+							"tests[\"Response siblings have All 5 geos because cat unknown\"] = Array.isArray(data.siblings[0].geos) && data.siblings[0].geos.length == 5",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{uhero_auth_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "{{url}}/package/series?u=coh&id=148232&cat=99989",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"package",
+						"series"
+					],
+					"query": [
+						{
+							"key": "u",
+							"value": "coh"
+						},
+						{
+							"key": "id",
+							"value": "148232"
+						},
+						{
+							"key": "cat",
+							"value": "99989"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "GET Category series by id, expand",
 			"event": [
 				{
