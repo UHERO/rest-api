@@ -18,6 +18,14 @@ func SetPackageRoutes(
 		controllers.GetSeriesPackage(seriesRepository, categoryRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
+		"cat", "{cat:[0-9]+}",
+		"u", "{universe_text:.+}",
+	)
+	router.HandleFunc(
+		"/v1/package/series",
+		controllers.GetSeriesPackage(seriesRepository, categoryRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
 		"u", "{universe_text:.+}",
 	)
 	router.HandleFunc(

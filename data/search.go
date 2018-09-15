@@ -59,7 +59,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
 		if err != nil {
 			return seriesList, err
 		}
@@ -272,7 +272,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
 		if err != nil {
 			return seriesList, err
 		}
@@ -348,7 +348,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
 		if err != nil {
 			return seriesList, err
 		}

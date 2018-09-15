@@ -78,7 +78,7 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 			&geography.Handle,
 		)
 		if err != nil {
-			continue
+			return
 		}
 		dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 		if geography.FIPS.Valid {

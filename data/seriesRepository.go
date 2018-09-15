@@ -200,7 +200,8 @@ var measurementSeriesPrefix = `SELECT
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE measurements.id = ? AND NOT series.restricted
+	WHERE measurements.id = ?
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 var geoFilter = ` AND geographies.handle = UPPER(?) `
 var freqFilter = ` AND series.frequency = ? `
@@ -209,7 +210,7 @@ var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_ord
 var siblingSortStmt = ` GROUP BY series.id;`
 //language=MySQL
 var siblingsPrefix = `SELECT
-    series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+    series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
@@ -225,7 +226,13 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series ON series.id = measurement_series.series_id
 	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-	LEFT JOIN geographies ON geographies.id = series.geography_id
+	LEFT JOIN categories ON categories.id = ?
+	LEFT JOIN category_geographies cg ON cg.category_id = categories.id
+	LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
+	LEFT JOIN geographies ON
+		(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
+			  THEN geographies.id = cg.geography_id ELSE true
+		 END)
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -235,6 +242,10 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND public_data_points.value IS NOT NULL
+	AND series.geography_id = geographies.id
+	AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
+	          THEN series.frequency = cf.frequency ELSE true
+	     END)
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 
 func (r *SeriesRepository) GetSeriesByGroupAndFreq(
@@ -244,9 +255,11 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	prefix := seriesPrefix
 	sort := sortStmt
+	catId := groupId
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
 		sort = measurementPostfix
+		catId = 0
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, freqFilter, sort}, ""),
@@ -261,7 +274,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
 		if err != nil {
 			return seriesList, err
 		}
@@ -280,9 +293,11 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	prefix := seriesPrefix
 	sort := sortStmt
+	catId := groupId
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
 		sort = measurementPostfix
+		catId = 0
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
@@ -298,7 +313,7 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
 		if err != nil {
 			return seriesList, err
 		}
@@ -317,9 +332,11 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 ) (seriesList []models.InflatedSeries, err error) {
 	prefix := seriesPrefix
 	sort := sortStmt
+	catId := groupId
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
 		sort = measurementPostfix
+		catId = 0
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
@@ -335,7 +352,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
 		if err != nil {
 			return seriesList, err
 		}
@@ -358,9 +375,11 @@ func (r *SeriesRepository) GetSeriesByGroupAndGeo(
 ) (seriesList []models.DataPortalSeries, err error) {
 	prefix := seriesPrefix
 	sort := sortStmt
+	catId := groupId
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
 		sort = measurementPostfix
+		catId = 0
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, geoFilter, sort}, ""),
@@ -375,7 +394,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndGeo(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
 		if err != nil {
 			return seriesList, err
 		}
@@ -392,9 +411,11 @@ func (r *SeriesRepository) GetInflatedSeriesByGroup(
 ) (seriesList []models.InflatedSeries, err error) {
 	prefix := seriesPrefix
 	sort := sortStmt
+	catId := groupId
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
 		sort = measurementPostfix
+		catId = 0
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, sort}, ""),
@@ -408,7 +429,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroup(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
 		if err != nil {
 			return seriesList, err
 		}
@@ -430,9 +451,11 @@ func (r *SeriesRepository) GetSeriesByGroup(
 ) (seriesList []models.DataPortalSeries, err error) {
 	prefix := seriesPrefix
 	sort := sortStmt
+	catId := groupId
 	if groupType == Measurement {
 		prefix = measurementSeriesPrefix
 		sort = measurementPostfix
+		catId = 0
 	}
 	rows, err := r.DB.Query(
 		strings.Join([]string{prefix, sort}, ""),
@@ -446,7 +469,7 @@ func (r *SeriesRepository) GetSeriesByGroup(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
 		if err != nil {
 			return seriesList, err
 		}
@@ -493,10 +516,11 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []models.DataPortalSeries, err error) {
+func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{siblingsPrefix, siblingSortStmt}, ""),
 		seriesId,
+		categoryId,
 	)
 	if err != nil {
 		return
@@ -506,7 +530,7 @@ func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64) (seriesList []m
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, categoryId)
 		if err != nil {
 			return seriesList, err
 		}
@@ -523,7 +547,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(strings.Join(
 		[]string{siblingsPrefix, freqFilter, siblingSortStmt}, ""),
-		seriesId,
+		seriesId, 0,
 		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
@@ -534,7 +558,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
 		if err != nil {
 			return seriesList, err
 		}
@@ -551,7 +575,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{siblingsPrefix, geoFilter, siblingSortStmt}, ""),
-		seriesId,
+		seriesId, 0,
 		geo,
 	)
 	if err != nil {
@@ -562,7 +586,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
 		if err != nil {
 			return seriesList, err
 		}
@@ -580,7 +604,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter, siblingSortStmt}, ""),
-		seriesId,
+		seriesId, 0,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
 	)
@@ -592,7 +616,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id)
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
 		if err != nil {
 			return seriesList, err
 		}
@@ -635,7 +659,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries models.DataPortalSeries, err error) {
+func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
@@ -659,7 +683,8 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.id = ? AND NOT series.restricted
+	WHERE series.id = ?
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
 	if err != nil {
 		return
@@ -669,7 +694,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64) (dataPortalSeries model
 		if err != nil {
 			return
 		}
-		geos, freqs, err := getAllFreqsGeos(r, seriesId)
+		geos, freqs, err := getAllFreqsGeos(r, seriesId, categoryId)
 		if err != nil {
 			return dataPortalSeries, err
 		}
@@ -806,10 +831,11 @@ func (r *SeriesRepository) GetTransformation(
 func (r *SeriesRepository) CreateSeriesPackage(
 	id int64,
 	universe string,
+	categoryId int64,
 	categoryRepository *CategoryRepository,
 )  (pkg models.DataPortalSeriesPackage, err error) {
 
-	series, err := r.GetSeriesById(id)
+	series, err := r.GetSeriesById(id, categoryId)
 	if err != nil {
 		return
 	}
@@ -827,7 +853,7 @@ func (r *SeriesRepository) CreateSeriesPackage(
 	}
 	pkg.Observations = observations
 
-	siblings, err := r.GetSeriesSiblingsById(id)
+	siblings, err := r.GetSeriesSiblingsById(id, categoryId)
 	if err != nil {
 		return
 	}
@@ -844,7 +870,7 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 	pkg.InflatedSeries = []models.InflatedSeries{}
 
 	for _, id := range ids {
-		series, anErr := r.GetSeriesById(id)
+		series, anErr := r.GetSeriesById(id, 0)
 		if anErr != nil {
 			err = anErr
 			return

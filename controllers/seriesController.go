@@ -105,7 +105,7 @@ func GetSeriesById(seriesRepository *data.SeriesRepository, cacheRepository *dat
 		if !ok {
 			return
 		}
-		series, err := seriesRepository.GetSeriesById(id)
+		series, err := seriesRepository.GetSeriesById(id, 0)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -136,7 +136,11 @@ func GetSeriesSiblingsById(seriesRepository *data.SeriesRepository, cacheReposit
 		if !ok {
 			return
 		}
-		seriesList, err := seriesRepository.GetSeriesSiblingsById(id)
+		catId, ok := getIntParam(r, "cat")
+		if !ok {
+			catId = 0
+		}
+		seriesList, err := seriesRepository.GetSeriesSiblingsById(id, catId)
 		returnSeriesList(seriesList, err, w, r, cacheRepository)
 	}
 }
@@ -278,11 +282,15 @@ func GetSeriesPackage(
 		if !ok {
 			return
 		}
+		catId, ok := getIntParam(r, "cat")
+		if !ok {
+			catId = 0
+		}
 		universe, ok := mux.Vars(r)["universe_text"]
 		if !ok {
 			return
 		}
-		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, categoryRepository)
+		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, catId, categoryRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
