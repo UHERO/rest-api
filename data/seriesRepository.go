@@ -718,7 +718,8 @@ func (r *SeriesRepository) GetSeriesObservations(
 	err = r.DB.QueryRow(`SELECT series.universe, series.percent
 	FROM series
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.id = ? AND NOT series.restricted
+	WHERE series.id = ?
+	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&universe, &percent)
 	if err != nil {
 		return
@@ -773,10 +774,7 @@ func (r *SeriesRepository) GetTransformation(
 	seriesId int64,
 	currentStart *time.Time,
 	currentEnd *time.Time,
-) (
-	transformationResult models.TransformationResult,
-	err error,
-) {
+) (transformationResult models.TransformationResult, err error) {
 	var observationStart, observationEnd time.Time
 	rows, err := r.DB.Query(
 		transformations[transformation].Statement,
