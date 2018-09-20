@@ -558,6 +558,7 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	id int64,
 	geo string,
 	freq string,
+	padded bool,
 	seriesRepository *SeriesRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
 

@@ -290,7 +290,12 @@ func GetCategoryPackage(
 				return
 			}
 		}
-		pkg, err := categoryRepository.CreateCategoryPackage(id, geo, freq, seriesRepository)
+		padded := false
+		paddedText, ok := mux.Vars(r)["paddedSeries"]
+		if ok && paddedText == "true" {
+			padded = true
+		}
+		pkg, err := categoryRepository.CreateCategoryPackage(id, geo, freq, padded, seriesRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
