@@ -761,14 +761,6 @@ func (r *SeriesRepository) GetSeriesObservations(
 	return
 }
 
-func variadicSeriesId(seriesId int64, count int) []interface{} {
-	variadic := make([]interface{}, count, count)
-	for i := range variadic {
-		variadic[i] = seriesId
-	}
-	return variadic
-}
-
 func (r *SeriesRepository) GetTransformation(
 	transformation string,
 	seriesId int64,
@@ -824,6 +816,14 @@ func (r *SeriesRepository) GetTransformation(
 	transformationResult.ObservationValues = obsValues
 	transformationResult.ObservationPHist = obsPseudoHist
 	return
+}
+
+func variadicSeriesId(seriesId int64, count int) []interface{} {
+	variadic := make([]interface{}, count, count)
+	for i := range variadic {
+		variadic[i] = seriesId
+	}
+	return variadic
 }
 
 func (r *SeriesRepository) CreateSeriesPackage(
