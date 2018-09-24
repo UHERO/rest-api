@@ -328,6 +328,8 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
+	startDate string,
+	endDate string,
 	groupType GroupType,
 ) (seriesList []models.InflatedSeries, err error) {
 	prefix := seriesPrefix
@@ -886,5 +888,13 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 		return
 	}
 	pkg.Categories = categories
+	return
+}
+
+func (r *SeriesRepository) GetCategoryDateRange(id int64) (startDate, endDate string) {
+	return
+}
+
+func (r *SeriesRepository) GetMeasurementDateRange(id int64) (startDate, endDate string) {
 	return
 }

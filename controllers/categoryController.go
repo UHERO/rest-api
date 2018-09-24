@@ -290,12 +290,12 @@ func GetCategoryPackage(
 				return
 			}
 		}
-		padded := false
-		paddedText, ok := mux.Vars(r)["paddedSeries"]
-		if ok && paddedText == "true" {
-			padded = true
+		var startDate, endDate string
+		paddedSeries, ok := mux.Vars(r)["paddedSeries"]
+		if ok && paddedSeries == "true" {
+			startDate, endDate = seriesRepository.GetCategoryDateRange(id)
 		}
-		pkg, err := categoryRepository.CreateCategoryPackage(id, geo, freq, padded, seriesRepository)
+		pkg, err := categoryRepository.CreateCategoryPackage(id, geo, freq, startDate, endDate, seriesRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return

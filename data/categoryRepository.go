@@ -513,6 +513,8 @@ func (r *CategoryRepository) getCategoryTree(
 	id int64,
 	geo string,
 	freq string,
+	startDate string,
+	endDate string,
 	seriesRepository *SeriesRepository,
 ) (tree []models.CategoryWithInflatedSeries, err error) {
 	kids, err := r.GetChildrenOf(id)
@@ -523,7 +525,7 @@ func (r *CategoryRepository) getCategoryTree(
 		if kid.IsHeader {
 			tree = append(tree, models.CategoryWithInflatedSeries{Category: kid})
 
-			subtree, anErr := r.getCategoryTree(kid.Id, geo, freq, seriesRepository) //recursion
+			subtree, anErr := r.getCategoryTree(kid.Id, geo, freq, startDate, endDate, seriesRepository) //recursion
 			if anErr != nil {
 				return
 			}
@@ -542,7 +544,7 @@ func (r *CategoryRepository) getCategoryTree(
 		inflatedCat.Category = category
 
 		if geo != "" && freq != "" {
-			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kid.Id, geo, freq, Category)
+			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kid.Id, geo, freq, startDate, endDate, Category)
 			if anErr != nil {
 				err = anErr
 				return
@@ -558,11 +560,12 @@ func (r *CategoryRepository) CreateCategoryPackage(
 	id int64,
 	geo string,
 	freq string,
-	padded bool,
+	startDate string,
+	endDate string,
 	seriesRepository *SeriesRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
 
-	tree, err := r.getCategoryTree(id, geo, freq, seriesRepository)
+	tree, err := r.getCategoryTree(id, geo, freq, startDate, endDate, seriesRepository)
 	if err != nil {
 		return
 	}

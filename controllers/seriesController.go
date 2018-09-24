@@ -94,7 +94,16 @@ func GetInflatedSeriesByGroupIdGeoAndFreq(
 		if !ok {
 			return
 		}
-		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, groupType)
+		var startDate, endDate string
+		paddedSeries, ok := mux.Vars(r)["paddedSeries"]
+		if ok && paddedSeries == "true" {
+			if groupType == data.Measurement {
+				startDate, endDate = seriesRepository.GetMeasurementDateRange(id)
+			} else {
+				startDate, endDate = seriesRepository.GetCategoryDateRange(id)
+			}
+		}
+		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, startDate, endDate, groupType)
 		returnInflatedSeriesList(seriesList, err, w, r, cacheRepository)
 	}
 }
