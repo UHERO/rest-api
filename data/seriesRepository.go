@@ -35,7 +35,7 @@ const (
 	C5MAChange        = "c5mach1"
 )
 
-var transformations map[string]transformation = map[string]transformation{
+var transformations = map[string]transformation{
 	Levels: { // untransformed value
 		//language=MySQL
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
@@ -328,8 +328,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
-	startDate string,
-	endDate string,
+	inRange models.DateRange,
 	groupType GroupType,
 ) (seriesList []models.InflatedSeries, err error) {
 	prefix := seriesPrefix
@@ -360,7 +359,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		}
 		dataPortalSeries.Geographies = &geos
 		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, inRange)
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -711,6 +710,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
 func (r *SeriesRepository) GetSeriesObservations(
 	seriesId int64,
+//	inRange models.DateRange,
 ) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
@@ -891,10 +891,10 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 	return
 }
 
-func (r *SeriesRepository) GetCategoryDateRange(id int64) (startDate, endDate string) {
+func (r *SeriesRepository) GetCategoryDateRange(id int64) (theRange models.DateRange) {
 	return
 }
 
-func (r *SeriesRepository) GetMeasurementDateRange(id int64) (startDate, endDate string) {
+func (r *SeriesRepository) GetMeasurementDateRange(id int64) (theRange models.DateRange) {
 	return
 }

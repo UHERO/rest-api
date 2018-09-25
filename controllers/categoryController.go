@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-
 	"errors"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
@@ -290,12 +289,12 @@ func GetCategoryPackage(
 				return
 			}
 		}
-		var startDate, endDate string
+		var inRange models.DateRange
 		paddedSeries, ok := mux.Vars(r)["paddedSeries"]
 		if ok && paddedSeries == "true" {
-			startDate, endDate = seriesRepository.GetCategoryDateRange(id)
+			inRange = seriesRepository.GetCategoryDateRange(id)
 		}
-		pkg, err := categoryRepository.CreateCategoryPackage(id, geo, freq, startDate, endDate, seriesRepository)
+		pkg, err := categoryRepository.CreateCategoryPackage(id, geo, freq, inRange, seriesRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return

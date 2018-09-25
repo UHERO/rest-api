@@ -258,6 +258,11 @@ type Feedback struct {
 	Feedback string `json:"feedback"`
 }
 
+type DateRange struct {
+	First time.Time
+	Last  time.Time
+}
+
 func (o *DataPortalObservation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Date          string `json:"date"`
