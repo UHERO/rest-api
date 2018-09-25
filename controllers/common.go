@@ -16,9 +16,9 @@ import (
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := GetFullRelativeURL(r)
-		cached_val, _ := c.GetCache(url)
-		if cached_val != nil {
-			WriteResponse(w, cached_val)
+		cachedVal, _ := c.GetCache(url)
+		if cachedVal != nil {
+			WriteResponse(w, cachedVal)
 			return
 		}
 		next(w, r)
@@ -29,9 +29,9 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := data.GetCensusReqURI(r)
-		cached_val_fresh, _ := c.GetCache(url + ":fresh")
-		if cached_val_fresh != nil {
-			WriteResponse(w, cached_val_fresh)
+		cachedValFresh, _ := c.GetCache(url + ":fresh")
+		if cachedValFresh != nil {
+			WriteResponse(w, cachedValFresh)
 			return
 		}
 		next(w, r)
