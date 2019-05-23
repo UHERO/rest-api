@@ -61,6 +61,7 @@ func (r *CacheRepository) SetCachePair(key string, value []byte) (err error) {
 	r.SetCache(key+":fresh", value)
 	r.SetCache(key, value)
 	c := r.Pool.Get()
+	defer c.Close()
 	c.Send("PERSIST", key)
 	return
 }
