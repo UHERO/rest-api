@@ -181,13 +181,13 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN category_frequencies cf ON cf.category_id = ?
-		LEFT JOIN series ON series.id = ms.series_id
+		LEFT JOIN series_v AS series ON series.id = ms.series_id
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-				AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = ?)
-						  THEN series.frequency = cf.frequency ELSE true
-					 END)
+		AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = ?)
+				  THEN series.frequency = cf.frequency ELSE true
+			 END)
 		GROUP BY RIGHT(series.name, 1)
 		ORDER BY 1,2 ;`, categoryId, categoryId, seriesId, categoryId, seriesId, categoryId)
 	if err != nil {
