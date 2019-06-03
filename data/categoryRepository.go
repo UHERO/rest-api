@@ -129,12 +129,12 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-		LEFT JOIN series
-		    ON series.id = measurement_series.series_id
-		   AND series.geography_id = categories.default_geo_id
-		   AND RIGHT(series.name, 1) = categories.default_freq
-		   AND NOT series.restricted
-		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+		LEFT JOIN series_v sv
+		    ON sv.id = measurement_series.series_id
+		   AND sv.geography_id = categories.default_geo_id
+		   AND RIGHT(sv.name, 1) = categories.default_freq
+		   AND NOT sv.restricted
+		LEFT JOIN public_data_points ON public_data_points.series_id = sv.id
 		WHERE categories.universe = ?
 		AND categories.ancestry IS NOT NULL
 		AND NOT (categories.hidden OR categories.masked)
