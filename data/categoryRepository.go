@@ -296,7 +296,7 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			ANY_VALUE(COALESCE(mygeo.handle, parentgeo.handle)) AS def_geo,
 			ANY_VALUE(COALESCE(categories.default_freq, parentcat.default_freq)) AS def_freq,
 			ANY_VALUE(geographies.handle) AS series_geo,
-			RIGHT(series.name, 1) AS series_freq,
+			RIGHT(sv.name, 1) AS series_freq,
 			ANY_VALUE(geographies.fips) AS geofips,
 			ANY_VALUE(geographies.display_name) AS geoname,
 			ANY_VALUE(geographies.display_name_short) AS geonameshort,
@@ -308,23 +308,23 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		LEFT JOIN geographies parentgeo ON parentgeo.id = parentcat.default_geo_id
 	        LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-		LEFT JOIN series
-		    ON series.id = measurement_series.series_id
-		   AND NOT series.restricted
+		LEFT JOIN series_v sv
+		    ON sv.id = measurement_series.series_id
+		   AND NOT sv.restricted
 		LEFT JOIN category_geographies cg ON cg.category_id = categories.id
 		LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
 		LEFT JOIN geographies ON
 			(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
 				  THEN geographies.id = cg.geography_id ELSE true
 			 END)
-		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+		LEFT JOIN public_data_points ON public_data_points.series_id = sv.id
 		WHERE categories.id = ?
-		AND series.geography_id = geographies.id
+		AND sv.geography_id = geographies.id
 		AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
-				  THEN series.frequency = cf.frequency ELSE true
+				  THEN sv.frequency = cf.frequency ELSE true
 			 END)
 		AND public_data_points.value IS NOT null /* suppress those with no public data */
-		GROUP BY categories.id, geographies.id, RIGHT(series.name, 1)  ;`, id)
+		GROUP BY categories.id, geographies.id, RIGHT(sv.name, 1)  ;`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
