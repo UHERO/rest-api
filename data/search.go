@@ -27,7 +27,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	MAX(geo.fips), MAX(geo.handle) AS shandle, MAX(geo.display_name), MAX(geo.display_name_short)
-	FROM series
+	FROM series_v AS series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
@@ -83,7 +83,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	err = r.Series.DB.QueryRow(`
 	    SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
 	    FROM public_data_points
-	    JOIN series ON series.id = public_data_points.series_id
+	    JOIN series_v AS series ON series.id = public_data_points.series_id
 	    JOIN (
 			SELECT series_id FROM measurement_series WHERE measurement_id IN (
 				SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
@@ -128,7 +128,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	//language=MySQL
 	rows, err := r.Series.DB.Query(`
 	SELECT DISTINCT geo.fips, geo.display_name, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
-	FROM series
+	FROM series_v AS series
 	LEFT JOIN geographies geo on geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurement_series.measurement_id
@@ -144,6 +144,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	  		COALESCE(series.dataPortalName, ''),
 	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	ORDER BY 1,2,3,4;`, universeText, searchText, searchText, searchText)
+												/**** REPLACE LIKE+CONCAT with REGEXP, no need LOWER ****/
 	if err != nil {
 		return
 	}
@@ -230,7 +231,7 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name), MAX(geo.display_name_short)
-	FROM series
+	FROM series_v AS series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
@@ -307,7 +308,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name), MAX(geo.display_name_short)
-	FROM series
+	FROM series_v AS series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
