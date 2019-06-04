@@ -99,7 +99,7 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 	rows, err := r.DB.Query(
 		`SELECT DISTINCT geographies.fips, geographies.display_name, geographies.display_name_short, geographies.handle
 		FROM series_v AS series
-		JOIN (SELECT name, universe FROM series where id = ?) AS original_series
+		JOIN (SELECT name, universe FROM series where id = ?) AS original_series  /* This "series" is base table, not confused with previous alias! */
 		LEFT JOIN geographies ON geographies.id = series.geography_id
 		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 		WHERE series.universe = original_series.universe
