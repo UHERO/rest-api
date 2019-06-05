@@ -164,7 +164,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 			MIN(pdp.date), MAX(pdp.date)
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
-		LEFT JOIN series ON series.id = ms.series_id
+		LEFT JOIN series_v AS series ON series.id = ms.series_id
 		LEFT JOIN category_geographies cg ON cg.category_id = ?
 		LEFT JOIN geographies geo ON
 			(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = ?)
