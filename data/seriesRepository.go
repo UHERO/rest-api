@@ -35,12 +35,12 @@ const (
 	C5MAChange        = "c5mach1"
 )
 
-var transformations map[string]transformation = map[string]transformation{
+var transformations = map[string]transformation{
 	Levels: { // untransformed value
 		//language=MySQL
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
 		FROM public_data_points
-		LEFT JOIN series ON public_data_points.series_id = series.id
+		LEFT JOIN series_v AS series ON public_data_points.series_id = series.id
 		WHERE series_id = ?;`,
 		PlaceholderCount: 1,
 		Label:            "lvl",
@@ -53,7 +53,7 @@ var transformations map[string]transformation = map[string]transformation{
 				      FROM public_data_points WHERE series_id = ?) AS t1
 				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
 				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date)
-				LEFT JOIN series ON t1.series_id = series.id;`,
+				LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "pc1",
 	},
@@ -65,7 +65,7 @@ var transformations map[string]transformation = map[string]transformation{
 				      FROM public_data_points WHERE series_id = ?) AS t1
 				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
 				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date)
-				LEFT JOIN series ON t1.series_id = series.id;`,
+				LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "pc1",
 	},
@@ -83,7 +83,7 @@ var transformations map[string]transformation = map[string]transformation{
                    @year := year(date), pseudo_history
                  FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
                  WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date)
-      LEFT JOIN series ON t1.series_id = series.id;`,
+      LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
@@ -99,7 +99,7 @@ var transformations map[string]transformation = map[string]transformation{
                    @year := year(date), pseudo_history
                  FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
                  WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date)
-      LEFT JOIN series ON t1.series_id = series.id;`,
+      LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
@@ -115,7 +115,7 @@ var transformations map[string]transformation = map[string]transformation{
 				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
 				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
 				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
-      			LEFT JOIN series ON t1.series_id = series.id;`,
+      			LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 4,
 		Label:            "c5ma",
 	},
@@ -131,7 +131,7 @@ var transformations map[string]transformation = map[string]transformation{
 				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
 				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
 				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
-			LEFT JOIN series ON t1.series_id = series.id;`,
+			LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 4,
 		Label:            "c5ma",
 	},
@@ -150,7 +150,7 @@ var seriesPrefix = `SELECT
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	MAX(data_list_measurements.indent), series.base_year, series.decimals,
 	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name), MAX(geographies.display_name_short)
-	FROM series
+	FROM series_v AS series
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
@@ -191,7 +191,7 @@ var measurementSeriesPrefix = `SELECT
 	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name), MAX(geographies.display_name_short)
 	FROM measurements
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
-	LEFT JOIN series ON series.id = measurement_series.series_id
+	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
 	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
@@ -224,7 +224,7 @@ var siblingsPrefix = `SELECT
 	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
-	LEFT JOIN series ON series.id = measurement_series.series_id
+	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
 	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 	LEFT JOIN categories ON categories.id = ?
 	LEFT JOIN category_geographies cg ON cg.category_id = categories.id
@@ -485,7 +485,7 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	FROM categories
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-	LEFT JOIN series ON series.id = measurement_series.series_id
+	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
 	LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
@@ -631,8 +631,8 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	seriesId int64,
 ) (frequencyList []models.DataPortalFrequency, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
-	FROM series
-	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series
+	FROM series_v AS series
+	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series /* This "series" is base table, not confused with previous alias! */
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = original_series.universe
 	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
@@ -672,7 +672,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 	measurements.id, measurements.data_portal_name,
 	NULL, series.base_year, series.decimals,
 	geo.fips, geo.handle AS shandle, geo.display_name, geo.display_name_short
-	FROM series
+	FROM series_v AS series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
@@ -716,7 +716,7 @@ func (r *SeriesRepository) GetSeriesObservations(
 	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, C5MAPercentChange
 
 	err = r.DB.QueryRow(`SELECT series.universe, series.percent
-	FROM series
+	FROM series_v AS series
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ? AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&universe, &percent)
