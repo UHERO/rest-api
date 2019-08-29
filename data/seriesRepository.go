@@ -155,12 +155,7 @@ var seriesPrefix = `SELECT
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
 	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
-	LEFT JOIN category_geographies cg ON cg.category_id = categories.id
-	LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
-	LEFT JOIN geographies ON
-	    (CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
-	          THEN geographies.id = cg.geography_id ELSE true
-	     END)
+	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -171,10 +166,6 @@ var seriesPrefix = `SELECT
 	WHERE categories.id = ?
 	AND NOT (categories.hidden OR categories.masked)
 	AND NOT series.restricted
-	AND series.geography_id = geographies.id
-	AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
-	          THEN series.frequency = cf.frequency ELSE true
-	     END)
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 //language=MySQL
 var measurementSeriesPrefix = `SELECT
@@ -227,12 +218,7 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
 	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 	LEFT JOIN categories ON categories.id = ?
-	LEFT JOIN category_geographies cg ON cg.category_id = categories.id
-	LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
-	LEFT JOIN geographies ON
-		(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
-			  THEN geographies.id = cg.geography_id ELSE true
-		 END)
+	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
 	LEFT JOIN sources ON sources.id = series.source_id
@@ -242,10 +228,6 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE NOT series.restricted
 	AND public_data_points.value IS NOT NULL
-	AND series.geography_id = geographies.id
-	AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
-	          THEN series.frequency = cf.frequency ELSE true
-	     END)
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
 
 func (r *SeriesRepository) GetSeriesByGroupAndFreq(
@@ -486,14 +468,10 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
-	LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
 	AND NOT (categories.hidden OR categories.masked)
 	AND NOT series.restricted
-	AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
-	          THEN series.frequency = cf.frequency ELSE true
-	     END)
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {

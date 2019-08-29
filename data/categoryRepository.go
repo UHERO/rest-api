@@ -311,18 +311,9 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		LEFT JOIN series_v AS series
 		    ON series.id = measurement_series.series_id
 		   AND NOT series.restricted
-		LEFT JOIN category_geographies cg ON cg.category_id = categories.id
-		LEFT JOIN category_frequencies cf ON cf.category_id = categories.id
-		LEFT JOIN geographies ON
-			(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = categories.id)
-				  THEN geographies.id = cg.geography_id ELSE true
-			 END)
+		LEFT JOIN geographies ON geographies.id = series.geography_id
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 		WHERE categories.id = ?
-		AND series.geography_id = geographies.id
-		AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = categories.id)
-				  THEN series.frequency = cf.frequency ELSE true
-			 END)
 		AND public_data_points.value IS NOT null /* suppress those with no public data */
 		GROUP BY categories.id, geographies.id, RIGHT(series.name, 1)  ;`, id)
 	if err != nil {
