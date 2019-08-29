@@ -165,31 +165,22 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series_v AS series ON series.id = ms.series_id
-		LEFT JOIN category_geographies cg ON cg.category_id = ?
-		LEFT JOIN geographies geo ON
-			(CASE WHEN EXISTS(SELECT * FROM category_geographies WHERE category_id = ?)
-				  THEN geo.id = cg.geography_id ELSE true
-			 END)
+		LEFT JOIN geographies geo ON geo.id = series.geography_id
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		AND series.geography_id = geo.id
 		GROUP BY geo.id
 		   UNION
 		SELECT DISTINCT 'freq' AS gftype,
 			RIGHT(series.name, 1) AS handle, null, null, null, MIN(pdp.date), MAX(pdp.date)
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
-		LEFT JOIN category_frequencies cf ON cf.category_id = ?
 		LEFT JOIN series_v AS series ON series.id = ms.series_id
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		AND (CASE WHEN EXISTS(SELECT * FROM category_frequencies WHERE category_id = ?)
-				  THEN series.frequency = cf.frequency ELSE true
-			 END)
 		GROUP BY RIGHT(series.name, 1)
-		ORDER BY 1,2 ;`, categoryId, categoryId, seriesId, categoryId, seriesId, categoryId)
+		ORDER BY 1,2 ;`, seriesId, seriesId)
 	if err != nil {
 		return nil, nil, err
 	}
