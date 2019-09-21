@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/UHERO/rest-api/common"
@@ -93,6 +94,17 @@ func main() {
 		},
 	}
 
+	ttlMinutes := 10
+	cacheTtl, ok := os.LookupEnv("API_CACHE_TTL_MIN")
+	if ok {
+		ttlMinutes, err = strconv.Atoi(cacheTtl)
+		if err != nil {
+			log.Printf("*** ERROR in API_CACHE_TTL_MIN env var")
+			ttlMinutes = 10
+		}
+	}
+	log.Printf("Cache TTL is %d minutes", ttlMinutes)
+
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
@@ -100,7 +112,7 @@ func main() {
 	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{}
-	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * 10} //TTL in seconds
+	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes} // TTL stored in seconds
 
 	// Get the mux router object
 	router := routers.InitRoutes(
