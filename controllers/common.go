@@ -20,6 +20,7 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 		nocache, _ := regexp.MatchString(`&nocache$`, url)
 		if nocache {
 			r.URL.RawQuery = strings.Replace(r.URL.RawQuery, "&nocache", "", -1)
+			log.Printf("Bypassing cache lookup for URL %s", url)
 		} else {
 			cached_val, _ := c.GetCache(url)
 			if cached_val != nil {
@@ -38,6 +39,7 @@ func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Re
 		nocache, _ := regexp.MatchString(`&nocache$`, url)
 		if nocache {
 			r.URL.RawQuery = strings.Replace(r.URL.RawQuery, "&nocache", "", -1)
+			log.Printf("Bypassing cache lookup for URL %s", url)
 		} else {
 			cached_val_fresh, _ := c.GetCache(url + ":fresh")
 			if cached_val_fresh != nil {
