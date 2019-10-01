@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"github.com/UHERO/rest-api/common"
@@ -16,10 +17,15 @@ import (
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := GetFullRelativeURL(r)
-		cached_val, _ := c.GetCache(url)
-		if cached_val != nil {
-			WriteResponse(w, cached_val)
-			return
+		nocache, _ := regexp.MatchString(`&nocache$`, url)
+		if nocache {
+			r.URL.RawQuery = strings.Replace(r.URL.RawQuery, "&nocache", "", -1)
+		} else {
+			cached_val, _ := c.GetCache(url)
+			if cached_val != nil {
+				WriteResponse(w, cached_val)
+				return
+			}
 		}
 		next(w, r)
 		return

@@ -3,7 +3,6 @@ package data
 import (
 	"errors"
 	"log"
-
 	"github.com/garyburd/redigo/redis"
 )
 
