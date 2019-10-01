@@ -35,10 +35,15 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := data.GetCensusReqURI(r)
-		cached_val_fresh, _ := c.GetCache(url + ":fresh")
-		if cached_val_fresh != nil {
-			WriteResponse(w, cached_val_fresh)
-			return
+		nocache, _ := regexp.MatchString(`&nocache$`, url)
+		if nocache {
+			r.URL.RawQuery = strings.Replace(r.URL.RawQuery, "&nocache", "", -1)
+		} else {
+			cached_val_fresh, _ := c.GetCache(url + ":fresh")
+			if cached_val_fresh != nil {
+				WriteResponse(w, cached_val_fresh)
+				return
+			}
 		}
 		next(w, r)
 		return
