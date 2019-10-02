@@ -17,8 +17,7 @@ import (
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := GetFullRelativeURL(r)
-		nocache, _ := regexp.MatchString(`&nocache$`, url)
-		if nocache {
+		if noCache, _ := regexp.MatchString(`&nocache$`, url); noCache {
 			r.URL.RawQuery = strings.Replace(r.URL.RawQuery, "&nocache", "", -1)
 			log.Printf("Bypassing cache lookup for URL %s", url)
 		} else {
@@ -36,8 +35,7 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := data.GetCensusReqURI(r)
-		nocache, _ := regexp.MatchString(`&nocache$`, url)
-		if nocache {
+		if noCache, _ := regexp.MatchString(`&nocache$`, url); noCache {
 			r.URL.RawQuery = strings.Replace(r.URL.RawQuery, "&nocache", "", -1)
 			log.Printf("Bypassing cache lookup for URL %s", url)
 		} else {
