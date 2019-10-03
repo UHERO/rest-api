@@ -3,7 +3,6 @@ package data
 import (
 	"errors"
 	"log"
-
 	"github.com/garyburd/redigo/redis"
 )
 
@@ -21,7 +20,7 @@ func (r *CacheRepository) GetCache(key string) ([]byte, error) {
 		return nil, err
 	}
 	if value == nil {
-		log.Printf("Redis cached val nil on GET: %v", err)
+		//log.Printf("Redis cached val nil on GET: %v", err)
 		return nil, err
 	}
 	log.Printf("Redis GET: %s", key)
@@ -45,7 +44,7 @@ func (r *CacheRepository) SetCache(key string, value []byte) (err error) {
 		log.Print("Error on scan of redis response")
 	}
 	if setResponse != "OK" {
-		err = errors.New("Did not get OK from Redis SET")
+		err = errors.New("did not get OK from Redis SET")
 		log.Print(err)
 		return
 	}

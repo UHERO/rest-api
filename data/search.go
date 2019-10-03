@@ -3,7 +3,6 @@ package data
 import (
 	"sort"
 	"time"
-
 	"github.com/UHERO/rest-api/models"
 	"strings"
 )

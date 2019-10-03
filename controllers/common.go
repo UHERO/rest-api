@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"github.com/UHERO/rest-api/common"
@@ -16,10 +17,15 @@ import (
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := GetFullRelativeURL(r)
-		cached_val, _ := c.GetCache(url)
-		if cached_val != nil {
-			WriteResponse(w, cached_val)
-			return
+		if noCache, _ := regexp.MatchString(`&nocache$`, url); noCache {
+			r.URL.RawQuery = strings.Replace(r.URL.RawQuery, "&nocache", "", -1)
+			log.Printf("Bypassing cache lookup for URL %s", url)
+		} else {
+			cachedVal, _ := c.GetCache(url)
+			if cachedVal != nil {
+				WriteResponse(w, cachedVal)
+				return
+			}
 		}
 		next(w, r)
 		return
@@ -29,10 +35,15 @@ func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request
 func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		url := data.GetCensusReqURI(r)
-		cached_val_fresh, _ := c.GetCache(url + ":fresh")
-		if cached_val_fresh != nil {
-			WriteResponse(w, cached_val_fresh)
-			return
+		if noCache, _ := regexp.MatchString(`&nocache$`, url); noCache {
+			r.URL.RawQuery = strings.Replace(r.URL.RawQuery, "&nocache", "", -1)
+			log.Printf("Bypassing cache lookup for URL %s", url)
+		} else {
+			freshCachedVal, _ := c.GetCache(url + ":fresh")
+			if freshCachedVal != nil {
+				WriteResponse(w, freshCachedVal)
+				return
+			}
 		}
 		next(w, r)
 		return
