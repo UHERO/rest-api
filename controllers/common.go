@@ -53,7 +53,10 @@ func CheckCacheFresh(c *data.CacheRepository) func(http.ResponseWriter, *http.Re
 func WriteResponse(w http.ResponseWriter, payload []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(payload)
+	_, err := w.Write(payload)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func WriteCache(r *http.Request, c *data.CacheRepository, payload []byte) {

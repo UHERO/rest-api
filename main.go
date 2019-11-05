@@ -139,5 +139,8 @@ func main() {
 		Handler: n,
 	}
 	log.Printf("Listening on %s...", server.Addr)
-	server.ListenAndServe()
+	err = server.ListenAndServe()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
