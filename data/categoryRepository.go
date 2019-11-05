@@ -115,14 +115,14 @@ func (r *CategoryRepository) GetAllCategories() (categories []models.Category, e
 func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
 	rows, err := r.DB.Query(
 		`SELECT categories.id,
-			ANY_VALUE(categories.name) AS catname,
-			ANY_VALUE(categories.universe) AS universe,
-			ANY_VALUE(categories.ancestry) AS ancest,
+			categories.name AS catname,
+			categories.universe AS universe,
+			categories.ancestry AS ancest,
 			categories.default_freq AS catfreq,
-			ANY_VALUE(geographies.handle) AS catgeo,
-			ANY_VALUE(geographies.fips) AS catgeofips,
-			ANY_VALUE(geographies.display_name) AS catgeoname,
-			ANY_VALUE(geographies.display_name_short) AS catgeonameshort,
+			geographies.handle AS catgeo,
+			geographies.fips AS catgeofips,
+			geographies.display_name AS catgeoname,
+			geographies.display_name_short AS catgeonameshort,
 			MIN(public_data_points.date) AS startdate,
 			MAX(public_data_points.date) AS enddate
 		FROM categories
@@ -138,7 +138,8 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		WHERE categories.universe = ?
 		AND categories.ancestry IS NOT NULL
 		AND NOT (categories.hidden OR categories.masked)
-		GROUP BY categories.id, categories.default_geo_id, categories.default_freq
+		GROUP BY categories.id, categories.name, categories.universe, categories.ancestry, categories.default_geo_id, categories.default_freq,
+		         geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short
 		ORDER BY categories.list_order;`, universe)
 	if err != nil {
 		return
@@ -289,17 +290,17 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	dataPortalCategory := models.Category{}
 	rows, err := r.DB.Query(
 		`SELECT categories.id,
-			ANY_VALUE(categories.name) AS catname,
-			ANY_VALUE(categories.universe) AS universe,
-			ANY_VALUE(parentcat.id) AS parent_id,
-			ANY_VALUE(categories.header) AS header,
-			ANY_VALUE(COALESCE(mygeo.handle, parentgeo.handle)) AS def_geo,
-			ANY_VALUE(COALESCE(categories.default_freq, parentcat.default_freq)) AS def_freq,
-			ANY_VALUE(geographies.handle) AS series_geo,
+			categories.name AS catname,
+			categories.universe AS universe,
+			parentcat.id AS parent_id,
+			categories.header AS header,
+			COALESCE(mygeo.handle, parentgeo.handle) AS def_geo,
+			COALESCE(categories.default_freq, parentcat.default_freq) AS def_freq,
+			geographies.handle AS series_geo,
 			RIGHT(series.name, 1) AS series_freq,
-			ANY_VALUE(geographies.fips) AS geofips,
-			ANY_VALUE(geographies.display_name) AS geoname,
-			ANY_VALUE(geographies.display_name_short) AS geonameshort,
+			geographies.fips AS geofips,
+			geographies.display_name AS geoname,
+			geographies.display_name_short AS geonameshort,
 			MIN(public_data_points.date) AS startdate,
 			MAX(public_data_points.date) AS enddate
 		FROM categories
@@ -315,7 +316,9 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 		WHERE categories.id = ?
 		AND public_data_points.value IS NOT null /* suppress those with no public data */
-		GROUP BY categories.id, geographies.id, RIGHT(series.name, 1)  ;`, id)
+		GROUP BY categories.id, categories.name, categories.universe, parentcat.id, categories.header, COALESCE(mygeo.handle, parentgeo.handle),
+		         COALESCE(categories.default_freq, parentcat.default_freq), geographies.id, geographies.handle, RIGHT(series.name, 1),
+		         geographies.fips, geographies.display_name, geographies.display_name_short;`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
