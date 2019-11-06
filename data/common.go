@@ -157,10 +157,10 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 ) {
 	rows, err := r.DB.Query(
 		`SELECT DISTINCT 'geo' AS gftype,
-			ANY_VALUE(geo.handle) AS handle,
-			ANY_VALUE(geo.fips) AS fips,
-			ANY_VALUE(geo.display_name) AS display_name,
-			ANY_VALUE(geo.display_name_short) AS display_name_short,
+			geo.handle AS handle,
+			geo.fips AS fips,
+			geo.display_name AS display_name,
+			geo.display_name_short AS display_name_short,
 			MIN(pdp.date), MAX(pdp.date)
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
@@ -169,7 +169,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		GROUP BY geo.id
+		GROUP BY geo.id, geo.handle, geo.fips, geo.display_name, geo.display_name_short
 		   UNION
 		SELECT DISTINCT 'freq' AS gftype,
 			RIGHT(series.name, 1) AS handle, null, null, null, MIN(pdp.date), MAX(pdp.date)
