@@ -139,22 +139,12 @@ func GetSeriesByName(seriesRepository *data.SeriesRepository, cacheRepository *d
 		}
 		series, err := seriesRepository.GetSeriesByName(name, 0)
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
 		j, err := json.Marshal(SeriesResource{Data: series})
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
 			return
 		}
 		WriteResponse(w, j)

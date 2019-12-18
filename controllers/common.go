@@ -139,8 +139,8 @@ func getIntParam(r *http.Request, name string) (id int64, ok bool) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-func getStrParam(r *http.Request, name string) (strval string, ok bool) {
-	strval, ok = mux.Vars(r)[name]
+func getStrParam(r *http.Request, name string) (strVal string, ok bool) {
+	strVal, ok = mux.Vars(r)[name]
 	// maybe create a new error and return that instead of boolean?
 	return
 }
