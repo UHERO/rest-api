@@ -683,11 +683,62 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 	return
 }
 
+func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
+	row, err := r.DB.Query(`SELECT DISTINCT
+	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
+	COALESCE(NULLIF(units.short_label, ''), NULLIF(measurement_units.short_label, '')),
+	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
+	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
+	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
+	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
+	measurements.table_prefix, measurements.table_postfix,
+	measurements.id, measurements.data_portal_name,
+	NULL, series.base_year, series.decimals,
+	geo.fips, geo.handle AS shandle, geo.display_name, geo.display_name_short
+	FROM series_v AS series
+	LEFT JOIN geographies geo ON geo.id = series.geography_id
+	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
+	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
+	LEFT JOIN units ON units.id = series.unit_id
+	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
+	LEFT JOIN sources ON sources.id = series.source_id
+	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
+	LEFT JOIN source_details ON source_details.id = series.source_detail_id
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
+	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
+	WHERE series.name = ?
+	AND series.universe = ?
+	AND NOT series.restricted
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, name, universe)
+ // AND NOT ( feature_toggles.status IS NOT NULL AND feature_toggles.status AND series.quarantined )
+	if err != nil {
+		return
+	}
+	var series models.DataPortalSeries
+	var observations models.SeriesObservations
+
+	for row.Next() {
+		series, err = getNextSeriesFromRows(row)
+		if err != nil {
+			return
+		}
+		SeriesPkg.Series = series
+		break
+	}
+	if expand {
+		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id)
+		if err != nil {
+			return
+		}
+		SeriesPkg.Observations = &observations
+	}
+	return
+}
+
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
-func (r *SeriesRepository) GetSeriesObservations(
-	seriesId int64,
-) (seriesObservations models.SeriesObservations, err error) {
+func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string
@@ -829,7 +880,7 @@ func (r *SeriesRepository) CreateSeriesPackage(
 	if err != nil {
 		return
 	}
-	pkg.Observations = observations
+	pkg.Observations = &observations
 
 	siblings, err := r.GetSeriesSiblingsById(id, categoryId)
 	if err != nil {

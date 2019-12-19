@@ -138,6 +138,13 @@ func getIntParam(r *http.Request, name string) (id int64, ok bool) {
 	return
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+func getStrParam(r *http.Request, name string) (strVal string, ok bool) {
+	strVal, ok = mux.Vars(r)[name]
+	// maybe create a new error and return that instead of boolean?
+	return
+}
+
 func getId(w http.ResponseWriter, r *http.Request) (id int64, ok bool) {
 	id, ok = getIntParam(r, "id")
 	if !ok {

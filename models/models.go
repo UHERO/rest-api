@@ -182,9 +182,9 @@ type Measurement struct {
 
 type DataPortalSeriesPackage struct {
 	Series		DataPortalSeries	`json:"series"`
-	Categories	[]Category		`json:"categories"`
-	Observations	SeriesObservations	`json:"observations"`
-	Siblings	[]DataPortalSeries	`json:"siblings"`
+	Categories	[]Category		`json:"categories,omitempty"`
+	Observations	*SeriesObservations	`json:"observations,omitempty"`
+	Siblings	[]DataPortalSeries	`json:"siblings,omitempty"`
 }
 
 type DataPortalSeries struct {

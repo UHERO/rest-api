@@ -130,6 +130,34 @@ func GetSeriesById(seriesRepository *data.SeriesRepository, cacheRepository *dat
 	}
 }
 
+
+func GetSeriesByName(seriesRepository *data.SeriesRepository, cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name, ok := getStrParam(r, "name")
+		if !ok {
+			return
+		}
+		universe, ok := getStrParam(r, "universe")
+		if !ok {
+			universe = "UHERO"
+		}
+		expand, ok := getStrParam(r, "exp")
+
+		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, expand == "true")
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			return
+		}
+		j, err := json.Marshal(SeriesPackage{Data: seriesPkg})
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
+	}
+}
+
 func GetSeriesSiblingsById(seriesRepository *data.SeriesRepository, cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
