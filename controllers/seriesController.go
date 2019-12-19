@@ -137,11 +137,11 @@ func GetSeriesByName(seriesRepository *data.SeriesRepository, cacheRepository *d
 		if !ok {
 			return
 		}
-		universe, ok := getStrParam(r, "u")
+		universe, ok := getStrParam(r, "universe")
 		if !ok {
 			universe = "UHERO"
 		}
-		expand, ok := getStrParam(r, "expand")
+		expand, ok := getStrParam(r, "exp")
 
 		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, expand == "true")
 		if err != nil {

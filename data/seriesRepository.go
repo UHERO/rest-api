@@ -3,6 +3,7 @@ package data
 import (
 	"database/sql"
 	"github.com/UHERO/rest-api/models"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -684,6 +685,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 }
 
 func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
+//	log.Printf("`````````````````` at 1: %v", SeriesPkg.Observations)
 	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
@@ -716,23 +718,28 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 		return
 	}
 	var series models.DataPortalSeries
-	var observations models.SeriesObservations
+	//var observations models.SeriesObservations
 
+//	log.Printf("`````````````````` at 2: %v", SeriesPkg.Observations)
 	for row.Next() {
 		series, err = getNextSeriesFromRows(row)
+//		log.Printf("`````````````````` at 3: %v", SeriesPkg.Observations)
 		if err != nil {
 			return
 		}
 		SeriesPkg.Series = series
+//		log.Printf("`````````````````` at 4: %v", SeriesPkg.Observations)
 		break
 	}
 	if expand {
-		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id)
+		log.Printf(">>>>>>>>> EXPANDERMAN")
+		_, err = r.GetSeriesObservations(SeriesPkg.Series.Id)
 		if err != nil {
 			return
 		}
-		SeriesPkg.Observations = observations
+		// SeriesPkg.Observations = observations
 	}
+//	log.Printf("`````````````````` at 5: %v", SeriesPkg.Observations)
 	return
 }
 
