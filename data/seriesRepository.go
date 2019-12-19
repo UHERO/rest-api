@@ -683,7 +683,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByName(name string, categoryId int64) (dataPortalSeries models.DataPortalSeries, err error) {
+func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
 	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
@@ -708,33 +708,37 @@ func (r *SeriesRepository) GetSeriesByName(name string, categoryId int64) (dataP
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.name = ?
+	AND series.universe = ?
 	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, name)
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, name, universe)
  // AND NOT ( feature_toggles.status IS NOT NULL AND feature_toggles.status AND series.quarantined )
 	if err != nil {
 		return
 	}
+	var series models.DataPortalSeries
+	var observations models.SeriesObservations
+
 	for row.Next() {
-		dataPortalSeries, err = getNextSeriesFromRows(row)
+		series, err = getNextSeriesFromRows(row)
 		if err != nil {
 			return
 		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, categoryId)
-		if err != nil {
-			return dataPortalSeries, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
+		SeriesPkg.Series = series
 		break
+	}
+	if expand {
+		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id)
+		if err != nil {
+			return
+		}
+		SeriesPkg.Observations = observations
 	}
 	return
 }
 
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
-func (r *SeriesRepository) GetSeriesObservations(
-	seriesId int64,
-) (seriesObservations models.SeriesObservations, err error) {
+func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string

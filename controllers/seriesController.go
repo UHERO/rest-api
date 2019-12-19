@@ -137,12 +137,18 @@ func GetSeriesByName(seriesRepository *data.SeriesRepository, cacheRepository *d
 		if !ok {
 			return
 		}
-		series, err := seriesRepository.GetSeriesByName(name, 0)
+		universe, ok := getStrParam(r, "u")
+		if !ok {
+			universe = "UHERO"
+		}
+		expand, ok := getStrParam(r, "expand")
+
+		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, expand == "true")
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
-		j, err := json.Marshal(SeriesResource{Data: series})
+		j, err := json.Marshal(SeriesPackage{Data: seriesPkg})
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
 			return
