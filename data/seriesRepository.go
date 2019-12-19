@@ -731,7 +731,7 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 		if err != nil {
 			return
 		}
-		SeriesPkg.Observations = observations
+		SeriesPkg.Observations = &observations
 	}
 	return
 }
@@ -880,7 +880,7 @@ func (r *SeriesRepository) CreateSeriesPackage(
 	if err != nil {
 		return
 	}
-	pkg.Observations = observations
+	pkg.Observations = &observations
 
 	siblings, err := r.GetSeriesSiblingsById(id, categoryId)
 	if err != nil {
