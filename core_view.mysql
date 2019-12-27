@@ -1,0 +1,56 @@
+CREATE OR REPLACE VIEW core_view AS SELECT
+    categories.universe AS category_universe,
+    categories.id AS category_id,
+    categories.name AS category_name,
+    categories.data_list_id,
+    categories.default_geo_id,
+    categories.default_freq,
+    categories.list_order AS category_list_order,
+    categories.hidden,
+    categories.masked,
+    categories.header,
+    data_lists.universe AS data_list_universe,
+    data_lists.id AS data_list_id,
+    data_lists.name AS data_list_name,
+    data_list_measurements.list_order AS dlm_list_order,
+    data_list_measurements.indent AS dlm_indent,
+    geographies.fips,
+    geographies.handle AS geography_handle,
+    geographies.display_name AS geography_display_name,
+    geographies.display_name_short AS geography_display_name_short,
+    measurements.universe AS measurement_universe,
+    measurements.id AS measurements_id,
+	measurements.data_portal_name,
+    measurements.table_prefix,
+    measurements.table_postfix,
+    series.universe AS series_universe,
+    series.id AS series_id,
+    series.name AS series_name,
+    series.description,
+    series.frequency,
+    series.seasonally_adjusted,
+    series.seasonal_adjustment,
+    series.base_year,
+    series.decimals,
+    COALESCE(units.long_label, measurement_units.long_label) AS inh_units_long,
+    COALESCE(units.short_label, measurement_units.short_label) AS inh_units_short,
+    COALESCE(series.dataPortalName, measurements.data_portal_name) AS inh_data_portal_name,
+    COALESCE(sources.description, measurement_sources.description) AS inh_source_description,
+    COALESCE(source_details.description, measurement_source_details.description) AS inh_source_detail_description,
+    COALESCE(series.source_link, measurements.source_link, sources.link, measurement_sources.link) AS inh_source_link
+    FROM series_v AS series
+    JOIN measurement_series ON measurement_series.series_id = series.id
+    JOIN measurements ON measurements.id = measurement_series.measurement_id
+    JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+    JOIN data_lists ON data_list_measurements.data_list_id = data_lists.id
+    JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
+    JOIN geographies ON geographies.id = series.geography_id
+    LEFT JOIN units ON units.id = series.unit_id
+    LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
+    LEFT JOIN sources ON sources.id = series.source_id
+    LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
+    LEFT JOIN source_details ON source_details.id = series.source_detail_id
+    LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
+    -- WHERE TRUE
+    -- AND NOT (categories.hidden OR categories.masked)
+    -- AND NOT (series.restricted OR series.quarantined)
