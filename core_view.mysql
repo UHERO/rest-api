@@ -32,12 +32,12 @@ CREATE OR REPLACE VIEW core_view AS SELECT
     series.seasonal_adjustment,
     series.base_year,
     series.decimals,
-    COALESCE(units.long_label, measurement_units.long_label) AS inh_units_long,
-    COALESCE(units.short_label, measurement_units.short_label) AS inh_units_short,
-    COALESCE(series.dataPortalName, measurements.data_portal_name) AS inh_data_portal_name,
-    COALESCE(sources.description, measurement_sources.description) AS inh_source_description,
-    COALESCE(source_details.description, measurement_source_details.description) AS inh_source_detail_description,
-    COALESCE(series.source_link, measurements.source_link, sources.link, measurement_sources.link) AS inh_source_link
+    COALESCE(units.long_label, measurement_units.long_label) AS units_long,
+    COALESCE(units.short_label, measurement_units.short_label) AS units_short,
+    COALESCE(series.dataPortalName, measurements.data_portal_name) AS data_portal_name,
+    COALESCE(sources.description, measurement_sources.description) AS source_description,
+    COALESCE(source_details.description, measurement_source_details.description) AS source_detail_description,
+    COALESCE(series.source_link, measurements.source_link, sources.link, measurement_sources.link) AS source_link
     FROM series_v AS series
     JOIN measurement_series ON measurement_series.series_id = series.id
     JOIN measurements ON measurements.id = measurement_series.measurement_id
