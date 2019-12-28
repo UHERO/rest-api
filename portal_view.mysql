@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW core_view AS SELECT
+CREATE OR REPLACE VIEW portal_view AS SELECT
     categories.universe AS category_universe,
     categories.id AS category_id,
     categories.name AS category_name,
