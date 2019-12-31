@@ -31,6 +31,8 @@ CREATE OR REPLACE VIEW portal_meta AS SELECT
     series.seasonal_adjustment,
     series.base_year,
     series.decimals,
+    CONCAT(series.name, '|', series.description, '|', series.dataPortalName) as series_search_text,
+    CONCAT(series.name, '|', series.description, '|', series.dataPortalName, '|', categories.name) as ext_search_text,
     COALESCE(units.short_label, measurement_units.short_label) AS units_short,
     COALESCE(units.long_label, measurement_units.long_label) AS units_long,
     COALESCE(series.dataPortalName, measurements.data_portal_name) AS data_portal_name,
