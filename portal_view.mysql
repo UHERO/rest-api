@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW portal_view AS SELECT
+CREATE OR REPLACE VIEW portal_meta AS SELECT
     categories.universe AS category_universe,
     categories.id AS category_id,
     categories.name AS category_name,
@@ -25,14 +25,14 @@ CREATE OR REPLACE VIEW portal_view AS SELECT
     series.universe AS series_universe,
     series.id AS series_id,
     series.name AS series_name,
-    series.series_description,
+    series.description AS series_description,
     series.frequency,
     series.seasonally_adjusted,
     series.seasonal_adjustment,
     series.base_year,
     series.decimals,
-    COALESCE(units.long_label, measurement_units.long_label) AS units_long,
     COALESCE(units.short_label, measurement_units.short_label) AS units_short,
+    COALESCE(units.long_label, measurement_units.long_label) AS units_long,
     COALESCE(series.dataPortalName, measurements.data_portal_name) AS data_portal_name,
     COALESCE(sources.description, measurement_sources.description) AS source_description,
     COALESCE(source_details.description, measurement_source_details.description) AS source_detail_description,
