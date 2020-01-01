@@ -105,6 +105,14 @@ func main() {
 	}
 	log.Printf("Cache TTL is %d minutes", ttlMinutes)
 
+	filterNonPublic := true
+	filterEnv, ok := os.LookupEnv("API_FILTER_NONPUBLIC")
+	if ok {
+		if filterEnv == "false" {
+			filterNonPublic = false
+		}
+	}
+
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
@@ -112,7 +120,7 @@ func main() {
 	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{}
-	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes} // TTL stored in seconds
+	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes, Filter: filterNonPublic} // TTL stored in seconds
 
 	// Get the mux router object
 	router := routers.InitRoutes(
