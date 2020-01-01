@@ -58,5 +58,5 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
 
 CREATE OR REPLACE VIEW portal_v AS
     SELECT * FROM portal_all_v
-    WHERE NOT (hidden OR masked OR restricted OR quarantined)
+    WHERE NOT (hidden OR masked OR quarantined OR restricted)
 
