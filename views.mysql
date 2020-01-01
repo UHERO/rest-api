@@ -32,6 +32,8 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
     series.seasonal_adjustment,
     series.base_year,
     series.decimals,
+    series.percent,
+    series.`real`,
     series.quarantined,
     series.restricted,
     CONCAT(series.name, '|', series.description, '|', series.dataPortalName) as series_search_text,
