@@ -162,11 +162,8 @@ var seriesPrefix = `SELECT
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
-	AND NOT (categories.hidden OR categories.masked)
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
+	AND NOT (categories.hidden OR categories.masked) ;`
 //language=MySQL
 var measurementSeriesPrefix = `SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
@@ -190,10 +187,7 @@ var measurementSeriesPrefix = `SELECT
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE measurements.id = ?
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
+	WHERE measurements.id = ? ;`
 var geoFilter = ` AND geographies.handle = UPPER(?) `
 var freqFilter = ` AND series.frequency = ? `
 var measurementPostfix = ` GROUP BY series.id;`
@@ -225,10 +219,7 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE NOT series.restricted
-	AND public_data_points.value IS NOT NULL
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
+	WHERE public_data_points.value IS NOT NULL ;`
 
 func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
@@ -468,11 +459,8 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE categories.id = ?
 	AND NOT (categories.hidden OR categories.masked)
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
@@ -611,12 +599,9 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series_v AS series
 	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series /* This "series" is base table, not confused with previous alias! */
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.universe = original_series.universe
 	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
 	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
 		return
@@ -660,10 +645,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.id = ?
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
+	WHERE series.id = ? ;`, seriesId)
 	if err != nil {
 		return
 	}
@@ -706,12 +688,8 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.name = ?
-	AND series.universe = ?
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, name, universe)
- // AND NOT ( feature_toggles.status IS NOT NULL AND feature_toggles.status AND series.quarantined )
+	AND series.universe = ? ;`, name, universe)
 	if err != nil {
 		return
 	}
@@ -746,9 +724,7 @@ func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservat
 
 	err = r.DB.QueryRow(`SELECT series.universe, series.percent
 	FROM series_v AS series
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.id = ? AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&universe, &percent)
+	WHERE series.id = ? ;`, seriesId).Scan(&universe, &percent)
 	if err != nil {
 		return
 	}

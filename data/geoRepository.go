@@ -49,11 +49,8 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 		LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
 		LEFT JOIN geographies ON geographies.id = series.geography_id
-		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 		WHERE (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]'))
-		AND NOT (categories.hidden OR categories.masked)
-		AND NOT series.restricted
-		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`,
+		AND NOT (categories.hidden OR categories.masked) ;`,
 		categoryId,
 		categoryId,
 	)
@@ -92,11 +89,8 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 		FROM series_v AS series
 		JOIN (SELECT name, universe FROM series where id = ?) AS original_series  /* This "series" is base table, not confused with previous alias! */
 		LEFT JOIN geographies ON geographies.id = series.geography_id
-		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 		WHERE series.universe = original_series.universe
-		AND substring_index(series.name, '@', 1) = substring_index(original_series.name, '@', 1) /* prefixes are equal */
-		AND NOT series.restricted
-		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
+		AND substring_index(series.name, '@', 1) = substring_index(original_series.name, '@', 1) /* prefixes are equal */`, seriesId)
 	if err != nil {
 		return
 	}
