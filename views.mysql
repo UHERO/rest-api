@@ -1,13 +1,13 @@
-CREATE OR REPLACE VIEW portal_meta AS SELECT
+CREATE OR REPLACE VIEW portal_all_v AS SELECT
     categories.universe AS category_universe,
     categories.id AS category_id,
     categories.name AS category_name,
     categories.default_geo_id,
     categories.default_freq,
     categories.list_order AS category_list_order,
+    categories.header,
     categories.hidden,
     categories.masked,
-    categories.header,
     data_lists.universe AS data_list_universe,
     data_lists.id AS data_list_id,
     data_lists.name AS data_list_name,
@@ -19,6 +19,7 @@ CREATE OR REPLACE VIEW portal_meta AS SELECT
     geographies.display_name_short AS geography_display_name_short,
     measurements.universe AS measurement_universe,
     measurements.id AS measurements_id,
+	measurements.prefix,
 	measurements.data_portal_name,
     measurements.table_prefix,
     measurements.table_postfix,
@@ -31,6 +32,8 @@ CREATE OR REPLACE VIEW portal_meta AS SELECT
     series.seasonal_adjustment,
     series.base_year,
     series.decimals,
+    series.quarantined,
+    series.restricted,
     CONCAT(series.name, '|', series.description, '|', series.dataPortalName) as series_search_text,
     CONCAT(series.name, '|', series.description, '|', series.dataPortalName, '|', categories.name) as ext_search_text,
     COALESCE(units.short_label, measurement_units.short_label) AS units_short,
@@ -39,7 +42,7 @@ CREATE OR REPLACE VIEW portal_meta AS SELECT
     COALESCE(sources.description, measurement_sources.description) AS source_description,
     COALESCE(source_details.description, measurement_source_details.description) AS source_detail_description,
     COALESCE(series.source_link, measurements.source_link, sources.link, measurement_sources.link) AS source_link
-    FROM series_v AS series
+    FROM series_all_v AS series
     JOIN measurement_series ON measurement_series.series_id = series.id
     JOIN measurements ON measurements.id = measurement_series.measurement_id
     JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
@@ -52,6 +55,8 @@ CREATE OR REPLACE VIEW portal_meta AS SELECT
     LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
     LEFT JOIN source_details ON source_details.id = series.source_detail_id
     LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-    -- WHERE TRUE
-    -- AND NOT (categories.hidden OR categories.masked)
-    -- AND NOT (series.restricted OR series.quarantined)
+
+CREATE OR REPLACE VIEW portal_v AS
+    SELECT * FROM portal_all_v
+    WHERE NOT (hidden OR masked OR restricted OR quarantined)
+
