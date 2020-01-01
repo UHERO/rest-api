@@ -138,32 +138,25 @@ var transformations = map[string]transformation{
 }
 
 //language=MySQL
-var seriesPrefix = `SELECT
-	series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
-	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
-	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
-	MAX(measurements.id), MAX(measurements.data_portal_name),
-	MAX(data_list_measurements.indent), series.base_year, series.decimals,
-	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name), MAX(geographies.display_name_short)
-	FROM series_v AS series
-	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
-	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
-	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
-	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
-	LEFT JOIN geographies ON geographies.id = series.geography_id
-	LEFT JOIN units ON units.id = series.unit_id
-	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
-	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
-	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	WHERE categories.id = ?
-	AND NOT (categories.hidden OR categories.masked) ;`
+var seriesPrefix = `
+	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+	-- series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+	-- COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
+	-- COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
+	-- COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	-- COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
+	-- COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
+	-- COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
+		   table_prefix, table_postfix, measurement_id,
+		   data_portal_name,  -- a repetition; figure out why this is duplicated unnecessarily
+		   dlm_indent, base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
+	-- MAX(measurements.table_prefix), MAX(measurements.table_postfix),
+	-- MAX(measurements.id), MAX(measurements.data_portal_name),
+	-- MAX(data_list_measurements.indent), series.base_year, series.decimals,
+	-- MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name), MAX(geographies.display_name_short)
+	FROM _PORTLVIEW_ pv
+	WHERE category_id = ? ;`
 //language=MySQL
 var measurementSeriesPrefix = `SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
