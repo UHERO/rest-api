@@ -148,8 +148,7 @@ var seriesPrefix = `
 	-- COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
 	-- COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
 	-- COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
-		   table_prefix, table_postfix, measurement_id,
-		   data_portal_name,  -- a repetition; figure out why this is duplicated unnecessarily
+		   table_prefix, table_postfix, measurement_id, measurement_portal_name,
 		   dlm_indent, base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	-- MAX(measurements.table_prefix), MAX(measurements.table_postfix),
 	-- MAX(measurements.id), MAX(measurements.data_portal_name),
