@@ -53,6 +53,15 @@ func main() {
 		log.Fatal("Cannot login to MySQL server - check all DB_* environment variables")
 	}
 
+	includeNonPublic := false
+	include, ok := os.LookupEnv("API_INCL_NONPUBLIC")
+	if ok {
+		if include == "true" {
+			includeNonPublic = true
+		}
+	}
+	//Nonpublic: includeNonPublic
+
 	// Set up Redis
 	var redis_server, authpw string
 	if redis_url, ok := os.LookupEnv("REDIS_URL"); ok {
@@ -105,14 +114,6 @@ func main() {
 	}
 	log.Printf("Cache TTL is %d minutes", ttlMinutes)
 
-	includeNonPublic := false
-	include, ok := os.LookupEnv("API_INCL_NONPUBLIC")
-	if ok {
-		if include == "true" {
-			includeNonPublic = true
-		}
-	}
-
 	applicationRepository := &data.ApplicationRepository{DB: db}
 	categoryRepository := &data.CategoryRepository{DB: db}
 	seriesRepository := &data.SeriesRepository{DB: db}
@@ -120,7 +121,7 @@ func main() {
 	measurementRepository := &data.MeasurementRepository{DB: db}
 	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{}
-	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes, Nonpublic: includeNonPublic} // TTL stored in seconds
+	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes} // TTL stored in seconds
 
 	// Get the mux router object
 	router := routers.InitRoutes(
