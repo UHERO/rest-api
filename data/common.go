@@ -34,6 +34,10 @@ var indentationLevel map[string]int = map[string]int{
 	"indent3": 3,
 }
 
+func (r *ApplicationRepository) DBConn() *sql.DB {
+	return r.DB.DB
+}
+
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
 	series := models.Series{}
 	geography := models.Geography{}

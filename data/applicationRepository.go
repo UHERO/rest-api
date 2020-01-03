@@ -2,14 +2,13 @@ package data
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"encoding/base64"
 	"github.com/UHERO/rest-api/models"
 	"log"
 	"time"
 )
 
-type Repository interface {
+type AppRepository interface {
 	CreateApplication(string, *models.Application) (int64, error)
 	UpdateApplication(string, *models.Application) (int64, error)
 	DeleteApplication(string, int64) (int64, error)
@@ -18,10 +17,6 @@ type Repository interface {
 
 type ApplicationRepository struct {
 	DB *models.UheroDB
-}
-
-func (r *ApplicationRepository) DBConn() *sql.DB {
-	return r.DB.DB
 }
 
 func (r *ApplicationRepository) CreateApplication(username string, application *models.Application) (numRows int64, err error) {
@@ -56,7 +51,7 @@ func (r *ApplicationRepository) CreateApplication(username string, application *
 }
 
 func (r *ApplicationRepository) UpdateApplication(username string, application *models.Application) (numRows int64, err error) {
-	stmt, err := r.DBConn.Prepare(`UPDATE api_applications SET
+	stmt, err := r.DBConn().Prepare(`UPDATE api_applications SET
 	name = COALESCE(?, name),
 	hostname = COALESCE(?, hostname),
 	updated_at = ?
@@ -88,7 +83,7 @@ func (r *ApplicationRepository) UpdateApplication(username string, application *
 }
 
 func (r *ApplicationRepository) DeleteApplication(username string, id int64) (numRows int64, err error) {
-	stmt, err := r.DB.Prepare(`DELETE FROM api_applications WHERE id = ? and github_nickname = ?;`)
+	stmt, err := r.DBConn().Prepare(`DELETE FROM api_applications WHERE id = ? and github_nickname = ?;`)
 	if err != nil {
 		return
 	}
@@ -102,7 +97,7 @@ func (r *ApplicationRepository) DeleteApplication(username string, id int64) (nu
 }
 
 func (r *ApplicationRepository) GetAllApplications(username string) (applications []models.Application, err error) {
-	rows, err := r.DB.Query(`SELECT
+	rows, err := r.DBConn().Query(`SELECT
 	id, name, hostname, api_key
 	FROM api_applications WHERE github_nickname = ?;`, username)
 	if err != nil {
@@ -125,7 +120,7 @@ func (r *ApplicationRepository) GetAllApplications(username string) (application
 }
 
 func (r *ApplicationRepository) GetApplicationsByApiKey(apiKey string) (applications []models.Application, err error) {
-	rows, err := r.DB.Query(`SELECT
+	rows, err := r.DBConn().Query(`SELECT
 	id, name, hostname, api_key
 	FROM api_applications WHERE api_key = ?;`, apiKey)
 	if err != nil {
@@ -148,7 +143,7 @@ func (r *ApplicationRepository) GetApplicationsByApiKey(apiKey string) (applicat
 }
 
 func (r *ApplicationRepository) GetApplicationById(username string, id int64) (application models.Application, err error) {
-	err = r.DB.QueryRow(`SELECT
+	err = r.DBConn().QueryRow(`SELECT
 	id, name, hostname, api_key
 	FROM api_applications
 	WHERE id = ? AND github_nickname = ?;`, id, username).Scan(

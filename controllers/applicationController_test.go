@@ -44,7 +44,7 @@ type resultInterface interface {
 }
 
 type applicationTest struct {
-	Function       func(data.Repository) func(http.ResponseWriter, *http.Request)
+	Function       func(data.AppRepository) func(http.ResponseWriter, *http.Request)
 	RequestMethod  string
 	RequestURL     string
 	StatusCode     int
