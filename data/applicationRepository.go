@@ -20,6 +20,10 @@ type ApplicationRepository struct {
 	DB *models.UheroDB
 }
 
+func (r *ApplicationRepository) DBConn() *sql.DB {
+	return r.DB.DB
+}
+
 func (r *ApplicationRepository) CreateApplication(username string, application *models.Application) (numRows int64, err error) {
 	rb := make([]byte, 32)
 	_, err = rand.Read(rb)
@@ -27,7 +31,7 @@ func (r *ApplicationRepository) CreateApplication(username string, application *
 		return
 	}
 	application.APIKey = base64.URLEncoding.EncodeToString(rb)
-	stmt, err := r.DB.Prepare(`INSERT INTO api_applications(name, hostname, api_key, github_nickname, created_at, updated_at)
+	stmt, err := r.DBConn().Prepare(`INSERT INTO api_applications(name, hostname, api_key, github_nickname, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return
@@ -52,7 +56,7 @@ func (r *ApplicationRepository) CreateApplication(username string, application *
 }
 
 func (r *ApplicationRepository) UpdateApplication(username string, application *models.Application) (numRows int64, err error) {
-	stmt, err := r.DB.Prepare(`UPDATE api_applications SET
+	stmt, err := r.DBConn.Prepare(`UPDATE api_applications SET
 	name = COALESCE(?, name),
 	hostname = COALESCE(?, hostname),
 	updated_at = ?

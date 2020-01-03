@@ -61,10 +61,8 @@ func main() {
 			includeNonPublic = true
 		}
 	}
-	//Nonpublic: includeNonPublic
-
 	uhdb := &models.UheroDB{DB: db, Nonpublic: includeNonPublic}
-	
+
 	// Set up Redis
 	var redis_server, authpw string
 	if redis_url, ok := os.LookupEnv("REDIS_URL"); ok {
