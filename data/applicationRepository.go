@@ -17,7 +17,7 @@ type Repository interface {
 }
 
 type ApplicationRepository struct {
-	DB *sql.DB
+	DB *models.UheroDB
 }
 
 func (r *ApplicationRepository) CreateApplication(username string, application *models.Application) (numRows int64, err error) {

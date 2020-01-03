@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+type UheroDB struct {
+	DB	*sql.DB
+	Nonpublic	bool
+}
+
 type Application struct {
 	Id       int64  `json:"id"`
 	Name     string `json:"name"`
