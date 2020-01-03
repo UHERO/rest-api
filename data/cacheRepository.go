@@ -9,7 +9,7 @@ import (
 type CacheRepository struct {
 	Pool 	*redis.Pool
 	TTL  	int
-	Filter	bool		// This is an awful hack. Looking forward to rewriting this whole API, in which it will be eliminated.
+	Nonpublic	bool		// This is an awful hack. Looking forward to rewriting this whole API, in which it will be eliminated.
 }
 
 func (r *CacheRepository) GetCache(key string) ([]byte, error) {
