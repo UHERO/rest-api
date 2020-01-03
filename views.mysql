@@ -20,7 +20,7 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
     measurements.universe AS measurement_universe,
     measurements.id AS measurements_id,
     measurements.prefix,
-    measurements.data_portal_name,
+    measurements.data_portal_name AS measurement_portal_name,
     measurements.table_prefix,
     measurements.table_postfix,
     series.universe AS series_universe,
