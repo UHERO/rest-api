@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/UHERO/rest-api/models"
 	"strconv"
 	"strings"
@@ -36,15 +37,12 @@ var indentationLevel map[string]int = map[string]int{
 
 type FooRepository struct {
 	DB	*sql.DB
-	Nonpublic	bool
+	PortalView	string
 }
 
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
+	query = fmt.Sprintf(query, r.PortalView)
 	return r.DB.Query(query, args)
-}
-
-func (r *FooRepository) DBConn() *sql.DB {
-	return r.DB
 }
 
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {

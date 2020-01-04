@@ -27,18 +27,19 @@ func (r *FooRepository) CreateApplication(username string, application *models.A
 		return
 	}
 	application.APIKey = base64.URLEncoding.EncodeToString(rb)
-	stmt, err := r.DBConn().Prepare(`INSERT INTO api_applications(name, hostname, api_key, github_nickname, created_at, updated_at)
+	stmt, err := r.DB.Prepare(`INSERT INTO api_applications(name, hostname, api_key, github_nickname, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return
 	}
+	t := time.Now()
 	res, err := stmt.Exec(
 		application.Name,
 		application.Hostname,
 		application.APIKey,
 		username,
-		time.Now(),
-		time.Now(),
+		t,
+		t,
 	)
 	if err != nil {
 		return
@@ -52,7 +53,7 @@ func (r *FooRepository) CreateApplication(username string, application *models.A
 }
 
 func (r *FooRepository) UpdateApplication(username string, application *models.Application) (numRows int64, err error) {
-	stmt, err := r.DBConn().Prepare(`UPDATE api_applications SET
+	stmt, err := r.DB.Prepare(`UPDATE api_applications SET
 	name = COALESCE(?, name),
 	hostname = COALESCE(?, hostname),
 	updated_at = ?
@@ -84,7 +85,7 @@ func (r *FooRepository) UpdateApplication(username string, application *models.A
 }
 
 func (r *FooRepository) DeleteApplication(username string, id int64) (numRows int64, err error) {
-	stmt, err := r.DBConn().Prepare(`DELETE FROM api_applications WHERE id = ? and github_nickname = ?;`)
+	stmt, err := r.DB.Prepare(`DELETE FROM api_applications WHERE id = ? and github_nickname = ?;`)
 	if err != nil {
 		return
 	}
@@ -98,9 +99,7 @@ func (r *FooRepository) DeleteApplication(username string, id int64) (numRows in
 }
 
 func (r *FooRepository) GetAllApplications(username string) (applications []models.Application, err error) {
-	rows, err := r.DBConn().Query(`SELECT
-	id, name, hostname, api_key
-	FROM api_applications WHERE github_nickname = ?;`, username)
+	rows, err := r.DB.Query(`SELECT id, name, hostname, api_key FROM api_applications WHERE github_nickname = ?;`, username)
 	if err != nil {
 		return
 	}
@@ -121,9 +120,7 @@ func (r *FooRepository) GetAllApplications(username string) (applications []mode
 }
 
 func (r *FooRepository) GetApplicationsByApiKey(apiKey string) (applications []models.Application, err error) {
-	rows, err := r.DBConn().Query(`SELECT
-	id, name, hostname, api_key
-	FROM api_applications WHERE api_key = ?;`, apiKey)
+	rows, err := r.DB.Query(`SELECT id, name, hostname, api_key FROM api_applications WHERE api_key = ?;`, apiKey)
 	if err != nil {
 		return
 	}
@@ -144,14 +141,12 @@ func (r *FooRepository) GetApplicationsByApiKey(apiKey string) (applications []m
 }
 
 func (r *FooRepository) GetApplicationById(username string, id int64) (application models.Application, err error) {
-	err = r.DBConn().QueryRow(`SELECT
-	id, name, hostname, api_key
-	FROM api_applications
-	WHERE id = ? AND github_nickname = ?;`, id, username).Scan(
-		&application.Id,
-		&application.Name,
-		&application.Hostname,
-		&application.APIKey,
+	err = r.DB.QueryRow(`SELECT id, name, hostname, api_key FROM api_applications WHERE id = ? AND github_nickname = ?;`,
+		id, username).Scan(
+			&application.Id,
+			&application.Name,
+			&application.Hostname,
+			&application.APIKey,
 	)
 	return
 }

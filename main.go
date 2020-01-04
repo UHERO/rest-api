@@ -53,14 +53,11 @@ func main() {
 		log.Fatal("Cannot login to MySQL server - check all DB_* environment variables")
 	}
 
-	includeNonPublic := false
-	include, ok := os.LookupEnv("API_INCL_NONPUBLIC")
+	uhRepo := &data.FooRepository{DB: db, PortalView: "portal_v"}
+	view, ok := os.LookupEnv("API_PORTAL_VIEW")
 	if ok {
-		if include == "true" {
-			includeNonPublic = true
-		}
+		uhRepo.PortalView = view
 	}
-	uhRepo := &data.FooRepository{DB: db, Nonpublic: includeNonPublic}
 
 	// Set up Redis
 	var redis_server, authpw string
