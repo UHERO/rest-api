@@ -4,7 +4,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/UHERO/rest-api/models"
 	"log"
 	"net"
 	"net/http"
@@ -61,7 +60,7 @@ func main() {
 			includeNonPublic = true
 		}
 	}
-	uhdb := &models.UheroDB{DB: db, Nonpublic: includeNonPublic}
+	uhRepo := &data.FooRepository{DB: db, Nonpublic: includeNonPublic}
 
 	// Set up Redis
 	var redis_server, authpw string
@@ -115,8 +114,8 @@ func main() {
 	}
 	log.Printf("Cache TTL is %d minutes", ttlMinutes)
 
-	applicationRepository := &data.FooRepository{DB: uhdb}
-	categoryRepository := &data.FooRepository{DB: uhdb}
+	applicationRepository := uhRepo
+	categoryRepository := uhRepo
 	seriesRepository := &data.SeriesRepository{DB: db}
 	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
 	measurementRepository := &data.MeasurementRepository{DB: db}

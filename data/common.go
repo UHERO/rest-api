@@ -35,15 +35,16 @@ var indentationLevel map[string]int = map[string]int{
 }
 
 type FooRepository struct {
-	DB *models.UheroDB
+	DB	*sql.DB
+	Nonpublic	bool
 }
 
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
-	return r.DB.DB.Query(query, args)
+	return r.DB.Query(query, args)
 }
 
 func (r *FooRepository) DBConn() *sql.DB {
-	return r.DB.DB
+	return r.DB
 }
 
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
