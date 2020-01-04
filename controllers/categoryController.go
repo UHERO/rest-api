@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-func GetCategory(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategory(categoryRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {
@@ -60,7 +60,7 @@ func GetCategory(categoryRepository *data.CategoryRepository, c *data.CacheRepos
 	}
 }
 
-func GetCategoryByIdGeoFreq(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategoryByIdGeoFreq(categoryRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {
@@ -127,7 +127,7 @@ func GetCategoryByIdGeoFreq(categoryRepository *data.CategoryRepository, c *data
 	}
 }
 
-func GetCategories(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategories(categoryRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		categories, err := categoryRepository.GetAllCategories()
 		if err != nil {
@@ -154,7 +154,7 @@ func GetCategories(categoryRepository *data.CategoryRepository, c *data.CacheRep
 	}
 }
 
-func GetCategoryRoots(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategoryRoots(categoryRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		categories, err := categoryRepository.GetCategoryRoots()
 		if err != nil {
@@ -181,7 +181,7 @@ func GetCategoryRoots(categoryRepository *data.CategoryRepository, c *data.Cache
 	}
 }
 
-func GetCategoriesByName(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategoriesByName(categoryRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["searchText"]
 		if !ok {
@@ -218,7 +218,7 @@ func GetCategoriesByName(categoryRepository *data.CategoryRepository, c *data.Ca
 	}
 }
 
-func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetCategoriesByUniverse(categoryRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		universe, ok := mux.Vars(r)["universe_text"]
 		if !ok {
@@ -263,7 +263,7 @@ func GetCategoriesByUniverse(categoryRepository *data.CategoryRepository, c *dat
 }
 
 func GetCategoryPackage(
-	categoryRepository *data.CategoryRepository,
+	categoryRepository *data.FooRepository,
 	seriesRepository *data.SeriesRepository,
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {

@@ -8,8 +8,8 @@ import (
 )
 
 func InitRoutes(
-	applicationRepository *data.ApplicationRepository,
-	categoryRepository *data.CategoryRepository,
+	applicationRepository *data.FooRepository,
+	categoryRepository *data.FooRepository,
 	seriesRepository *data.SeriesRepository,
 	searchRepository *data.SearchRepository,
 	measurementRepository *data.MeasurementRepository,

@@ -12,7 +12,7 @@ import (
 	"os"
 )
 
-func SetApplicationRoutes(router *mux.Router, applicationRepository *data.ApplicationRepository) *mux.Router {
+func SetApplicationRoutes(router *mux.Router, applicationRepository *data.FooRepository) *mux.Router {
 	goth.UseProviders(github.New(
 		os.Getenv("GITHUB_KEY"),
 		os.Getenv("GITHUB_SECRET"),

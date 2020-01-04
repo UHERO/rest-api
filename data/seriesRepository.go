@@ -824,7 +824,7 @@ func (r *SeriesRepository) CreateSeriesPackage(
 	id int64,
 	universe string,
 	categoryId int64,
-	categoryRepository *CategoryRepository,
+	categoryRepository *FooRepository,
 )  (pkg models.DataPortalSeriesPackage, err error) {
 
 	series, err := r.GetSeriesById(id, categoryId)
@@ -856,7 +856,7 @@ func (r *SeriesRepository) CreateSeriesPackage(
 func (r *SeriesRepository) CreateAnalyzerPackage(
 	ids []int64,
 	universe string,
-	categoryRepository *CategoryRepository,
+	categoryRepository *FooRepository,
 ) (pkg models.DataPortalAnalyzerPackage, err error) {
 
 	pkg.InflatedSeries = []models.InflatedSeries{}

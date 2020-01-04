@@ -66,7 +66,7 @@ func CreateApplication(applicationRepository data.AppRepository) func(http.Respo
 	}
 }
 
-func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+func ValidApiKey(applicationRepository *data.FooRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		authString := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authString, authPrefix) {

@@ -115,8 +115,8 @@ func main() {
 	}
 	log.Printf("Cache TTL is %d minutes", ttlMinutes)
 
-	applicationRepository := &data.ApplicationRepository{DB: uhdb}
-	categoryRepository := &data.CategoryRepository{DB: db}
+	applicationRepository := &data.FooRepository{DB: uhdb}
+	categoryRepository := &data.FooRepository{DB: uhdb}
 	seriesRepository := &data.SeriesRepository{DB: db}
 	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
 	measurementRepository := &data.MeasurementRepository{DB: db}

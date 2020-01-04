@@ -8,7 +8,7 @@ import (
 )
 
 type SearchRepository struct {
-	Categories *CategoryRepository
+	Categories *FooRepository
 	Series     *SeriesRepository
 }
 

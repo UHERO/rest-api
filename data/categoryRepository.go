@@ -14,13 +14,14 @@ type CategoryRepository struct {
 	DB *sql.DB
 }
 
-func (r *CategoryRepository) GetNavCategories() (categories []models.Category, err error) {
+func (r *FooRepository) GetNavCategories() (categories []models.Category, err error) {
 	categories, err = r.GetNavCategoriesByUniverse("UHERO")
 	return
 }
 
-func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (categories []models.Category, err error) {
-	rows, err := r.DB.Query(
+func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories []models.Category, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(
 		`SELECT categories.id,
 			categories.name,
 			categories.universe,
@@ -94,7 +95,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 	return
 }
 
-func (r *CategoryRepository) GetDefaultNavCategory(universe string) (category models.Category, err error) {
+func (r *FooRepository) GetDefaultNavCategory(universe string) (category models.Category, err error) {
 	categories, err := r.GetNavCategoriesByUniverse(universe)
 	if err != nil {
 		return
@@ -107,13 +108,14 @@ func (r *CategoryRepository) GetDefaultNavCategory(universe string) (category mo
 	return
 }
 
-func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
+func (r *FooRepository) GetAllCategories() (categories []models.Category, err error) {
 	categories, err = r.GetAllCategoriesByUniverse("UHERO")
 	return
 }
 
-func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
-	rows, err := r.DB.Query(
+func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(
 		`SELECT categories.id,
 			categories.name AS catname,
 			categories.universe AS universe,
@@ -217,8 +219,9 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 	return
 }
 
-func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT id, name, universe FROM categories WHERE ancestry IS NULL ORDER BY list_order;`)
+func (r *FooRepository) GetCategoryRoots() (categories []models.Category, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT id, name, universe FROM categories WHERE ancestry IS NULL ORDER BY list_order;`)
 	if err != nil {
 		return
 	}
@@ -237,8 +240,9 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 	return
 }
 
-func (r *CategoryRepository) GetCategoryRootByUniverse(universe string) (category models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT categories.id, categories.name, categories.universe, categories.default_freq,
+func (r *FooRepository) GetCategoryRootByUniverse(universe string) (category models.Category, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT categories.id, categories.name, categories.universe, categories.default_freq,
 					geographies.handle, geographies.display_name, geographies.display_name_short
 				FROM categories
 				  LEFT JOIN geographies on geographies.id = categories.default_geo_id
@@ -282,13 +286,14 @@ func (r *CategoryRepository) GetCategoryRootByUniverse(universe string) (categor
 	return
 }
 
-func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
+func (r *FooRepository) GetCategoryById(id int64) (models.Category, error) {
 	return r.GetCategoryByIdGeoFreq(id, "", "")
 }
 
-func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
+func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
 	dataPortalCategory := models.Category{}
-	rows, err := r.DB.Query(
+	//language=MySQL
+	rows, err := r.RunQuery(
 		`SELECT categories.id,
 			categories.name AS catname,
 			categories.universe AS universe,
@@ -413,9 +418,10 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	return dataPortalCategory, err
 }
 
-func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
+func (r *FooRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
 	fuzzyString := "%" + name + "%"
-	rows, err := r.DB.Query(`SELECT id, name, universe, ancestry FROM categories
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT id, name, universe, ancestry FROM categories
 							 WHERE LOWER(name) LIKE ? AND NOT (hidden OR masked)
 							 ORDER BY list_order;`, fuzzyString)
 	if err != nil {
@@ -443,8 +449,9 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 	return
 }
 
-func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT categories.id, categories.universe, categories.name, header, ancestry,
+func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT categories.id, categories.universe, categories.name, header, ancestry,
 												geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
 										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
@@ -503,7 +510,7 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 	return
 }
 
-func (r *CategoryRepository) getCategoryTree(
+func (r *FooRepository) getCategoryTree(
 	id int64,
 	geo string,
 	freq string,
@@ -548,7 +555,7 @@ func (r *CategoryRepository) getCategoryTree(
 	return
 }
 
-func (r *CategoryRepository) CreateCategoryPackage(
+func (r *FooRepository) CreateCategoryPackage(
 	id int64,
 	geo string,
 	freq string,

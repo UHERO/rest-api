@@ -34,7 +34,15 @@ var indentationLevel map[string]int = map[string]int{
 	"indent3": 3,
 }
 
-func (r *ApplicationRepository) DBConn() *sql.DB {
+type FooRepository struct {
+	DB *models.UheroDB
+}
+
+func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
+	return r.DB.DB.Query(query, args)
+}
+
+func (r *FooRepository) DBConn() *sql.DB {
 	return r.DB.DB
 }
 

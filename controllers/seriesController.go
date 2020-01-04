@@ -301,7 +301,7 @@ func GetSeriesObservations(seriesRepository *data.SeriesRepository, cacheReposit
 
 func GetSeriesPackage(
 	seriesRepository *data.SeriesRepository,
-	categoryRepository *data.CategoryRepository,
+	categoryRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -334,7 +334,7 @@ func GetSeriesPackage(
 }
 
 func GetAnalyzerPackage(
-	categoryRepository *data.CategoryRepository,
+	categoryRepository *data.FooRepository,
 	seriesRepository *data.SeriesRepository,
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
