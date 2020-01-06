@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-func GetGeographies(geographyRepository *data.GeographyRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetGeographies(geographyRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		geographies, err := geographyRepository.GetAllGeographies()
 		if err != nil {
@@ -38,7 +38,7 @@ func GetGeographies(geographyRepository *data.GeographyRepository, c *data.Cache
 	}
 }
 
-func GetGeographiesByCategory(geographyRepository *data.GeographyRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetGeographiesByCategory(geographyRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {
@@ -85,7 +85,7 @@ func GetGeographiesByCategory(geographyRepository *data.GeographyRepository, c *
 	}
 }
 
-func GetSibllingGeographiesBySeriesId(geographyRepository *data.GeographyRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetSibllingGeographiesBySeriesId(geographyRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]
 		if !ok {

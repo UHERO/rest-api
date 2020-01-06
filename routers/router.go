@@ -13,7 +13,7 @@ func InitRoutes(
 	seriesRepository *data.SeriesRepository,
 	searchRepository *data.SearchRepository,
 	measurementRepository *data.MeasurementRepository,
-	geographyRepository *data.GeographyRepository,
+	geographyRepository *data.FooRepository,
 	feedbackRepository *data.FeedbackRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
