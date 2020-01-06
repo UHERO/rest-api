@@ -115,7 +115,7 @@ func main() {
 	categoryRepository := uhRepo
 	seriesRepository := &data.SeriesRepository{DB: db}
 	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
-	measurementRepository := &data.MeasurementRepository{DB: db}
+	measurementRepository := uhRepo
 	geographyRepository := uhRepo
 	feedbackRepository := &data.FeedbackRepository{}
 	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes} // TTL stored in seconds

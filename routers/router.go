@@ -12,7 +12,7 @@ func InitRoutes(
 	categoryRepository *data.FooRepository,
 	seriesRepository *data.SeriesRepository,
 	searchRepository *data.SearchRepository,
-	measurementRepository *data.MeasurementRepository,
+	measurementRepository *data.FooRepository,
 	geographyRepository *data.FooRepository,
 	feedbackRepository *data.FeedbackRepository,
 	cacheRepository *data.CacheRepository,

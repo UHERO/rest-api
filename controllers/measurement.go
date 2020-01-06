@@ -9,7 +9,7 @@ import (
 )
 
 func GetMeasurementByCategoryId(
-	measurementRepository *data.MeasurementRepository,
+	measurementRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
