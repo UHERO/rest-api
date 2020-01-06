@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/UHERO/rest-api/models"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -41,7 +42,9 @@ type FooRepository struct {
 }
 
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
-	query = fmt.Sprintf(query, r.PortalView)
+	if hasFormat, _ := regexp.MatchString(`%s`, query); hasFormat {
+		query = fmt.Sprintf(query, r.PortalView)
+	}
 	return r.DB.Query(query, args)
 }
 
