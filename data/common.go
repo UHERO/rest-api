@@ -164,7 +164,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	return
 }
 
-func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
+func getAllFreqsGeos(r *FooRepository, seriesId int64, categoryId int64) (
 	[]models.DataPortalGeography,
 	[]models.DataPortalFrequency,
 	error,

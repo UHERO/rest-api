@@ -10,7 +10,7 @@ import (
 func InitRoutes(
 	applicationRepository *data.FooRepository,
 	categoryRepository *data.FooRepository,
-	seriesRepository *data.SeriesRepository,
+	seriesRepository *data.FooRepository,
 	searchRepository *data.SearchRepository,
 	measurementRepository *data.FooRepository,
 	geographyRepository *data.FooRepository,

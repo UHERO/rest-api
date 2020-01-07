@@ -9,10 +9,10 @@ import (
 
 type SearchRepository struct {
 	Categories *FooRepository
-	Series     *SeriesRepository
+	Series     *FooRepository
 }
 
-func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
+func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
 	//language=MySQL
 	rows, err := r.DB.Query(`SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
@@ -66,7 +66,7 @@ func (r *SeriesRepository) GetSeriesBySearchTextAndUniverse(searchText string, u
 	return
 }
 
-func (r *SeriesRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
+func (r *FooRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
 	seriesList, err = r.GetSeriesBySearchTextAndUniverse(searchText, "UHERO")
 	return
 }
@@ -202,7 +202,7 @@ func (r *SearchRepository) GetSearchSummary(searchText string) (searchSummary mo
 	return
 }
 
-func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
+func (r *FooRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	searchText string,
 	geo string,
 	freq string,
@@ -271,12 +271,12 @@ func (r *SeriesRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	return
 }
 
-func (r *SeriesRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
+func (r *FooRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
 	seriesList, err = r.GetSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
 	return
 }
 
-func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
+func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	searchText string,
 	geo string,
 	freq string,
@@ -349,7 +349,7 @@ func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	return
 }
 
-func (r *SeriesRepository) GetInflatedSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.InflatedSeries, err error) {
+func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.InflatedSeries, err error) {
 	seriesList, err = r.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
 	return
 }

@@ -208,7 +208,7 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
 	WHERE public_data_points.value IS NOT NULL ;`
 
-func (r *SeriesRepository) GetSeriesByGroupAndFreq(
+func (r *FooRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
 	freq string,
 	groupType GroupType,
@@ -245,7 +245,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
+func (r *FooRepository) GetSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
@@ -284,7 +284,7 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
+func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
@@ -328,7 +328,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByGroupAndGeo(
+func (r *FooRepository) GetSeriesByGroupAndGeo(
 	groupId int64,
 	geoHandle string,
 	groupType GroupType,
@@ -365,7 +365,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndGeo(
 	return
 }
 
-func (r *SeriesRepository) GetInflatedSeriesByGroup(
+func (r *FooRepository) GetInflatedSeriesByGroup(
 	groupId int64,
 	groupType GroupType,
 ) (seriesList []models.InflatedSeries, err error) {
@@ -405,7 +405,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroup(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByGroup(
+func (r *FooRepository) GetSeriesByGroup(
 	groupId int64,
 	groupType GroupType,
 ) (seriesList []models.DataPortalSeries, err error) {
@@ -440,7 +440,7 @@ func (r *SeriesRepository) GetSeriesByGroup(
 	return
 }
 
-func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
+func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM categories
 	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
@@ -469,7 +469,7 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
+func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.DB.Query(
 		strings.Join([]string{siblingsPrefix, siblingSortStmt}, ""),
 		seriesId,
@@ -494,7 +494,7 @@ func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64, categoryId int6
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
+func (r *FooRepository) GetSeriesSiblingsByIdAndFreq(
 	seriesId int64,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
@@ -522,7 +522,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
+func (r *FooRepository) GetSeriesSiblingsByIdAndGeo(
 	seriesId int64,
 	geo string,
 ) (seriesList []models.DataPortalSeries, err error) {
@@ -550,7 +550,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
+func (r *FooRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	seriesId int64,
 	geo string,
 	freq string,
@@ -580,7 +580,7 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsFreqById(
+func (r *FooRepository) GetSeriesSiblingsFreqById(
 	seriesId int64,
 ) (frequencyList []models.DataPortalFrequency, err error) {
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
@@ -609,7 +609,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPortalSeries models.DataPortalSeries, err error) {
+func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPortalSeries models.DataPortalSeries, err error) {
 	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
@@ -652,7 +652,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
+func (r *FooRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
 	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
@@ -703,7 +703,7 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
-func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
+func (r *FooRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string
@@ -760,7 +760,7 @@ func variadicSeriesId(seriesId int64, count int) []interface{} {
 	return variadic
 }
 
-func (r *SeriesRepository) GetTransformation(
+func (r *FooRepository) GetTransformation(
 	transformation string,
 	seriesId int64,
 	currentStart *time.Time,
@@ -820,7 +820,7 @@ func (r *SeriesRepository) GetTransformation(
 	return
 }
 
-func (r *SeriesRepository) CreateSeriesPackage(
+func (r *FooRepository) CreateSeriesPackage(
 	id int64,
 	universe string,
 	categoryId int64,
@@ -853,7 +853,7 @@ func (r *SeriesRepository) CreateSeriesPackage(
 	return
 }
 
-func (r *SeriesRepository) CreateAnalyzerPackage(
+func (r *FooRepository) CreateAnalyzerPackage(
 	ids []int64,
 	universe string,
 	categoryRepository *FooRepository,

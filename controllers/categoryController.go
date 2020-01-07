@@ -264,7 +264,7 @@ func GetCategoriesByUniverse(categoryRepository *data.FooRepository, c *data.Cac
 
 func GetCategoryPackage(
 	categoryRepository *data.FooRepository,
-	seriesRepository *data.SeriesRepository,
+	seriesRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

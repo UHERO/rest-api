@@ -9,7 +9,7 @@ import (
 func SetCategoryRoutes(
 	router *mux.Router,
 	categoryRepository *data.FooRepository,
-	seriesRepository *data.SeriesRepository,
+	seriesRepository *data.FooRepository,
 	measurementRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {

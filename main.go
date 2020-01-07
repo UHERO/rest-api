@@ -113,10 +113,10 @@ func main() {
 
 	applicationRepository := uhRepo
 	categoryRepository := uhRepo
-	seriesRepository := &data.SeriesRepository{DB: db}
-	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
+	seriesRepository := uhRepo
 	measurementRepository := uhRepo
 	geographyRepository := uhRepo
+	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
 	feedbackRepository := &data.FeedbackRepository{}
 	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes} // TTL stored in seconds
 

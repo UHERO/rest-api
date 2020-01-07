@@ -514,7 +514,7 @@ func (r *FooRepository) getCategoryTree(
 	id int64,
 	geo string,
 	freq string,
-	seriesRepository *SeriesRepository,
+	seriesRepository *FooRepository,
 ) (tree []models.CategoryWithInflatedSeries, err error) {
 	kids, err := r.GetChildrenOf(id)
 	if err != nil {
@@ -559,7 +559,7 @@ func (r *FooRepository) CreateCategoryPackage(
 	id int64,
 	geo string,
 	freq string,
-	seriesRepository *SeriesRepository,
+	seriesRepository *FooRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
 
 	tree, err := r.getCategoryTree(id, geo, freq, seriesRepository)
