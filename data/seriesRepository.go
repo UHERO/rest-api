@@ -441,14 +441,9 @@ func (r *FooRepository) GetSeriesByGroup(
 }
 
 func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
-	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
-	FROM categories
-	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
-	WHERE categories.id = ?
-	AND NOT (categories.hidden OR categories.masked)
-	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series_name, 1)) AS freq FROM %s pv WHERE category_id = ?
+							 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
 	}
@@ -583,6 +578,7 @@ func (r *FooRepository) GetSeriesSiblingsByIdGeoAndFreq(
 func (r *FooRepository) GetSeriesSiblingsFreqById(
 	seriesId int64,
 ) (frequencyList []models.DataPortalFrequency, err error) {
+	//language=MySQL
 	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
 	FROM series_v AS series
 	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series /* This "series" is base table, not confused with previous alias! */
@@ -610,29 +606,15 @@ func (r *FooRepository) GetSeriesSiblingsFreqById(
 }
 
 func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPortalSeries models.DataPortalSeries, err error) {
-	row, err := r.DB.Query(`SELECT DISTINCT
-	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
-	COALESCE(NULLIF(units.short_label, ''), NULLIF(measurement_units.short_label, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
-	NULL, series.base_year, series.decimals,
-	geo.fips, geo.handle AS shandle, geo.display_name, geo.display_name_short
-	FROM series_v AS series
-	LEFT JOIN geographies geo ON geo.id = series.geography_id
-	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
-	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
-	LEFT JOIN units ON units.id = series.unit_id
-	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
-	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
-	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	WHERE series.id = ? ;`, seriesId)
+	//language=MySQL
+	row, err := r.RunQuery(`
+		SELECT DISTINCT
+		   series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+		   units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL, base_year, decimals,
+		   geo_fips, geo_handle, geo_display_name, geo_display_name_short
+		FROM %s pv
+		WHERE series_id = ? ;`, seriesId)
 	if err != nil {
 		return
 	}
@@ -653,30 +635,15 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 }
 
 func (r *FooRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
-	row, err := r.DB.Query(`SELECT DISTINCT
-	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
-	COALESCE(NULLIF(units.short_label, ''), NULLIF(measurement_units.short_label, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
-	NULL, series.base_year, series.decimals,
-	geo.fips, geo.handle AS shandle, geo.display_name, geo.display_name_short
-	FROM series_v AS series
-	LEFT JOIN geographies geo ON geo.id = series.geography_id
-	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
-	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
-	LEFT JOIN units ON units.id = series.unit_id
-	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
-	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
-	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	WHERE series.name = ?
-	AND series.universe = ? ;`, name, universe)
+	//language=MySQL
+	row, err := r.DB.Query(`
+		SELECT DISTINCT
+		   series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+		   units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL, base_year, decimals,
+		   geo_fips, geo_handle, geo_display_name, geo_display_name_short
+		FROM %s pv
+		WHERE series_name = ? AND series_universe = ? ;`, name, universe)
 	if err != nil {
 		return
 	}
@@ -709,9 +676,9 @@ func (r *FooRepository) GetSeriesObservations(seriesId int64) (seriesObservation
 	var universe string
 	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, C5MAPercentChange
 
-	err = r.DB.QueryRow(`SELECT series.universe, series.percent
-	FROM series_v AS series
-	WHERE series.id = ? ;`, seriesId).Scan(&universe, &percent)
+	//language=MySQL
+	err = r.RunQueryRow(`SELECT series_universe, percent FROM %s pv
+						 WHERE series_id = ? ;`, seriesId).Scan(&universe, &percent)
 	if err != nil {
 		return
 	}

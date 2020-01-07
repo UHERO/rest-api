@@ -43,9 +43,16 @@ type FooRepository struct {
 
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
 	if hasFormat, _ := regexp.MatchString(`%s`, query); hasFormat {
-		query = fmt.Sprintf(query, r.PortalView)
+		query = fmt.Sprintf(query, r.PortalView)	// plug in portal view name
 	}
 	return r.DB.Query(query, args)
+}
+
+func (r *FooRepository) RunQueryRow(query string, args ...interface{}) *sql.Row {
+	if hasFormat, _ := regexp.MatchString(`%s`, query); hasFormat {
+		query = fmt.Sprintf(query, r.PortalView)	// plug in portal view name
+	}
+	return r.DB.QueryRow(query, args)
 }
 
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
