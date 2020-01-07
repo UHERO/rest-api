@@ -53,10 +53,14 @@ func main() {
 		log.Fatal("Cannot login to MySQL server - check all DB_* environment variables")
 	}
 
-	uhRepo := &data.FooRepository{DB: db, PortalView: "portal_v"}
+	uhRepo := &data.FooRepository{DB: db, PortalView: "portal_v", SeriesView: "series_v"}
 	view, ok := os.LookupEnv("API_PORTAL_VIEW")
 	if ok {
 		uhRepo.PortalView = view
+	}
+	view, ok = os.LookupEnv("API_SERIES_VIEW")
+	if ok {
+		uhRepo.SeriesView = view
 	}
 
 	// Set up Redis

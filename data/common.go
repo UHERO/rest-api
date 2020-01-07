@@ -39,6 +39,7 @@ var indentationLevel map[string]int = map[string]int{
 type FooRepository struct {
 	DB	*sql.DB
 	PortalView	string
+	SeriesView	string
 }
 
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
