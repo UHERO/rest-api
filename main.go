@@ -53,7 +53,12 @@ func main() {
 		log.Fatal("Cannot login to MySQL server - check all DB_* environment variables")
 	}
 
-	uhRepo := &data.FooRepository{DB: db, PortalView: "portal_v", SeriesView: "series_v"}
+	uhRepo := &data.FooRepository{
+		DB: db,
+		PortalView: "portal_v",
+		SeriesView: "series_v",
+		DataPointView: "public_data_points",
+	}
 	view, ok := os.LookupEnv("API_PORTAL_VIEW")
 	if ok {
 		uhRepo.PortalView = view
