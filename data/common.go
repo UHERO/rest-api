@@ -181,7 +181,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
 		GROUP BY RIGHT(series.name, 1)
-		ORDER BY gftype, COALESCE(lorder, 999)`, seriesId, seriesId)
+		ORDER BY gftype, COALESCE(lorder, 999), handle`, seriesId, seriesId)
 	if err != nil {
 		return nil, nil, err
 	}
