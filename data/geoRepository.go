@@ -12,7 +12,7 @@ type GeographyRepository struct {
 
 func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geographies []models.DataPortalGeography, err error) {
 	rows, err := r.DB.Query(
-		`SELECT DISTINCT geographies.fips, geographies.display_name, geographies.display_name_short, geographies.handle
+		`SELECT DISTINCT geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short, geographies.list_order
 		FROM categories
 		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
@@ -32,9 +32,9 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 		geography := models.Geography{}
 		err = rows.Scan(
 			&geography.FIPS,
+			&geography.Handle,
 			&geography.Name,
 			&geography.ShortName,
-			&geography.Handle,
 		)
 		if err != nil {
 			return
@@ -56,7 +56,7 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 
 func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []models.DataPortalGeography, err error) {
 	rows, err := r.DB.Query(
-		`SELECT DISTINCT geographies.fips, geographies.display_name, geographies.display_name_short, geographies.handle
+		`SELECT DISTINCT geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short, geographies.list_order
 		FROM series_v AS series
 		JOIN (SELECT name, universe FROM series where id = ?) AS original_series  /* This "series" is base table, not confused with previous alias! */
 		LEFT JOIN geographies ON geographies.id = series.geography_id
@@ -73,9 +73,9 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 		geography := models.Geography{}
 		err = rows.Scan(
 			&geography.FIPS,
+			&geography.Handle,
 			&geography.Name,
 			&geography.ShortName,
-			&geography.Handle,
 		)
 		if err != nil {
 			continue
