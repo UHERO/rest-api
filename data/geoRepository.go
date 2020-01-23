@@ -29,12 +29,14 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 		return
 	}
 	for rows.Next() {
+		var listOrder sql.NullInt64  // I hate that Go forces me to have this var to scan into, when SQL forces me to select it, but I don't need it :(
 		geography := models.Geography{}
 		err = rows.Scan(
 			&geography.FIPS,
 			&geography.Handle,
 			&geography.Name,
 			&geography.ShortName,
+			&listOrder,
 		)
 		if err != nil {
 			return
@@ -70,12 +72,14 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 		return
 	}
 	for rows.Next() {
+		var listOrder sql.NullInt64  // I hate that Go forces me to have this var to scan into, when SQL forces me to select it, but I don't need it :(
 		geography := models.Geography{}
 		err = rows.Scan(
 			&geography.FIPS,
 			&geography.Handle,
 			&geography.Name,
 			&geography.ShortName,
+			&listOrder,
 		)
 		if err != nil {
 			continue
