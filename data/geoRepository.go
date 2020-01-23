@@ -22,9 +22,8 @@ func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geogra
 		WHERE (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]'))
 		AND NOT (categories.hidden OR categories.masked)
 		AND NOT series.restricted
-		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`,
-		categoryId,
-		categoryId,
+		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
+		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, categoryId, categoryId,
 	)
 	if err != nil {
 		return
@@ -65,7 +64,8 @@ func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geograph
 		WHERE series.universe = original_series.universe
 		AND substring_index(series.name, '@', 1) = substring_index(original_series.name, '@', 1) /* prefixes are equal */
 		AND NOT series.restricted
-		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
+		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
+		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, seriesId)
 	if err != nil {
 		return
 	}
