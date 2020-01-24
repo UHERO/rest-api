@@ -711,7 +711,6 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 	AND series.universe = ?
 	AND NOT series.restricted
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, name, universe)
- // AND NOT ( feature_toggles.status IS NOT NULL AND feature_toggles.status AND series.quarantined )
 	if err != nil {
 		return
 	}

@@ -161,7 +161,8 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 			geo.fips AS fips,
 			geo.display_name AS display_name,
 			geo.display_name_short AS display_name_short,
-			MIN(pdp.date), MAX(pdp.date)
+			geo.list_order AS lorder,
+            MIN(pdp.date), MAX(pdp.date)
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series_v AS series ON series.id = ms.series_id
@@ -169,10 +170,10 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		GROUP BY geo.id, geo.handle, geo.fips, geo.display_name, geo.display_name_short
+		GROUP BY geo.id, geo.handle, geo.fips, geo.display_name, geo.display_name_short, geo.list_order
 		   UNION
 		SELECT DISTINCT 'freq' AS gftype,
-			RIGHT(series.name, 1) AS handle, null, null, null, MIN(pdp.date), MAX(pdp.date)
+			RIGHT(series.name, 1) AS handle, null, null, null, null AS lorder, MIN(pdp.date), MAX(pdp.date)
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
 		LEFT JOIN series_v AS series ON series.id = ms.series_id
@@ -180,7 +181,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
 		GROUP BY RIGHT(series.name, 1)
-		ORDER BY 1,2 ;`, seriesId, seriesId)
+		ORDER BY gftype, COALESCE(lorder, 999), handle`, seriesId, seriesId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -188,6 +189,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 	freqsResult := []models.DataPortalFrequency{}
 	for rows.Next() {
 		var gftype sql.NullString
+		var listOrder sql.NullInt64  // thrown away, but we need to Scan it
 		temp := models.Geography{} // Using Geography object as a scan buffer, because it works.
 		err = rows.Scan(
 			&gftype,
@@ -195,6 +197,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 			&temp.FIPS,
 			&temp.Name,
 			&temp.ShortName,
+			&listOrder,
 			&temp.ObservationStart,
 			&temp.ObservationEnd,
 		)
@@ -230,7 +233,6 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 			freqsResult = append(freqsResult, f)
 		}
 	}
-	sort.Sort(models.ByGeography(geosResult))
 	sort.Sort(models.ByFrequency(freqsResult))
 	return geosResult, freqsResult, err
 }

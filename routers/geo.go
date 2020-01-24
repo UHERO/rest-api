@@ -11,7 +11,6 @@ func SetGeographyRoutes(
 	geoRepository *data.GeographyRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
-	router.HandleFunc("/v1/geo", controllers.GetGeographies(geoRepository, cacheRepository)).Methods("GET")
 	router.HandleFunc("/v1/category/geo", controllers.GetGeographiesByCategory(geoRepository, cacheRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
