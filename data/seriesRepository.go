@@ -638,7 +638,7 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 }
 
 func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPortalSeries models.DataPortalSeries, err error) {
-	row, err := r.DB.Query(`SELECT
+	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(measurement_units.short_label, '')),
@@ -663,8 +663,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ?
 	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-	ORDER BY COALESCE(geo.list_order, 999), geo.handle`, seriesId)
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
 	if err != nil {
 		return
 	}
@@ -685,7 +684,7 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 }
 
 func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
-	row, err := r.DB.Query(`SELECT
+	row, err := r.DB.Query(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(measurement_units.short_label, '')),
@@ -711,9 +710,8 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 	WHERE series.name = ?
 	AND series.universe = ?
 	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-	ORDER BY COALESCE(geo.list_order, 999), geo.handle`, name, universe)
- 	if err != nil {
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, name, universe)
+	if err != nil {
 		return
 	}
 	var series models.DataPortalSeries
