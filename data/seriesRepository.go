@@ -663,7 +663,8 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
 	WHERE series.id = ?
 	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
+	ORDER BY COALESCE(geo.list_order, 999), geo.handle`, seriesId)
 	if err != nil {
 		return
 	}
@@ -710,9 +711,9 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 	WHERE series.name = ?
 	AND series.universe = ?
 	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, name, universe)
- // AND NOT ( feature_toggles.status IS NOT NULL AND feature_toggles.status AND series.quarantined )
-	if err != nil {
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
+	ORDER BY COALESCE(geo.list_order, 999), geo.handle`, name, universe)
+ 	if err != nil {
 		return
 	}
 	var series models.DataPortalSeries
