@@ -318,7 +318,8 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 		AND public_data_points.value IS NOT null /* suppress those with no public data */
 		GROUP BY categories.id, categories.name, categories.universe, parentcat.id, categories.header, COALESCE(mygeo.handle, parentgeo.handle),
 		         COALESCE(categories.default_freq, parentcat.default_freq), geographies.id, geographies.handle, RIGHT(series.name, 1),
-		         geographies.fips, geographies.display_name, geographies.display_name_short;`, id)
+		         geographies.fips, geographies.display_name, geographies.display_name_short
+		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
@@ -406,7 +407,6 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 			}
 		}
 	}
-	sort.Sort(models.ByGeography(geosResult))
 	sort.Sort(models.ByFrequency(freqsResult))
 	dataPortalCategory.Geographies = &geosResult
 	dataPortalCategory.Frequencies = &freqsResult
