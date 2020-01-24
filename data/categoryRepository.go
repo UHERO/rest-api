@@ -36,7 +36,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 		WHERE NOT (categories.hidden OR categories.masked)
 		AND categories.ancestry = CONVERT(
 			(SELECT id from categories WHERE universe = ? AND ancestry IS NULL), CHAR)
-		ORDER BY categories.list_order;`, universe)
+		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, universe)
 	if err != nil {
 		return
 	}
@@ -140,7 +140,7 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		AND NOT (categories.hidden OR categories.masked)
 		GROUP BY categories.id, categories.name, categories.universe, categories.ancestry, categories.default_geo_id, categories.default_freq,
 		         geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short
-		ORDER BY categories.list_order;`, universe)
+		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, universe)
 	if err != nil {
 		return
 	}
@@ -449,7 +449,7 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
 										AND NOT (categories.hidden OR categories.masked)
-										ORDER BY categories.list_order;`, id)
+										ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, id)
 	if err != nil {
 		return
 	}
