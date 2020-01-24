@@ -189,6 +189,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 	freqsResult := []models.DataPortalFrequency{}
 	for rows.Next() {
 		var gftype sql.NullString
+		var listOrder sql.NullInt64  // thrown away, but we need to Scan it
 		temp := models.Geography{} // Using Geography object as a scan buffer, because it works.
 		err = rows.Scan(
 			&gftype,
@@ -196,6 +197,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 			&temp.FIPS,
 			&temp.Name,
 			&temp.ShortName,
+			&listOrder,
 			&temp.ObservationStart,
 			&temp.ObservationEnd,
 		)
