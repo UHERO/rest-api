@@ -37,7 +37,7 @@ func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories 
 		WHERE NOT (categories.hidden OR categories.masked)
 		AND categories.ancestry = CONVERT(
 			(SELECT id from categories WHERE universe = ? AND ancestry IS NULL), CHAR)
-		ORDER BY categories.list_order;`, universe)
+		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, universe)
 	if err != nil {
 		return
 	}
@@ -142,7 +142,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 		AND NOT (categories.hidden OR categories.masked)
 		GROUP BY categories.id, categories.name, categories.universe, categories.ancestry, categories.default_geo_id, categories.default_freq,
 		         geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short
-		ORDER BY categories.list_order;`, universe)
+		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, universe)
 	if err != nil {
 		return
 	}
@@ -323,7 +323,8 @@ func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, origi
 		AND public_data_points.value IS NOT null /* suppress those with no public data */
 		GROUP BY categories.id, categories.name, categories.universe, parentcat.id, categories.header, COALESCE(mygeo.handle, parentgeo.handle),
 		         COALESCE(categories.default_freq, parentcat.default_freq), geographies.id, geographies.handle, RIGHT(series.name, 1),
-		         geographies.fips, geographies.display_name, geographies.display_name_short;`, id)
+		         geographies.fips, geographies.display_name, geographies.display_name_short
+		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
@@ -411,7 +412,6 @@ func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, origi
 			}
 		}
 	}
-	sort.Sort(models.ByGeography(geosResult))
 	sort.Sort(models.ByFrequency(freqsResult))
 	dataPortalCategory.Geographies = &geosResult
 	dataPortalCategory.Frequencies = &freqsResult
@@ -456,7 +456,7 @@ func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err
 										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
 										AND NOT (categories.hidden OR categories.masked)
-										ORDER BY categories.list_order;`, id)
+										ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, id)
 	if err != nil {
 		return
 	}
