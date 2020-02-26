@@ -97,4 +97,9 @@ type (
 	AnalyzerPackage struct {
 		Data models.DataPortalAnalyzerPackage `json:"data"`
 	}
+
+	// GET - /package/export
+	ExportPackage struct {
+		Data models.DataPortalExportPackage `json:"data"`
+	}
 )

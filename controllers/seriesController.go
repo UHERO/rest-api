@@ -364,11 +364,23 @@ func GetAnalyzerPackage(
 	}
 }
 
-func GetExportPackage(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetExportPackage(seriesRepo *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
 			return
 		}
+		pkg, err := seriesRepo.CreateExportPackage(id)
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			return
+		}
+		j, err := json.Marshal(ExportPackage{Data: pkg})
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, c, j)
 	}
 }

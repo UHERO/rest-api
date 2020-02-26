@@ -224,6 +224,9 @@ type InflatedSeries struct {
 	Observations SeriesObservations `json:"seriesObservations"`
 }
 
+type DataPortalExportPackage struct {
+}
+
 type Observation struct {
 	Date          time.Time
 	Value         sql.NullFloat64

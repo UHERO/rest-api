@@ -918,3 +918,7 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 	pkg.Categories = categories
 	return
 }
+
+func (r *SeriesRepository) CreateExportPackage(id int64) (pkg models.DataPortalExportPackage, err error) {
+
+}
