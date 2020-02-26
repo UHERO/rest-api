@@ -363,3 +363,12 @@ func GetAnalyzerPackage(
 		WriteCache(r, cacheRepository, j)
 	}
 }
+
+func GetExportPackage(seriesRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, ok := getId(w, r)
+		if !ok {
+			return
+		}
+	}
+}

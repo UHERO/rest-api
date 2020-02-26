@@ -65,5 +65,11 @@ func SetPackageRoutes(
 		"ids", "{ids_list:[0-9,]+}",
 		"u", "{universe_text:.+}",
 	)
+	router.HandleFunc(
+		"/v1/export",
+		controllers.GetExportPackage(seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+	)
 	return router
 }
