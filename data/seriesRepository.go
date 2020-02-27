@@ -740,6 +740,10 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
 func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
+	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"))
+}
+
+func (r *SeriesRepository) GetSeriesTransformations(seriesId int64, include boolSet) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string
@@ -759,26 +763,30 @@ func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservat
 		C5MA = C5MAChange
 	}
 
-	transform, err := r.GetTransformation(Levels, seriesId, &start, &end)
-	if err != nil {
-		return
-	}
-	seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
+	var transform models.TransformationResult
 
-	if universe != "NTA" {
+	if include[Levels] || include["all"] {
+		transform, err = r.GetTransformation(Levels, seriesId, &start, &end)
+		if err != nil {
+			return
+		}
+		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
+	}
+	if include[YOY] || include["all"] && universe != "NTA" {
 		transform, err = r.GetTransformation(YOY, seriesId, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
-
+	}
+	if include[YTD] || include["all"] && universe != "NTA" {
 		transform, err = r.GetTransformation(YTD, seriesId, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
-	if universe == "NTA" {
+	if include[C5MA] || include["all"] && universe == "NTA" {
 		transform, err = r.GetTransformation(C5MA, seriesId, &start, &end)
 		if err != nil {
 			return
@@ -928,8 +936,10 @@ func (r *SeriesRepository) CreateExportPackage(id int64) (pkg []models.InflatedS
 	if err != nil {
 		return
 	}
-	var series models.DataPortalSeries
+	var series models.InflatedSeries
 	var dpn sql.NullString
+	var observations models.SeriesObservations
+
 	for rows.Next() {
 		err = rows.Scan(
 			&series.Id,
@@ -940,7 +950,12 @@ func (r *SeriesRepository) CreateExportPackage(id int64) (pkg []models.InflatedS
 		if dpn.Valid {
 			series.Title = dpn.String
 		}
-
+		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels))
+		if err != nil {
+			return
+		}
+		series.Observations = observations
+		pkg = append(pkg, series)
 	}
 	return
 }
