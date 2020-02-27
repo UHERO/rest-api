@@ -100,6 +100,6 @@ type (
 
 	// GET - /package/export
 	ExportPackage struct {
-		Data models.DataPortalExportPackage `json:"data"`
+		Data []models.InflatedSeries `json:"data"`
 	}
 )

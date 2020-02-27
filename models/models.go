@@ -190,7 +190,7 @@ type DataPortalSeriesPackage struct {
 type DataPortalSeries struct {
 	Id                          int64                   `json:"id"`
 	Name                        string                  `json:"name"`
-	Universe		    string                  `json:"universe"`
+	Universe					string                  `json:"universe"`
 	Title                       string                  `json:"title,omitempty"`
 	Description                 string                  `json:"description,omitempty"`
 	MeasurementId               int64                   `json:"measurementId,omitempty"`
@@ -213,18 +213,15 @@ type DataPortalSeries struct {
 	SourceLinkDeprecated        string                  `json:"source_link,omitempty"`
 	SourceDetails               string                  `json:"sourceDetails,omitempty"`
 	Indent                      int                     `json:"indent,omitempty"`
-	TablePrefix                 string                  `json:"tablePrefix"`
-	TablePostfix                string                  `json:"tablePostfix"`
+	TablePrefix                 string                  `json:"tablePrefix,omitempty"`
+	TablePostfix                string                  `json:"tablePostfix,omitempty"`
 	Geographies                 *[]DataPortalGeography  `json:"geos,omitempty"`
-	Frequencies		    *[]DataPortalFrequency  `json:"freqs,omitempty"`
+	Frequencies					*[]DataPortalFrequency  `json:"freqs,omitempty"`
 }
 
 type InflatedSeries struct {
 	DataPortalSeries
 	Observations SeriesObservations `json:"seriesObservations"`
-}
-
-type DataPortalExportPackage struct {
 }
 
 type Observation struct {

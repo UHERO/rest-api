@@ -717,14 +717,16 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 	var series models.DataPortalSeries
 	var observations models.SeriesObservations
 
-	for row.Next() {
-		series, err = getNextSeriesFromRows(row)
-		if err != nil {
-			return
-		}
-		SeriesPkg.Series = series
-		break
+	if !row.Next() {
+		err = row.Err()
+		return
 	}
+	series, err = getNextSeriesFromRows(row)
+	if err != nil {
+		return
+	}
+	SeriesPkg.Series = series
+
 	if expand {
 		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id)
 		if err != nil {
@@ -919,6 +921,26 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 	return
 }
 
-func (r *SeriesRepository) CreateExportPackage(id int64) (pkg models.DataPortalExportPackage, err error) {
+func (r *SeriesRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
+	rows, err := r.DB.Query(
+		`select s.id, s.universe, s.name, s.dataPortalName from series s
+		 join export_series es on es.series_id = s.id and es.export_id = ?`, id)
+	if err != nil {
+		return
+	}
+	var series models.DataPortalSeries
+	var dpn sql.NullString
+	for rows.Next() {
+		err = rows.Scan(
+			&series.Id,
+			&series.Universe,
+			&series.Name,
+			&dpn,
+		)
+		if dpn.Valid {
+			series.Title = dpn.String
+		}
 
+	}
+	return
 }
