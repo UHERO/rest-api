@@ -933,7 +933,8 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 func (r *SeriesRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
 	rows, err := r.DB.Query(
 		`select s.id, s.universe, s.name, s.dataPortalName from series s
-		 join export_series es on es.series_id = s.id and es.export_id = ?`, id)
+		 join export_series es on es.series_id = s.id and es.export_id = ?
+		 order by es.list_order`, id)
 	if err != nil {
 		return
 	}
