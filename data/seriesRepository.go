@@ -739,7 +739,7 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
-//    It has now been turned into a decorator for a more flexible method that allows section of transformations
+//    It has now been turned into a decorator for a more flexible method that allows selection of transformations
 func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
 	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"))
 }
@@ -944,7 +944,9 @@ func (r *SeriesRepository) CreateExportPackage(id int64) (pkg []models.InflatedS
 
 	for rows.Next() {
 		err = rows.Scan(&series.Id, &series.Universe, &series.Name, &dpn)
-
+		if err != nil {
+			return
+		}
 		if dpn.Valid {
 			series.Title = dpn.String
 		}
