@@ -753,8 +753,7 @@ func (r *SeriesRepository) GetSeriesTransformations(seriesId int64, include bool
 	err = r.DB.QueryRow(`SELECT series.universe, series.percent
 	FROM series_v AS series
 	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.id = ? AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`, seriesId).Scan(&universe, &percent)
+	WHERE series.id = ?`, seriesId).Scan(&universe, &percent)
 	if err != nil {
 		return
 	}
