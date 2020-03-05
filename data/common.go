@@ -34,6 +34,16 @@ var indentationLevel map[string]int = map[string]int{
 	"indent3": 3,
 }
 
+type boolSet map[string]bool
+
+func makeBoolSet(keys ...string) boolSet {
+	set := boolSet{}
+	for _, key := range keys {
+		set[key] = true
+	}
+	return set
+}
+
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
 	series := models.Series{}
 	geography := models.Geography{}
