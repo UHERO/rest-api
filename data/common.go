@@ -180,6 +180,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
+		AND NOT (series.restricted OR series.quarantined)
 		GROUP BY geo.id, geo.handle, geo.fips, geo.display_name, geo.display_name_short, geo.list_order
 		   UNION
 		SELECT DISTINCT 'freq' AS gftype,
@@ -190,6 +191,7 @@ func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
+		AND NOT (series.restricted OR series.quarantined)
 		GROUP BY RIGHT(series.name, 1)
 		ORDER BY gftype, COALESCE(lorder, 999), handle`, seriesId, seriesId)
 	if err != nil {
