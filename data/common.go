@@ -52,9 +52,19 @@ func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, 
 
 func (r *FooRepository) RunQueryRow(query string, args ...interface{}) *sql.Row {
 	if hasFormat, _ := regexp.MatchString(`%s`, query); hasFormat {
-		query = fmt.Sprintf(query, r.PortalView)	// plug in portal view name
+		query = fmt.Sprintf(query, r.PortalView) // plug in portal view name
 	}
 	return r.DB.QueryRow(query, args)
+}
+
+type boolSet map[string]bool
+
+func makeBoolSet(keys ...string) boolSet {
+	set := boolSet{}
+	for _, key := range keys {
+		set[key] = true
+	}
+	return set
 }
 
 func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSeries, err error) {
@@ -193,6 +203,7 @@ func getAllFreqsGeos(r *FooRepository, seriesId int64, categoryId int64) (
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
+		AND NOT (series.restricted OR series.quarantined)
 		GROUP BY geo.id, geo.handle, geo.fips, geo.display_name, geo.display_name_short, geo.list_order
 		   UNION
 		SELECT DISTINCT 'freq' AS gftype,
@@ -203,6 +214,7 @@ func getAllFreqsGeos(r *FooRepository, seriesId int64, categoryId int64) (
 		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
+		AND NOT (series.restricted OR series.quarantined)
 		GROUP BY RIGHT(series.name, 1)
 		ORDER BY gftype, COALESCE(lorder, 999), handle`, seriesId, seriesId)
 	if err != nil {

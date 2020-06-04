@@ -650,14 +650,16 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 	var series models.DataPortalSeries
 	var observations models.SeriesObservations
 
-	for row.Next() {
-		series, err = getNextSeriesFromRows(row)
-		if err != nil {
-			return
-		}
-		SeriesPkg.Series = series
-		break
+	if !row.Next() {
+		err = row.Err()
+		return
 	}
+	series, err = getNextSeriesFromRows(row)
+	if err != nil {
+		return
+	}
+	SeriesPkg.Series = series
+
 	if expand {
 		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id)
 		if err != nil {
@@ -670,15 +672,19 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
+//    It has now been turned into a decorator for a more flexible method that allows selection of transformations
 func (r *FooRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
+	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"))
+}
+
+func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string
 	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, C5MAPercentChange
 
 	//language=MySQL
-	err = r.RunQueryRow(`SELECT series_universe, percent FROM %s pv
-						 WHERE series_id = ? ;`, seriesId).Scan(&universe, &percent)
+	err = r.RunQueryRow(`SELECT series_universe, percent FROM %s pv WHERE series_id = ? ;`, seriesId).Scan(&universe, &percent)
 	if err != nil {
 		return
 	}
@@ -688,26 +694,30 @@ func (r *FooRepository) GetSeriesObservations(seriesId int64) (seriesObservation
 		C5MA = C5MAChange
 	}
 
-	transform, err := r.GetTransformation(Levels, seriesId, &start, &end)
-	if err != nil {
-		return
-	}
-	seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
+	var transform models.TransformationResult
 
-	if universe != "NTA" {
+	if include[Levels] || include["all"] {
+		transform, err = r.GetTransformation(Levels, seriesId, &start, &end)
+		if err != nil {
+			return
+		}
+		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
+	}
+	if include[YOY] || include["all"] && universe != "NTA" {
 		transform, err = r.GetTransformation(YOY, seriesId, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
-
+	}
+	if include[YTD] || include["all"] && universe != "NTA" {
 		transform, err = r.GetTransformation(YTD, seriesId, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
-	if universe == "NTA" {
+	if include[C5MA] || include["all"] && universe == "NTA" {
 		transform, err = r.GetTransformation(C5MA, seriesId, &start, &end)
 		if err != nil {
 			return
@@ -847,5 +857,35 @@ func (r *FooRepository) CreateAnalyzerPackage(
 		return
 	}
 	pkg.Categories = categories
+	return
+}
+
+func (r *SeriesRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
+	rows, err := r.DB.Query(
+		`select s.id, s.universe, s.name, s.dataPortalName from series s
+		 join export_series es on es.series_id = s.id and es.export_id = ?
+		 order by es.list_order`, id)
+	if err != nil {
+		return
+	}
+	var series models.InflatedSeries
+	var dpn sql.NullString
+	var observations models.SeriesObservations
+
+	for rows.Next() {
+		err = rows.Scan(&series.Id, &series.Universe, &series.Name, &dpn)
+		if err != nil {
+			return
+		}
+		if dpn.Valid {
+			series.Title = dpn.String
+		}
+		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels))
+		if err != nil {
+			return
+		}
+		series.Observations = observations
+		pkg = append(pkg, series)
+	}
 	return
 }
