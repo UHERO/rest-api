@@ -14,7 +14,7 @@ type SearchRepository struct {
 
 func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
 	//language=MySQL
-	rows, err := r.DB.Query(`SELECT
+	rows, err := r.RunQuery(`SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
@@ -26,7 +26,7 @@ func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, univ
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	MAX(geo.fips), MAX(geo.handle) AS shandle, MAX(geo.display_name), MAX(geo.display_name_short)
-	FROM series_v AS series
+	FROM %s AS series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id

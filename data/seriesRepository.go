@@ -860,7 +860,7 @@ func (r *FooRepository) CreateAnalyzerPackage(
 	return
 }
 
-func (r *SeriesRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
+func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
 	rows, err := r.DB.Query(
 		`select s.id, s.universe, s.name, s.dataPortalName from series s
 		 join export_series es on es.series_id = s.id and es.export_id = ?

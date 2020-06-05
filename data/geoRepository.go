@@ -11,12 +11,13 @@ type GeographyRepository struct {
 }
 
 func (r *FooRepository) GetGeographiesByCategory(categoryId int64) (geographies []models.DataPortalGeography, err error) {
-	rows, err := r.DB.Query(
+	//language=MySQL
+	rows, err := r.RunQuery(
 		`SELECT DISTINCT geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short, geographies.list_order
 		FROM categories
 		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-		LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
+		LEFT JOIN %s AS series ON series.id = measurement_series.series_id
 		LEFT JOIN geographies ON geographies.id = series.geography_id
 		WHERE (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]'))
 		AND NOT (categories.hidden OR categories.masked)
@@ -54,9 +55,10 @@ func (r *FooRepository) GetGeographiesByCategory(categoryId int64) (geographies 
 }
 
 func (r *FooRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []models.DataPortalGeography, err error) {
-	rows, err := r.DB.Query(
+	//language=MySQL
+	rows, err := r.RunQuery(
 		`SELECT DISTINCT geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short, geographies.list_order
-		FROM series_v AS series
+		FROM %s AS series
 		JOIN (SELECT name, universe FROM series where id = ?) AS original_series  /* This "series" is base table, not confused with previous alias! */
 		LEFT JOIN geographies ON geographies.id = series.geography_id
 		WHERE series.universe = original_series.universe

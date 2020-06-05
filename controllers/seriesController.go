@@ -364,7 +364,7 @@ func GetAnalyzerPackage(
 	}
 }
 
-func GetExportPackage(seriesRepo *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetExportPackage(seriesRepo *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
 		if !ok {
