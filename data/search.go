@@ -12,6 +12,11 @@ type SearchRepository struct {
 	Series     *FooRepository
 }
 
+func (r *FooRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
+	seriesList, err = r.GetSeriesBySearchTextAndUniverse(searchText, "UHERO")
+	return
+}
+
 func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
 	//language=MySQL
 	rows, err := r.RunQuery(`SELECT
@@ -66,8 +71,8 @@ func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, univ
 	return
 }
 
-func (r *FooRepository) GetSeriesBySearchText(searchText string) (seriesList []models.DataPortalSeries, err error) {
-	seriesList, err = r.GetSeriesBySearchTextAndUniverse(searchText, "UHERO")
+func (r *SearchRepository) GetSearchSummary(searchText string) (searchSummary models.SearchSummary, err error) {
+	searchSummary, err = r.GetSearchSummaryByUniverse(searchText, "UHERO")
 	return
 }
 
@@ -76,10 +81,10 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 
 	var observationStart, observationEnd models.NullTime
 	//language=MySQL
-	err = r.Series.DB.QueryRow(`
+	err = r.Series.RunQueryRow(`
 	    SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
 	    FROM public_data_points
-	    JOIN series_v AS series ON series.id = public_data_points.series_id
+	    JOIN %s AS series ON series.id = public_data_points.series_id
 	    JOIN (
 			SELECT series_id FROM measurement_series WHERE measurement_id IN (
 				SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
@@ -119,9 +124,9 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	}
 
 	//language=MySQL
-	rows, err := r.Series.DB.Query(`
+	rows, err := r.Series.RunQuery(`
 	SELECT DISTINCT geo.fips, geo.display_name, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
-	FROM series_v AS series
+	FROM %s AS series
 	LEFT JOIN geographies geo on geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurement_series.measurement_id
@@ -197,8 +202,8 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	return
 }
 
-func (r *SearchRepository) GetSearchSummary(searchText string) (searchSummary models.SearchSummary, err error) {
-	searchSummary, err = r.GetSearchSummaryByUniverse(searchText, "UHERO")
+func (r *FooRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
+	seriesList, err = r.GetSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
 	return
 }
 
@@ -209,7 +214,7 @@ func (r *FooRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	universeText string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	//language=MySQL
-	rows, err := r.DB.Query(`SELECT
+	rows, err := r.RunQuery(`SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
@@ -221,7 +226,7 @@ func (r *FooRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name), MAX(geo.display_name_short)
-	FROM series_v AS series
+	FROM %s AS series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
@@ -271,8 +276,8 @@ func (r *FooRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	return
 }
 
-func (r *FooRepository) GetSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.DataPortalSeries, err error) {
-	seriesList, err = r.GetSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
+func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.InflatedSeries, err error) {
+	seriesList, err = r.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
 	return
 }
 
@@ -283,7 +288,7 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	universeText string,
 ) (seriesList []models.InflatedSeries, err error) {
 	//language=MySQL
-	rows, err := r.DB.Query(`SELECT DISTINCT
+	rows, err := r.RunQuery(`SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
@@ -295,7 +300,7 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	MAX(measurements.id), MAX(measurements.data_portal_name),
 	NULL, series.base_year, series.decimals,
 	MAX(geo.fips), MAX(geo.handle), MAX(geo.display_name), MAX(geo.display_name_short)
-	FROM series_v AS series
+	FROM %s AS series
 	LEFT JOIN geographies geo ON geo.id = series.geography_id
 	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
 	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
@@ -346,11 +351,6 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
 		seriesList = append(seriesList, inflatedSeries)
 	}
-	return
-}
-
-func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreq(searchText string, geo string, freq string) (seriesList []models.InflatedSeries, err error) {
-	seriesList, err = r.GetInflatedSearchResultsByGeoAndFreqAndUniverse(searchText, geo, freq, "UHERO")
 	return
 }
 

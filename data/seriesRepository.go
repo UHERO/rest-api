@@ -579,8 +579,8 @@ func (r *FooRepository) GetSeriesSiblingsFreqById(
 	seriesId int64,
 ) (frequencyList []models.DataPortalFrequency, err error) {
 	//language=MySQL
-	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
-	FROM series_v AS series
+	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
+	FROM %s AS series
 	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series /* This "series" is base table, not confused with previous alias! */
 	WHERE series.universe = original_series.universe
 	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
@@ -636,7 +636,7 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 
 func (r *FooRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
 	//language=MySQL
-	row, err := r.DB.Query(`
+	row, err := r.RunQuery(`
 		SELECT DISTINCT
 		   series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
 		   units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
