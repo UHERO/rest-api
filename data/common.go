@@ -58,7 +58,7 @@ func (r *FooRepository) InitializeFoo() *FooRepository {
 		switch string(str) {
 		case "%PORTAL%":
 			result = r.PortalView
-		case "%SERIES":
+		case "%SERIES%":
 			result = r.SeriesView
 		case "%DATAPOINTS%":
 			result = r.DataPointView
