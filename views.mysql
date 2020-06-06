@@ -62,8 +62,8 @@ CREATE OR REPLACE VIEW portal_v AS
     SELECT * FROM portal_all_v
     WHERE NOT (hidden OR masked OR quarantined OR restricted)
 
-create or replace view `series_all_v` as
-select  series.*,
+CREATE OR REPLACE VIEW `series_all_v` AS SELECT
+        series.*,
         x.primary_series_id,
         x.frequency,
         x.seasonally_adjusted,
@@ -82,12 +82,12 @@ select  series.*,
         x.frequency_transform,
         x.restricted,
         x.quarantined,
-        x.created_at as xs_created_at,
-        x.updated_at as xs_updated_at
-from series join xseries x on x.id = series.xseries_id
+        x.created_at AS xs_created_at,
+        x.updated_at AS xs_updated_at
+    FROM series JOIN xseries x ON x.id = series.xseries_id
 
 
-create or replace view `series_v` as
-select * from series_all_v
-where not (restricted or quarantined)
+CREATE OR REPLACE view `series_v` AS
+    SELECT * FROM series_all_v
+    WHERE NOT (restricted OR quarantined)
 
