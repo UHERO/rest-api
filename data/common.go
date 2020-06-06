@@ -2,14 +2,13 @@ package data
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/UHERO/rest-api/models"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"sort"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -41,17 +40,17 @@ type FooRepository struct {
 	DB				*sql.DB
 	PortalView		string
 	SeriesView		string
-	DataPointView	string
+	DataPointsView	string
 	ReplaceViews	func([]byte) []byte
 }
 
-var Rex *regexp.Regexp
+var FindViewTags *regexp.Regexp
 
 func (r *FooRepository) InitializeFoo() *FooRepository {
 	var err error
-	Rex, err = regexp.Compile(`%[A-Z]+%`)
+	FindViewTags, err = regexp.Compile(`%[A-Z]+%`)
 	if err != nil {
-		log.Fatal("Failed to compile the regex")
+		log.Fatal("Failed to compile the FindViewTags regex")
 	}
 	r.ReplaceViews = func(str []byte) []byte {
 		var result string
@@ -61,7 +60,7 @@ func (r *FooRepository) InitializeFoo() *FooRepository {
 		case "%SERIES%":
 			result = r.SeriesView
 		case "%DATAPOINTS%":
-			result = r.DataPointView
+			result = r.DataPointsView
 		}
 		return []byte(result)
 	}
@@ -69,14 +68,12 @@ func (r *FooRepository) InitializeFoo() *FooRepository {
 }
 
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
-	query = string(Rex.ReplaceAllFunc([]byte(query), r.ReplaceViews))  // silly that we need to cast back and forth like this :/
+	query = string(FindViewTags.ReplaceAllFunc([]byte(query), r.ReplaceViews))  // silly that we need to cast back and forth like this :/
 	return r.DB.Query(query, args)
 }
 
 func (r *FooRepository) RunQueryRow(query string, args ...interface{}) *sql.Row {
-	if hasFormat, _ := regexp.MatchString(`%s`, query); hasFormat {
-		query = fmt.Sprintf(query, r.PortalView) // plug in portal view name
-	}
+	query = string(FindViewTags.ReplaceAllFunc([]byte(query), r.ReplaceViews))
 	return r.DB.QueryRow(query, args)
 }
 

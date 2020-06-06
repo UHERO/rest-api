@@ -57,7 +57,7 @@ func main() {
 		DB: db,
 		PortalView: "portal_v",
 		SeriesView: "series_v",
-		DataPointView: "public_data_points",
+		DataPointsView: "public_data_points",
 	}
 	view, ok := os.LookupEnv("API_PORTAL_VIEW")
 	if ok {
@@ -66,6 +66,10 @@ func main() {
 	view, ok = os.LookupEnv("API_SERIES_VIEW")
 	if ok {
 		uhRepo.SeriesView = view
+	}
+	view, ok = os.LookupEnv("API_DATAPOINTS_VIEW")
+	if ok {
+		uhRepo.DataPointsView = view
 	}
 	uhRepo = uhRepo.InitializeFoo()
 
