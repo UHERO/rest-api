@@ -45,12 +45,12 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
     COALESCE(source_details.description, measurement_source_details.description) AS source_detail_description,
     COALESCE(series.source_link, measurements.source_link, sources.link, measurement_sources.link) AS source_link
     FROM series_all_v AS series
+    JOIN geographies ON geographies.id = series.geography_id
     JOIN measurement_series ON measurement_series.series_id = series.id
     JOIN measurements ON measurements.id = measurement_series.measurement_id
     JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
-    JOIN data_lists ON data_list_measurements.data_list_id = data_lists.id
-    JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
-    JOIN geographies ON geographies.id = series.geography_id
+    JOIN data_lists ON data_lists.id = data_list_measurements.data_list_id
+    JOIN categories ON categories.data_list_id = data_lists.id
     LEFT JOIN units ON units.id = series.unit_id
     LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
     LEFT JOIN sources ON sources.id = series.source_id
