@@ -53,6 +53,7 @@ func main() {
 		log.Fatal("Cannot login to MySQL server - check all DB_* environment variables")
 	}
 
+	// Set up the FooRepository
 	uhRepo := &data.FooRepository{
 		DB: db,
 		PortalView: "portal_v",
@@ -74,25 +75,25 @@ func main() {
 	uhRepo = uhRepo.InitializeFoo()
 
 	// Set up Redis
-	var redis_server, authpw string
-	if redis_url, ok := os.LookupEnv("REDIS_URL"); ok {
-		if u, err := url.Parse(redis_url); err == nil {
-			redis_server = u.Host // includes port where specified
+	var redisServer, authpw string
+	if redisUrl, ok := os.LookupEnv("REDIS_URL"); ok {
+		if u, err := url.Parse(redisUrl); err == nil {
+			redisServer = u.Host // includes port where specified
 			authpw, _ = u.User.Password()
 		}
 	}
-	if redis_server == "" {
+	if redisServer == "" {
 		log.Print("Valid REDIS_URL var not found; using redis @ localhost:6379")
-		redis_server = "localhost:6379"
+		redisServer = "localhost:6379"
 	}
 	pool := &redis.Pool{
 		MaxIdle:     10,
 		MaxActive:   50,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", redis_server)
+			c, err := redis.Dial("tcp", redisServer)
 			if err != nil {
-				log.Printf("*** Cannot contact redis server at %s. No caching!", redis_server)
+				log.Printf("*** Cannot contact redis server at %s. No caching!", redisServer)
 				return nil, err
 			}
 			if authpw != "" {
@@ -102,7 +103,7 @@ func main() {
 					return nil, err
 				}
 			}
-			log.Printf("Redis connection to %s established", redis_server)
+			log.Printf("Redis connection to %s established", redisServer)
 			return c, nil
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {

@@ -54,13 +54,15 @@ func (r *FooRepository) InitializeFoo() *FooRepository {
 	}
 	r.ReplaceViews = func(str []byte) []byte {
 		var result string
-		switch string(str) {
-		case "%PORTAL%":
+		switch tag := string(str); tag {
+		case "<%PORTAL%>":
 			result = r.PortalView
-		case "%SERIES%":
+		case "<%SERIES%>":
 			result = r.SeriesView
-		case "%DATAPOINTS%":
+		case "<%DATAPOINTS%>":
 			result = r.DataPointsView
+		default:
+			log.Fatalf("Unknown view tag %s", tag)
 		}
 		return []byte(result)
 	}
