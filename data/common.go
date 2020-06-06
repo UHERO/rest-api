@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/UHERO/rest-api/models"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -37,16 +38,38 @@ var indentationLevel map[string]int = map[string]int{
 }
 
 type FooRepository struct {
-	DB	*sql.DB
+	DB				*sql.DB
 	PortalView		string
 	SeriesView		string
 	DataPointView	string
+	ReplaceViews	func([]byte) []byte
+}
+
+var Rex *regexp.Regexp
+
+func (r *FooRepository) InitializeFoo() *FooRepository {
+	var err error
+	Rex, err = regexp.Compile(`%[A-Z]+%`)
+	if err != nil {
+		log.Fatal("Failed to compile the regex")
+	}
+	r.ReplaceViews = func(str []byte) []byte {
+		var result string
+		switch string(str) {
+		case "%PORTAL%":
+			result = r.PortalView
+		case "%SERIES":
+			result = r.SeriesView
+		case "%DATAPOINTS%":
+			result = r.DataPointView
+		}
+		return []byte(result)
+	}
+	return r
 }
 
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
-	if hasFormat, _ := regexp.MatchString(`%s`, query); hasFormat {
-		query = fmt.Sprintf(query, r.PortalView)	// plug in portal view name
-	}
+	query = string(Rex.ReplaceAllFunc([]byte(query), r.ReplaceViews))  // silly that we need to cast back and forth like this :/
 	return r.DB.Query(query, args)
 }
 

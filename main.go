@@ -67,6 +67,7 @@ func main() {
 	if ok {
 		uhRepo.SeriesView = view
 	}
+	uhRepo = uhRepo.InitializeFoo()
 
 	// Set up Redis
 	var redis_server, authpw string

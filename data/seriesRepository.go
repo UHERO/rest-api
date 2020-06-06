@@ -143,7 +143,7 @@ var seriesPrefix = `
 	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
 		   table_prefix, table_postfix, measurement_id, measurement_portal_name, dlm_indent, base_year, decimals,
 	       geo_fips, geo_handle, geo_display_name, geo_display_name_short
-	FROM %s pv
+	FROM %PORTAL% pv
 	WHERE category_id = ? `
 
 //language=MySQL
@@ -173,7 +173,7 @@ var measurementSeriesPrefix = `/* SELECT
 	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
 		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL, base_year, decimals,
 	       geo_fips, geo_handle, geo_display_name, geo_display_name_short
-	FROM %s pv
+	FROM %PORTAL% pv
 	WHERE measurement_id = ? ;`
 var geoFilter = ` AND geo_handle = ? `
 var freqFilter = ` AND frequency = ? `
