@@ -221,7 +221,7 @@ func (r *FooRepository) GetSeriesByGroupAndFreq(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, freqFilter, sort}, ""),
 		groupId,
 		freqDbNames[strings.ToUpper(freq)],
@@ -259,7 +259,7 @@ func (r *FooRepository) GetSeriesByGroupGeoAndFreq(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
@@ -298,7 +298,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
@@ -341,7 +341,7 @@ func (r *FooRepository) GetSeriesByGroupAndGeo(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, geoFilter, sort}, ""),
 		groupId,
 		geoHandle,
@@ -377,7 +377,7 @@ func (r *FooRepository) GetInflatedSeriesByGroup(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, sort}, ""),
 		groupId,
 	)
@@ -417,7 +417,7 @@ func (r *FooRepository) GetSeriesByGroup(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, sort}, ""),
 		groupId,
 	)
@@ -465,7 +465,7 @@ func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []model
 }
 
 func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, siblingSortStmt}, ""),
 		seriesId,
 		categoryId,
@@ -493,7 +493,7 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndFreq(
 	seriesId int64,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(strings.Join(
+	rows, err := r.RunQuery(strings.Join(
 		[]string{siblingsPrefix, freqFilter, siblingSortStmt}, ""),
 		seriesId, 0,
 		freqDbNames[strings.ToUpper(freq)],
@@ -521,7 +521,7 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndGeo(
 	seriesId int64,
 	geo string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, geoFilter, siblingSortStmt}, ""),
 		seriesId, 0,
 		geo,
@@ -550,7 +550,7 @@ func (r *FooRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	geo string,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter, siblingSortStmt}, ""),
 		seriesId, 0,
 		geo,
@@ -747,7 +747,7 @@ func (r *FooRepository) GetTransformation(
 	err error,
 ) {
 	var observationStart, observationEnd time.Time
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		transformations[transformation].Statement,
 		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
 	)
@@ -861,7 +861,8 @@ func (r *FooRepository) CreateAnalyzerPackage(
 }
 
 func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
-	rows, err := r.DB.Query(
+	//language=MySQL
+	rows, err := r.RunQuery(
 		`select s.id, s.universe, s.name, s.dataPortalName from series s
 		 join export_series es on es.series_id = s.id and es.export_id = ?
 		 order by es.list_order`, id)

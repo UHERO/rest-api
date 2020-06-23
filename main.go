@@ -72,7 +72,7 @@ func main() {
 	if ok {
 		uhRepo.DataPointsView = view
 	}
-	uhRepo = uhRepo.InitializeFoo()
+	uhRepo.InitializeFoo()
 
 	// Set up Redis
 	var redisServer, authpw string

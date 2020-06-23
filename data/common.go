@@ -46,9 +46,9 @@ type FooRepository struct {
 
 var FindViewTags *regexp.Regexp
 
-func (r *FooRepository) InitializeFoo() *FooRepository {
+func (r *FooRepository) InitializeFoo() {
 	var err error
-	FindViewTags, err = regexp.Compile(`%[A-Z]+%`)
+	FindViewTags, err = regexp.Compile(`<%[A-Z]+%>`)
 	if err != nil {
 		log.Fatal("Failed to compile the FindViewTags regex")
 	}
@@ -66,7 +66,6 @@ func (r *FooRepository) InitializeFoo() *FooRepository {
 		}
 		return []byte(result)
 	}
-	return r
 }
 
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
