@@ -18,7 +18,7 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
     geographies.display_name AS geo_display_name,
     geographies.display_name_short AS geo_display_name_short,
     measurements.universe AS measurement_universe,
-    measurements.id AS measurements_id,
+    measurements.id AS measurement_id,
     measurements.prefix,
     measurements.data_portal_name AS measurement_portal_name,
     measurements.table_prefix,
