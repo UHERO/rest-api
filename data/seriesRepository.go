@@ -170,8 +170,8 @@ var seriesPrefix = `
 	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined) */
 	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
 	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
-		   table_prefix, table_postfix, measurement_id, measurement_portal_name, dlm_indent, base_year, decimals,
-	       geo_fips, geo_handle, geo_display_name, geo_display_name_short
+		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
+	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
 	WHERE category_id = ? `
 
