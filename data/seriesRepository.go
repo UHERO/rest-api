@@ -138,8 +138,7 @@ var transformations = map[string]transformation{
 }
 
 //language=MySQL
-var seriesPrefix = `
-/* SELECT
+var seriesPrefix = `/* SELECT
     series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
@@ -200,14 +199,14 @@ var measurementSeriesPrefix = `/* SELECT
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id */
 	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
 	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
-		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL, base_year, decimals,
-	       geo_fips, geo_handle, geo_display_name, geo_display_name_short
+		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL,
+	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
 	WHERE measurement_id = ? ;`
 var geoFilter = ` AND geo_handle = ? `
 var freqFilter = ` AND frequency = ? `
 var measurementPostfix = ""  // this part of query no longer needed, but too troublesome to change all the code
-var sortStmt = ""  // this part of query no longer needed, but too troublesome to change all the code
+var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
 var siblingSortStmt = ` GROUP BY series.id;`
 //language=MySQL
 var siblingsPrefix = `SELECT
