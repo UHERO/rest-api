@@ -206,27 +206,27 @@ var measurementSeriesPrefix = `/* SELECT
 var geoFilter = ` AND geo_handle = ? `
 var freqFilter = ` AND frequency = ? `
 var measurementPostfix = ""  // this part of query no longer needed, but too troublesome to change all the code
-var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
-var siblingSortStmt = ` GROUP BY series.id;`
+var sortStmt = ` GROUP BY series_id ORDER BY MAX(dlm_list_order);`
+var siblingSortStmt = ` GROUP BY series_id;`
 //language=MySQL
-var siblingsPrefix = `SELECT
+var siblingsPrefix = `/* SELECT
     series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)),
+       series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
-	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
-	MAX(measurements.id), MAX(measurements.data_portal_name),
-	NULL, series.base_year, series.decimals,
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix), MAX(measurements.id), MAX(measurements.data_portal_name), NULL,
+       series.base_year, series.decimals,
 	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name), MAX(geographies.display_name_short)
 	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
 	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-	LEFT JOIN categories ON categories.id = ?
+	LEFT JOIN categories ON categories.id = ?  *******************************************
 	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
@@ -234,7 +234,16 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	WHERE public_data_points.value IS NOT NULL ;`
+	WHERE public_data_points.value IS NOT NULL */
+	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
+	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
+	FROM <%PORTAL%> pv
+	JOIN (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
+	WHERE category_id = ?
+	AND EXISTS(select * from public_data_points where series_id = pv.series_id)
+`
 
 func (r *FooRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
@@ -523,7 +532,8 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.RunQuery(strings.Join(
 		[]string{siblingsPrefix, freqFilter, siblingSortStmt}, ""),
-		seriesId, 0,
+		seriesId,
+		0,
 		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
@@ -551,7 +561,8 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndGeo(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, geoFilter, siblingSortStmt}, ""),
-		seriesId, 0,
+		seriesId,
+		0,
 		geo,
 	)
 	if err != nil {
@@ -580,7 +591,8 @@ func (r *FooRepository) GetSeriesSiblingsByIdGeoAndFreq(
 ) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter, siblingSortStmt}, ""),
-		seriesId, 0,
+		seriesId,
+		0,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
 	)
