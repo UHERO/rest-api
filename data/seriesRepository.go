@@ -479,7 +479,9 @@ func (r *FooRepository) GetSeriesByGroup(
 
 func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
 	//language=MySQL
-	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series_name, 1)) AS freq FROM %s pv WHERE category_id = ?
+	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series_name, 1)) AS freq
+							 FROM <%PORTAL%> pv
+							 WHERE category_id = ?
 							 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
@@ -620,7 +622,7 @@ func (r *FooRepository) GetSeriesSiblingsFreqById(
 ) (frequencyList []models.DataPortalFrequency, err error) {
 	//language=MySQL
 	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
-	FROM %s AS series
+	FROM <%PORTAL%> AS series
 	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series /* This "series" is base table, not confused with previous alias! */
 	WHERE series.universe = original_series.universe
 	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
@@ -653,8 +655,8 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 		   units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
 		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL, base_year, decimals,
 		   geo_fips, geo_handle, geo_display_name, geo_display_name_short
-		FROM %s pv
-		WHERE series_id = ? ;`, seriesId)
+		FROM <%PORTAL%> pv
+		WHERE series_id = ? ;`, seriesId)  // No MAX() aggregations here because the loop below breaks after first iteration
 	if err != nil {
 		return
 	}
@@ -682,7 +684,7 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 		   units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
 		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL, base_year, decimals,
 		   geo_fips, geo_handle, geo_display_name, geo_display_name_short
-		FROM %s pv
+		FROM <%PORTAL%> pv
 		WHERE series_name = ? AND series_universe = ? ;`, name, universe)
 	if err != nil {
 		return
@@ -724,7 +726,7 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, C5MAPercentChange
 
 	//language=MySQL
-	err = r.RunQueryRow(`SELECT series_universe, percent FROM %s pv WHERE series_id = ? ;`, seriesId).Scan(&universe, &percent)
+	err = r.RunQueryRow(`SELECT series_universe, percent FROM <%SERIES%> WHERE series_id = ? ;`, seriesId).Scan(&universe, &percent)
 	if err != nil {
 		return
 	}
