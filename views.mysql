@@ -13,6 +13,7 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
     data_lists.name AS data_list_name,
     data_list_measurements.list_order AS dlm_list_order,
     data_list_measurements.indent AS dlm_indent,
+    geographies.id AS geo_id,
     geographies.fips AS geo_fips,
     geographies.handle AS geo_handle,
     geographies.display_name AS geo_display_name,
