@@ -19,11 +19,12 @@ func (r *FooRepository) GetSeriesBySearchText(searchText string) (seriesList []m
 
 func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, universeText string) (seriesList []models.DataPortalSeries, err error) {
 	//language=MySQL
-	rows, err := r.RunQuery(`SELECT
+	rows, err := r.RunQuery(`/* SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)),
+       series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
@@ -42,15 +43,20 @@ func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, univ
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	WHERE series.universe = ?
-	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name,
-	  		COALESCE(series.description, ''),
-	  		COALESCE(series.dataPortalName, ''),
-	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
-	GROUP BY series.id
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id */
+	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), NULL,
+	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
+	FROM <%PORTAL%> pv
+	WHERE series_universe = ?
+	AND ((MATCH(series_name, series_description, data_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR (MATCH(category_name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series_name,
+	  		COALESCE(series_description, ''),
+	  		COALESCE(data_portal_name, ''),
+	  		COALESCE(category_name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	GROUP BY series_id
 	LIMIT 50;`, universeText, searchText, searchText, searchText)
 	if err != nil {
 		return
@@ -125,21 +131,17 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 
 	//language=MySQL
 	rows, err := r.Series.RunQuery(`
-	SELECT DISTINCT geo.fips, geo.display_name, geo.display_name_short, geo.handle AS geo, RIGHT(series.name, 1) as freq
-	FROM %s AS series
-	LEFT JOIN geographies geo on geo.id = series.geography_id
-	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
-	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurement_series.measurement_id
-	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
-	WHERE series.universe = ?
-	AND ((MATCH(series.name, series.description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name,
-	  		COALESCE(series.description, ''),
-	  		COALESCE(series.dataPortalName, ''),
-	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	SELECT DISTINCT geo_fips, geo_display_name, geo_display_name_short, geo_handle AS geo, RIGHT(series_name, 1) as freq
+	FROM <%PORTAL%> pv
+	WHERE series_universe = ?
+	AND ((MATCH(series_name, series_description, data_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR (MATCH(category_name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series_name,
+	  		COALESCE(series_description, ''),
+	  		COALESCE(data_portal_name, ''),
+	  		COALESCE(category_name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
 	ORDER BY 1,2,3,4;`, universeText, searchText, searchText, searchText)
-												/**** REPLACE LIKE+CONCAT with REGEXP, no need LOWER ****/
+												/**** REPLACE LIKE+CONCAT with REGEXP! no need LOWER ****/
 	if err != nil {
 		return
 	}
@@ -214,11 +216,12 @@ func (r *FooRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	universeText string,
 ) (seriesList []models.DataPortalSeries, err error) {
 	//language=MySQL
-	rows, err := r.RunQuery(`SELECT
+	rows, err := r.RunQuery(`/* SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)),
+   		series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
@@ -237,17 +240,22 @@ func (r *FooRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	WHERE series.universe = ?
-	AND geo.handle = ?
-	AND series.frequency = ?
-	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name,
-	  		COALESCE(series.description, ''),
-	  		COALESCE(series.dataPortalName, ''),
-	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
-	GROUP BY series.id
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id */
+	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), NULL,
+	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
+	FROM <%PORTAL%> pv
+	WHERE series_universe = ?
+	AND geo_handle = ?
+	AND frequency = ?
+	AND ((MATCH(series_name, series_description, data_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR (MATCH(category_name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series_name,
+	  		COALESCE(series_description, ''),
+	  		COALESCE(data_portal_name, ''),
+	  		COALESCE(category_name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	GROUP BY series_id
 	LIMIT 50;`,
 		universeText,
 		geo,
@@ -288,11 +296,12 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	universeText string,
 ) (seriesList []models.InflatedSeries, err error) {
 	//language=MySQL
-	rows, err := r.RunQuery(`SELECT DISTINCT
+	rows, err := r.RunQuery(`/* SELECT DISTINCT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)),
+                series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
@@ -311,17 +320,22 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	WHERE series.universe = ?
-	AND geo.handle = ?
-	AND series.frequency = ?
-	AND ((MATCH(series.name, series.description, series.dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR (MATCH(categories.name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series.name,
-	  		COALESCE(series.description, ''),
-	  		COALESCE(series.dataPortalName, ''),
-	  		COALESCE(categories.name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
-	GROUP BY series.id
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id */
+	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), NULL,
+	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
+	FROM <%PORTAL%> pv
+	WHERE series_universe = ?
+	AND geo_handle = ?
+	AND frequency = ?
+	AND ((MATCH(series_name, series_description, data_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR (MATCH(category_name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	  OR LOWER(CONCAT(series_name,
+	  		COALESCE(series_description, ''),
+	  		COALESCE(data_portal_name, ''),
+	  		COALESCE(category_name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	GROUP BY series_id
 	LIMIT 50;`,
 		universeText,
 		geo,
