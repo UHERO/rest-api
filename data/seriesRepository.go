@@ -226,7 +226,7 @@ var siblingsPrefix = `/* SELECT
 	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
 	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
 	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-	LEFT JOIN categories ON categories.id = ?  *******************************************
+	LEFT JOIN categories ON categories.id = ?
 	LEFT JOIN geographies ON geographies.id = series.geography_id
 	LEFT JOIN units ON units.id = series.unit_id
 	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
@@ -240,9 +240,9 @@ var siblingsPrefix = `/* SELECT
 		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
 	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
-	JOIN (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
+	JOIN (SELECT measurement_id FROM measurement_series WHERE series_id = ?) AS mfilt ON mfilt.measurement_id = pv.measurement_id
 	WHERE category_id = ?
-	AND EXISTS(select * from public_data_points where series_id = pv.series_id)
+	AND EXISTS(SELECT * FROM public_data_points WHERE series_id = pv.series_id)
 `
 
 func (r *FooRepository) GetSeriesByGroupAndFreq(
