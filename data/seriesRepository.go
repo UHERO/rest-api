@@ -40,7 +40,7 @@ var transformations = map[string]transformation{
 		//language=MySQL
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
 		FROM public_data_points
-		LEFT JOIN series_v AS series ON public_data_points.series_id = series.id
+		LEFT JOIN <%SERIES%> AS series ON public_data_points.series_id = series.id
 		WHERE series_id = ?;`,
 		PlaceholderCount: 1,
 		Label:            "lvl",
@@ -53,7 +53,7 @@ var transformations = map[string]transformation{
 				      FROM public_data_points WHERE series_id = ?) AS t1
 				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
 				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date)
-				LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
+				LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "pc1",
 	},
@@ -65,7 +65,7 @@ var transformations = map[string]transformation{
 				      FROM public_data_points WHERE series_id = ?) AS t1
 				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
 				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date)
-				LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
+				LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "pc1",
 	},
@@ -83,7 +83,7 @@ var transformations = map[string]transformation{
                    @year := year(date), pseudo_history
                  FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
                  WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date)
-      LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
+      LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
@@ -99,7 +99,7 @@ var transformations = map[string]transformation{
                    @year := year(date), pseudo_history
                  FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
                  WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date)
-      LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
+      LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
@@ -115,7 +115,7 @@ var transformations = map[string]transformation{
 				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
 				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
 				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
-      			LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
+      			LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 4,
 		Label:            "c5ma",
 	},
@@ -131,7 +131,7 @@ var transformations = map[string]transformation{
 				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
 				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
 				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
-			LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
+			LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 4,
 		Label:            "c5ma",
 	},
@@ -905,7 +905,7 @@ func (r *FooRepository) CreateAnalyzerPackage(
 func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
 	//language=MySQL
 	rows, err := r.RunQuery(
-		`select s.id, s.universe, s.name, s.dataPortalName from series s
+		`select s.id, s.universe, s.name, s.dataPortalName from <%SERIES%> s
 		 join export_series es on es.series_id = s.id and es.export_id = ?
 		 order by es.list_order`, id)
 	if err != nil {
