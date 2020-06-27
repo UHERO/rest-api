@@ -144,7 +144,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 		FROM <%PORTAL%> pv
 		JOIN categories AS cat ON cat.id = category_id
 		JOIN geographies AS catgeo ON catgeo.id = category_geo_id
-		JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = series_id
+		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = series_id
 		WHERE category_universe = ?
 		AND cat.ancestry IS NOT NULL
 		AND series_geo_id = category_geo_id
@@ -301,8 +301,8 @@ func (r *FooRepository) GetCategoryById(id int64) (models.Category, error) {
 func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
 	dataPortalCategory := models.Category{}
 	//language=MySQL
-	rows, err := r.RunQuery(
-		`SELECT categories.id,
+	rows, err := r.RunQuery(`/* SELECT
+		    categories.id,
 			categories.name AS catname,
 			categories.universe AS universe,
 			parentcat.id AS parent_id,
@@ -326,13 +326,24 @@ func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, origi
 		    ON series.id = measurement_series.series_id
 		   AND NOT series.restricted
 		LEFT JOIN geographies ON geographies.id = series.geography_id
-		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-		WHERE categories.id = ?
-		AND public_data_points.value IS NOT null /* suppress those with no public data */
-		GROUP BY categories.id, categories.name, categories.universe, parentcat.id, categories.header, COALESCE(mygeo.handle, parentgeo.handle),
-		         COALESCE(categories.default_freq, parentcat.default_freq), geographies.id, geographies.handle, RIGHT(series.name, 1),
-		         geographies.fips, geographies.display_name, geographies.display_name_short
-		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, id)
+		LEFT JOIN public_data_points ON public_data_points.series_id = series.id */
+		-- -------------------- WORKING
+		SELECT category_id, category_name, category_universe, parent.id, category_header,
+		    COALESCE(catgeo.handle, parentgeo.handle) AS def_geo,
+		    COALESCE(category_freq, parent.default_freq) AS def_freq,
+		    geo_handle, RIGHT(series_name, 1), geo_fips, geo_display_name, geo_display_name_short, 
+			MIN(public_data_points.date) AS startdate,
+			MAX(public_data_points.date) AS enddate
+		FROM <%PORTAL%> pv
+		JOIN categories AS cat ON cat.id = category_id
+		JOIN categories AS parent ON parent.id = SUBSTRING_INDEX(cat.ancestry, '/', -1)
+		JOIN geographies AS catgeo ON catgeo.id = category_geo_id
+		JOIN geographies AS parentgeo ON parentgeo.id = parent.default_geo_id
+		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = series_id
+		WHERE category_id = ?
+		AND public_data_points.value IS NOT NULL
+		GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+		ORDER BY COALESCE(geo_list_order, 999), geo_handle`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
