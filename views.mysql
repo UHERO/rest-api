@@ -5,6 +5,7 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
     categories.default_geo_id AS category_geo_id,
     categories.default_freq AS category_freq,
     categories.list_order AS category_list_order,
+    categories.ancestry AS category_ancestry,
     categories.header AS category_header,
     categories.hidden AS category_hidden,
     categories.masked AS category_masked,

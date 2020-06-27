@@ -137,16 +137,15 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 		   AND RIGHT(series.name, 1) = categories.default_freq
 		   AND NOT series.restricted
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id */
-		SELECT category_id, category_name, category_universe, cat.ancestry, category_freq, 
+		SELECT category_id, category_name, category_universe, category_ancestry, category_freq, 
 			   catgeo.handle, catgeo.fips, catgeo.display_name, catgeo.display_name_short,
                MIN(public_data_points.date) AS startdate,
                MAX(public_data_points.date) AS enddate
 		FROM <%PORTAL%> pv
-		JOIN categories AS cat ON cat.id = category_id
 		JOIN geographies AS catgeo ON catgeo.id = category_geo_id
 		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = series_id
 		WHERE category_universe = ?
-		AND cat.ancestry IS NOT NULL
+		AND category_ancestry IS NOT NULL
 		AND series_geo_id = category_geo_id
 		AND RIGHT(series_name, 1) = category_freq
 		GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -328,18 +327,17 @@ func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, origi
 		LEFT JOIN geographies ON geographies.id = series.geography_id
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id */
 		-- -------------------- WORKING
-		SELECT category_id, category_name, category_universe, parent.id, category_header,
+		SELECT category_id, category_name, category_universe, parent.id AS parent_id, category_header,
 		    COALESCE(catgeo.handle, parentgeo.handle) AS def_geo,
 		    COALESCE(category_freq, parent.default_freq) AS def_freq,
 		    geo_handle, RIGHT(series_name, 1), geo_fips, geo_display_name, geo_display_name_short, 
 			MIN(public_data_points.date) AS startdate,
 			MAX(public_data_points.date) AS enddate
 		FROM <%PORTAL%> pv
-		JOIN categories AS cat ON cat.id = category_id
-		JOIN categories AS parent ON parent.id = SUBSTRING_INDEX(cat.ancestry, '/', -1)
+		JOIN categories AS parent ON parent.id = SUBSTRING_INDEX(category_ancestry, '/', -1)
 		JOIN geographies AS catgeo ON catgeo.id = category_geo_id
 		JOIN geographies AS parentgeo ON parentgeo.id = parent.default_geo_id
-		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = series_id
+		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = pv.series_id
 		WHERE category_id = ?
 		AND public_data_points.value IS NOT NULL
 		GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
