@@ -63,7 +63,7 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
 
 CREATE OR REPLACE VIEW portal_v AS
     SELECT * FROM portal_all_v
-    WHERE NOT (hidden OR masked OR quarantined OR restricted)
+    WHERE NOT (category_hidden OR category_masked OR quarantined OR restricted)
 
 CREATE OR REPLACE VIEW `series_all_v` AS SELECT
         series.*,
@@ -88,7 +88,6 @@ CREATE OR REPLACE VIEW `series_all_v` AS SELECT
         x.created_at AS xs_created_at,
         x.updated_at AS xs_updated_at
     FROM series JOIN xseries x ON x.id = series.xseries_id
-
 
 CREATE OR REPLACE view `series_v` AS
     SELECT * FROM series_all_v
