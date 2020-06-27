@@ -89,8 +89,8 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	//language=MySQL
 	err = r.Series.RunQueryRow(`
 	    SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
-	    FROM public_data_points
-	    JOIN %s AS series ON series.id = public_data_points.series_id
+	    FROM <%DATAPOINTS%> as public_data_points
+	    JOIN <%SERIES%> AS series ON series.id = public_data_points.series_id
 	    JOIN (
 			SELECT series_id FROM measurement_series WHERE measurement_id IN (
 				SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
@@ -101,7 +101,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 				)
 			)
 			UNION
-			SELECT id AS series_id FROM series
+			SELECT id AS series_id FROM <%SERIES%>
 			WHERE universe = ?
 			AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
 				OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
@@ -122,6 +122,9 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	}
 
 	rootCat, err := r.Categories.GetCategoryRootByUniverse(universeText)
+	if err != nil {
+		return
+	}
 	if rootCat.Defaults != nil && rootCat.Defaults.Geography != nil {
 		searchSummary.DefaultGeo = rootCat.Defaults.Geography
 	}
