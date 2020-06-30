@@ -20,9 +20,12 @@ func (r *FooRepository) GetNavCategories() (categories []models.Category, err er
 }
 
 func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories []models.Category, err error) {
+	var hidden string
+	if !r.ShowHiddenCats {  // a rough heuristic for whether we are running as UHERO-internal portal or not
+		hidden = `AND NOT (categories.hidden OR categories.masked)`
+	}
 	//language=MySQL
-	rows, err := r.RunQuery(
-		`SELECT categories.id,
+	query := `SELECT categories.id,
 			categories.name,
 			categories.universe,
 			categories.ancestry,
@@ -34,10 +37,12 @@ func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories 
 			geographies.display_name_short AS catgeonameshort
 		FROM categories
 		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
-		WHERE NOT (categories.hidden OR categories.masked)
+		WHERE TRUE
+		<%HIDDEN_COND%>
 		AND categories.ancestry = CONVERT(
 			(SELECT id from categories WHERE universe = ? AND ancestry IS NULL), CHAR)
-		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, universe)
+		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
+	rows, err := r.RunQuery(ReplaceQueryTag(query, "HIDDEN_COND", hidden), universe)
 	if err != nil {
 		return
 	}

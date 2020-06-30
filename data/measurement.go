@@ -14,7 +14,7 @@ func (r *FooRepository) GetMeasurementsByCategory(categoryId int64) (
 	err error,
 ) {
 	var hidden string
-	if r.PortalView != "portal_all_v" {  // a rough heuristic for whether we are running as UHERO-internal portal or not
+	if !r.ShowHiddenCats {
 		hidden = `AND NOT (categories.hidden OR categories.masked)`
 	}
 	//language=MySQL
