@@ -68,6 +68,11 @@ func (r *FooRepository) InitializeFoo() {
 	}
 }
 
+func ReplaceQueryTag(query, tag, repl string) string {
+	TagRe, _ := regexp.Compile("<%" + tag + "%>")
+	return string(TagRe.ReplaceAllLiteral([]byte(query), []byte(repl)))  // silly that we need to cast back and forth like this :/
+}
+
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
 	query = string(FindViewTags.ReplaceAllFunc([]byte(query), r.ReplaceViews))  // silly that we need to cast back and forth like this :/
 	return r.DB.Query(query, args)

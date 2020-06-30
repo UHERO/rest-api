@@ -337,9 +337,8 @@ func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, origi
 		JOIN categories AS parent ON parent.id = SUBSTRING_INDEX(category_ancestry, '/', -1)
 		JOIN geographies AS catgeo ON catgeo.id = category_geo_id
 		JOIN geographies AS parentgeo ON parentgeo.id = parent.default_geo_id
-		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = pv.series_id
+		JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = pv.series_id
 		WHERE category_id = ?
-		AND public_data_points.value IS NOT NULL
 		GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 		ORDER BY COALESCE(geo_list_order, 999), geo_handle`, id)
 	if err != nil {
