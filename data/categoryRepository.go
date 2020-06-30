@@ -440,11 +440,17 @@ func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, origi
 }
 
 func (r *FooRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
-	fuzzyString := "%" + name + "%"
+	var hidden string
+	if !r.ShowHiddenCats {
+		hidden = `AND NOT (hidden OR masked)`
+	}
 	//language=MySQL
-	rows, err := r.RunQuery(`SELECT id, name, universe, ancestry FROM categories
-							 WHERE LOWER(name) LIKE ? AND NOT (hidden OR masked)
-							 ORDER BY list_order;`, fuzzyString)
+	query := `SELECT id, name, universe, ancestry FROM categories
+			 	WHERE LOWER(name) REGEXP ?
+				<%HIDDEN_COND%>
+				ORDER BY list_order`
+
+	rows, err := r.RunQuery(ReplaceQueryTag(query, "HIDDEN_COND", hidden), name)
 	if err != nil {
 		return
 	}
@@ -471,13 +477,19 @@ func (r *FooRepository) GetCategoriesByName(name string) (categories []models.Ca
 }
 
 func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
+	var hidden string
+	if !r.ShowHiddenCats {
+		hidden = `AND NOT (categories.hidden OR categories.masked)`
+	}
 	//language=MySQL
-	rows, err := r.RunQuery(`SELECT categories.id, categories.universe, categories.name, header, ancestry,
-												geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
-										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
-										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
-										AND NOT (categories.hidden OR categories.masked)
-										ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, id)
+	query := `SELECT categories.id, categories.universe, categories.name, header, ancestry,
+						geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
+			  FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
+			  WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
+			  <%HIDDEN_COND%>
+			  ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
+
+	rows, err := r.RunQuery(ReplaceQueryTag(query, "HIDDEN_COND", hidden), id)
 	if err != nil {
 		return
 	}
