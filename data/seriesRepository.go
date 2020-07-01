@@ -671,13 +671,53 @@ func (r *FooRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	return
 }
 
+func (r *FooRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []models.DataPortalGeography, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(
+		`SELECT DISTINCT geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short
+		FROM <%SERIES%> AS series
+		JOIN (SELECT name, universe FROM <%SERIES%> where id = ?) AS original_series
+		JOIN geographies ON geographies.id = series.geography_id
+		WHERE series.universe = original_series.universe
+		AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =    /* prefixes are equal */
+			TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
+		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, seriesId)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		geography := models.Geography{}
+		err = rows.Scan(
+			&geography.FIPS,
+			&geography.Handle,
+			&geography.Name,
+			&geography.ShortName,
+		)
+		if err != nil {
+			continue
+		}
+		dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
+		if geography.FIPS.Valid {
+			dataPortalGeography.FIPS = geography.FIPS.String
+		}
+		if geography.Name.Valid {
+			dataPortalGeography.Name = geography.Name.String
+		}
+		if geography.ShortName.Valid {
+			dataPortalGeography.ShortName = geography.ShortName.String
+		}
+		geographies = append(geographies, dataPortalGeography)
+	}
+	return
+}
+
 func (r *FooRepository) GetSeriesSiblingsFreqById(
 	seriesId int64,
 ) (frequencyList []models.DataPortalFrequency, err error) {
 	//language=MySQL
-	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
-	FROM <%PORTAL%> AS series
-	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series /* This "series" is base table, not confused with previous alias! */
+	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series.name, 1)) AS freq
+	FROM <%SERIES%> AS series
+	JOIN (SELECT name, universe FROM <%SERIES%> WHERE id = ?) AS original_series
 	WHERE series.universe = original_series.universe
 	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
 	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
