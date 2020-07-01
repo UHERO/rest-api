@@ -25,7 +25,7 @@ func (r *FooRepository) GetMeasurementsByCategory(categoryId int64) (
 		WHERE categories.id = ?
 		<%HIDDEN_COND%>
 		ORDER BY data_list_measurements.list_order;`
-	rows, err := r.RunQuery(ReplaceQueryTag(query, "HIDDEN_COND", hidden), categoryId)
+	rows, err := r.RunQuery(ReplaceTemplateTag(query, "HIDDEN_COND", hidden), categoryId)
 	if err != nil {
 		return
 	}

@@ -42,7 +42,7 @@ func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories 
 		AND categories.ancestry = CONVERT(
 			(SELECT id from categories WHERE universe = ? AND ancestry IS NULL), CHAR)
 		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
-	rows, err := r.RunQuery(ReplaceQueryTag(query, "HIDDEN_COND", hidden), universe)
+	rows, err := r.RunQuery(ReplaceTemplateTag(query, "HIDDEN_COND", hidden), universe)
 	if err != nil {
 		return
 	}
@@ -324,7 +324,7 @@ func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, origi
   		LEFT JOIN geographies mygeo ON mygeo.id = categories.default_geo_id
 		LEFT JOIN categories parentcat ON parentcat.id = SUBSTRING_INDEX(categories.ancestry, '/', -1)
 		LEFT JOIN geographies parentgeo ON parentgeo.id = parentcat.default_geo_id
-	        LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+	    LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 		LEFT JOIN series_v AS series
 		    ON series.id = measurement_series.series_id
@@ -450,7 +450,7 @@ func (r *FooRepository) GetCategoriesByName(name string) (categories []models.Ca
 				<%HIDDEN_COND%>
 				ORDER BY list_order`
 
-	rows, err := r.RunQuery(ReplaceQueryTag(query, "HIDDEN_COND", hidden), name)
+	rows, err := r.RunQuery(ReplaceTemplateTag(query, "HIDDEN_COND", hidden), name)
 	if err != nil {
 		return
 	}
@@ -489,7 +489,7 @@ func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err
 			  <%HIDDEN_COND%>
 			  ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
 
-	rows, err := r.RunQuery(ReplaceQueryTag(query, "HIDDEN_COND", hidden), id)
+	rows, err := r.RunQuery(ReplaceTemplateTag(query, "HIDDEN_COND", hidden), id)
 	if err != nil {
 		return
 	}
