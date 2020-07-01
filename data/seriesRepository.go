@@ -39,55 +39,37 @@ var transformations = map[string]transformation{
 	Levels: { // untransformed value
 		//language=MySQL
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
-		FROM <%DATAPOINTS%> dp
-		LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
-		WHERE dp.series_id = ?;`,
+					FROM <%DATAPOINTS%> dp
+					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
+					WHERE dp.series_id = ?;`,
 		PlaceholderCount: 1,
 		Label:            "lvl",
 	},
 	YOYPercentChange: { // percent change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
-				      FROM public_data_points WHERE series_id = ?) AS t1
-				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
-				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date)
-				LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 2,
+		Statement: `SELECT t1.date, (t1.value/t2.value - 1) * 100 AS yoy,
+							(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
+					FROM <%DATAPOINTS%> AS t1
+					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
+										  			  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
+					JOIN <%SERIES%> AS series ON series.id = t1.series_id
+					WHERE t1.series_id = ?;`,
+		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
-	/* YOYPercentChange
-		SELECT t1.date, (t1.value/t2.value - 1) * 100 AS yoy,
-					(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
-		FROM public_data_points AS t1
-		LEFT JOIN public_data_points AS t2 ON t2.series_id = t1.series_id
-										  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN series_v AS series ON t1.series_id = series.id
-		WHERE t1.series_id = ?
-	*/
 
 	YOYChange: { // change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.value - t2.last_value)/series.units AS yoy,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
-				      FROM public_data_points WHERE series_id = ?) AS t1
-				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
-				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date)
-				LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 2,
+		Statement: `SELECT t1.date, (t1.value - t2.value) / series.units AS yoy,
+			 			(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
+					FROM <%DATAPOINTS%> AS t1
+					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
+										 			  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
+					JOIN <%SERIES%> AS series ON series.id = t1.series_id
+					WHERE t1.series_id = ?;`,
+		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
-	/* YOYChange
-		SELECT t1.date, (t1.value - t2.value) / series.units AS yoy,
-			 (t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
-		FROM public_data_points AS t1
-		LEFT JOIN public_data_points AS t2 ON t2.series_id = t1.series_id
-										  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN series_v AS series ON t1.series_id = series.id
-		WHERE t1.series_id = ?
-	*/
 
 	YTDChange: { // ytd change from 1 year ago
 		//language=MySQL
