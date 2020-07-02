@@ -76,7 +76,7 @@ var transformations = map[string]transformation{
 		Statement: `
 		WITH ytd_agg AS (
 			SELECT p1.series_id, p1.date, p1.value, p1.pseudo_history, sum(p2.value) AS ytd_sum, sum(p2.value)/count(*) AS ytd_avg
-			FROM <%DATAPOINTS%> p1 JOIN <%DATAPOINTS%> p2
+			FROM <%DATAPOINTS%> AS p1 JOIN <%DATAPOINTS%> AS p2
 			   ON p2.series_id = p1.series_id
 			  AND year(p2.date) = year(p1.date)
 			  AND p2.date <= p1.date
@@ -97,7 +97,7 @@ var transformations = map[string]transformation{
 		Statement: `
 		WITH ytd_agg AS (
 			SELECT p1.series_id, p1.date, p1.value, p1.pseudo_history, sum(p2.value) AS ytd_sum, sum(p2.value)/count(*) AS ytd_avg
-			FROM <%DATAPOINTS%> p1 JOIN <%DATAPOINTS%> p2
+			FROM <%DATAPOINTS%> AS p1 JOIN <%DATAPOINTS%> AS p2
 			   ON p2.series_id = p1.series_id
 			  AND year(p2.date) = year(p1.date)
 			  AND p2.date <= p1.date
