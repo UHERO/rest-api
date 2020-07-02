@@ -76,7 +76,7 @@ var transformations = map[string]transformation{
 		Statement: `
 		WITH ytd_agg AS (
 			SELECT p1.series_id, p1.date, p1.value, p1.pseudo_history, sum(p2.value) AS ytd_sum, sum(p2.value)/count(*) AS ytd_avg
-			FROM public_data_points p1 JOIN public_data_points p2
+			FROM <%DATAPOINTS%> p1 JOIN <%DATAPOINTS%> p2
 			   ON p2.series_id = p1.series_id
 			  AND year(p2.date) = year(p1.date)
 			  AND p2.date <= p1.date
@@ -87,31 +87,17 @@ var transformations = map[string]transformation{
 			(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN series_v AS series ON series.id = t1.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
 		PlaceholderCount: 1,
 		Label:            "ytd",
 	},
 
 	YTDPercentChange: { // ytd percent change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.ytd/t2.last_ytd - 1)*100 AS ytd,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-      FROM (SELECT series_id, date, value, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
-              @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year, pseudo_history
-            FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-            WHERE series_id = ? ORDER BY date) AS t1
-      LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
-                   @year := year(date), pseudo_history
-                 FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-                 WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date)
-      LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 2,
-		Label:            "ytd",
-	},
-	/* YTDPercentChange
+		Statement: `
 		WITH ytd_agg AS (
 			SELECT p1.series_id, p1.date, p1.value, p1.pseudo_history, sum(p2.value) AS ytd_sum, sum(p2.value)/count(*) AS ytd_avg
-			FROM public_data_points p1 JOIN public_data_points p2
+			FROM <%DATAPOINTS%> p1 JOIN <%DATAPOINTS%> p2
 			   ON p2.series_id = p1.series_id
 			  AND year(p2.date) = year(p1.date)
 			  AND p2.date <= p1.date
@@ -121,9 +107,11 @@ var transformations = map[string]transformation{
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
 			(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
-		   LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		   JOIN series_v AS series ON series.id = t1.series_id
-	*/
+		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		PlaceholderCount: 1,
+		Label:            "ytd",
+	},
 
 	C5MAPercentChange: { // c5ma percent change from 1 year ago
 		//language=MySQL
