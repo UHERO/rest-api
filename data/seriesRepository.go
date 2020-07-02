@@ -48,7 +48,7 @@ var transformations = map[string]transformation{
 	YOYPercentChange: { // percent change from 1 year ago
 		//language=MySQL
 		Statement: `SELECT t1.date, (t1.value/t2.value - 1) * 100 AS yoy,
-							(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
+							(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 					FROM <%DATAPOINTS%> AS t1
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										  		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
@@ -61,7 +61,7 @@ var transformations = map[string]transformation{
 	YOYChange: { // change from 1 year ago
 		//language=MySQL
 		Statement: `SELECT t1.date, (t1.value - t2.value) / series.units AS yoy,
-			 			(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
+			 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 					FROM <%DATAPOINTS%> AS t1
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										 		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
@@ -84,7 +84,7 @@ var transformations = map[string]transformation{
 			GROUP BY 1, 2, 3, 4
 		)
 		SELECT t1.date, (t1.ytd_avg - t2.ytd_avg) / series.units AS ytd_change,
-			(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
+			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
@@ -105,7 +105,7 @@ var transformations = map[string]transformation{
 			GROUP BY 1, 2, 3, 4
 		)
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
-			(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph, series.decimals
+			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
@@ -115,34 +115,42 @@ var transformations = map[string]transformation{
 
 	C5MAPercentChange: { // c5ma percent change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.c5ma/t2.last_c5ma - 1)*100 AS c5ma, 
-			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, last_year, pseudo_history) AS t1
-			LEFT JOIN (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS last_c5ma, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
-      			LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 4,
+		Statement: `
+		WITH c5ma_agg AS (
+			SELECT p1.series_id, p1.date, p1.pseudo_history, CASE WHEN count(*) = 5 THEN AVG(p2.value) ELSE NULL END AS c5ma
+			FROM <%DATAPOINTS%> AS p1
+			JOIN <%DATAPOINTS%> AS p2 ON p2.series_id = p1.series_id
+								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
+													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
+			WHERE p1.series_id = ?
+			GROUP BY 1, 2, 3
+		)
+		SELECT cur.date, (cur.c5ma / lastyear.c5ma - 1) * 100 AS c5ma_pct_change,
+			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
+		FROM c5ma_agg AS cur
+		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
 	C5MAChange: { // cm5a change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.c5ma - t2.last_c5ma)/series.units AS c5ma, 
-			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, last_year, pseudo_history) AS t1
-			LEFT JOIN (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS last_c5ma, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
-			LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 4,
+		Statement: `
+		WITH c5ma_agg AS (
+			SELECT p1.series_id, p1.date, p1.pseudo_history, CASE WHEN count(*) = 5 THEN AVG(p2.value) ELSE NULL END AS c5ma
+			FROM <%DATAPOINTS%> AS p1
+			JOIN <%DATAPOINTS%> AS p2 ON p2.series_id = p1.series_id
+								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
+													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
+			WHERE p1.series_id = ?
+			GROUP BY 1, 2, 3
+		)
+		SELECT cur.date, (cur.c5ma - lastyear.c5ma) / series.units AS c5ma_change,
+			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
+		FROM c5ma_agg AS cur
+		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
 }

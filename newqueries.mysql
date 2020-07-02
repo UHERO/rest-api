@@ -133,7 +133,7 @@ LEFT JOIN <%SERIES%> AS series ON t1.series_id = series.id;
 /* newly generated version */
 WITH c5ma_agg AS (
     SELECT p1.series_id, p1.date, p1.pseudo_history, CASE WHEN count(*) = 5 THEN AVG(p2.value) ELSE NULL END AS c5ma
-    FROM public_data_points p1
+    FROM public_data_points AS p1
     JOIN public_data_points AS p2 ON p2.series_id = p1.series_id
                                  AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
                                                  AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
@@ -143,6 +143,6 @@ WITH c5ma_agg AS (
 SELECT cur.date, (cur.c5ma - lastyear.c5ma) / series.units AS c5ma_change,
       (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 FROM c5ma_agg AS cur
-  JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
+JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
 LEFT JOIN series_v AS series ON series.id = cur.series_id;
 
