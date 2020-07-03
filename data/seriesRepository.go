@@ -260,8 +260,7 @@ var siblingsPrefix = `/* SELECT
 	FROM <%PORTAL%> pv
 	JOIN (SELECT measurement_id FROM measurement_series WHERE series_id = ?) AS mfilt ON mfilt.measurement_id = pv.measurement_id
 	WHERE category_id = ?
-	AND EXISTS(SELECT * FROM public_data_points WHERE series_id = pv.series_id)
-`
+	AND EXISTS(SELECT * FROM public_data_points WHERE series_id = pv.series_id) `
 
 func (r *FooRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
