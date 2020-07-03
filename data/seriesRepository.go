@@ -521,7 +521,7 @@ func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []model
 
 func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.RunQuery(
-		strings.Join([]string{siblingsPrefix + " AND category_id = ? ", siblingSortStmt}, ""),
+		strings.Join([]string{siblingsPrefix, " AND category_id = ? ", siblingSortStmt}, ""),
 		seriesId,
 		categoryId,
 	)
