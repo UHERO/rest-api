@@ -259,8 +259,7 @@ var siblingsPrefix = `/* SELECT
 	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
 	JOIN (SELECT measurement_id FROM measurement_series WHERE series_id = ?) AS mfilt ON mfilt.measurement_id = pv.measurement_id
-	WHERE category_id = ?
-	AND EXISTS(SELECT * FROM public_data_points WHERE series_id = pv.series_id) `
+	WHERE EXISTS(SELECT * FROM public_data_points WHERE series_id = pv.series_id) `
 
 func (r *FooRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
@@ -522,7 +521,7 @@ func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []model
 
 func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.RunQuery(
-		strings.Join([]string{siblingsPrefix, siblingSortStmt}, ""),
+		strings.Join([]string{siblingsPrefix + " AND category_id = ? ", siblingSortStmt}, ""),
 		seriesId,
 		categoryId,
 	)
@@ -552,7 +551,6 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndFreq(
 	rows, err := r.RunQuery(strings.Join(
 		[]string{siblingsPrefix, freqFilter, siblingSortStmt}, ""),
 		seriesId,
-		0,
 		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
@@ -581,7 +579,6 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndGeo(
 	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, geoFilter, siblingSortStmt}, ""),
 		seriesId,
-		0,
 		geo,
 	)
 	if err != nil {
@@ -611,7 +608,6 @@ func (r *FooRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter, siblingSortStmt}, ""),
 		seriesId,
-		0,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
 	)
