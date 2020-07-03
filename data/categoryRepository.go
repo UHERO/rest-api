@@ -21,7 +21,7 @@ func (r *FooRepository) GetNavCategories() (categories []models.Category, err er
 
 func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories []models.Category, err error) {
 	var hidden string
-	if !r.ShowHiddenCats {  // a rough heuristic for whether we are running as UHERO-internal portal or not
+	if !r.ShowHiddenCats {
 		hidden = `AND NOT (categories.hidden OR categories.masked)`
 	}
 	//language=MySQL

@@ -49,7 +49,7 @@ var FindViewTags *regexp.Regexp
 
 func (r *FooRepository) InitializeFoo() {
 	var err error
-	FindViewTags, err = regexp.Compile(`<%[A-Z]+%>`)
+	FindViewTags, err = regexp.Compile(`<%[A-Z_]+%>`)
 	if err != nil {
 		log.Fatal("Failed to compile the FindViewTags regex")
 	}

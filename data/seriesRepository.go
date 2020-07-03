@@ -678,7 +678,7 @@ func (r *FooRepository) GetSeriesSiblingsFreqById(
 	FROM <%SERIES%> AS series
 	JOIN (SELECT name, universe FROM <%SERIES%> WHERE id = ?) AS original_series
 	WHERE series.universe = original_series.universe
-	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
+	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =    /* prefixes are equal */
 	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
