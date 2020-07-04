@@ -496,8 +496,7 @@ func (r *FooRepository) GetSeriesByGroup(
 func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
 	//language=MySQL
 	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series_name, 1)) AS freq
-							 FROM <%PORTAL%> pv
-							 WHERE category_id = ?
+							 FROM <%PORTAL%> pv WHERE category_id = ?
 							 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
@@ -638,7 +637,7 @@ func (r *FooRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []
 		JOIN (SELECT name, universe FROM <%SERIES%> where id = ?) AS original_series
 		JOIN geographies ON geographies.id = series.geography_id
 		WHERE series.universe = original_series.universe
-		AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =    /* prefixes are equal */
+		AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =  /* name prefixes are equal */
 			TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
 		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, seriesId)
 	if err != nil {
@@ -678,7 +677,7 @@ func (r *FooRepository) GetSeriesSiblingsFreqById(
 	FROM <%SERIES%> AS series
 	JOIN (SELECT name, universe FROM <%SERIES%> WHERE id = ?) AS original_series
 	WHERE series.universe = original_series.universe
-	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =    /* prefixes are equal */
+	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =  /* name prefixes are equal */
 	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
@@ -784,9 +783,7 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 		return
 	}
 	if percent.Valid && percent.Bool {
-		YOY = YOYChange
-		YTD = YTDChange
-		C5MA = C5MAChange
+		YOY, YTD, C5MA = YOYChange, YTDChange, C5MAChange
 	}
 
 	var transform models.TransformationResult
