@@ -76,12 +76,12 @@ func ReplaceTemplateTag(query, tag, repl string) string {
 
 func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
 	query = string(FindViewTags.ReplaceAllFunc([]byte(query), r.ReplaceViews))  // silly that we need to cast back and forth like this :/
-	return r.DB.Query(query, args)
+	return r.DB.Query(query, args...)
 }
 
 func (r *FooRepository) RunQueryRow(query string, args ...interface{}) *sql.Row {
 	query = string(FindViewTags.ReplaceAllFunc([]byte(query), r.ReplaceViews))
-	return r.DB.QueryRow(query, args)
+	return r.DB.QueryRow(query, args...)
 }
 
 type boolSet map[string]bool
