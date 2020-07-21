@@ -148,7 +148,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
                MAX(public_data_points.date) AS enddate
 		FROM <%PORTAL%> pv
 		JOIN geographies AS catgeo ON catgeo.id = category_geo_id
-		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = series_id
+		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = pv.series_id
 		WHERE category_universe = ?
 		AND category_ancestry IS NOT NULL
 		AND series_geo_id = category_geo_id
