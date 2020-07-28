@@ -255,7 +255,7 @@ var siblingsPrefix = `/* SELECT
 	WHERE public_data_points.value IS NOT NULL */
 	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
 	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
-		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
+		   MAX(table_prefix), MAX(table_postfix), MAX(pv.measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
 	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
 	JOIN (SELECT measurement_id FROM measurement_series WHERE series_id = ?) AS mfilt ON mfilt.measurement_id = pv.measurement_id
