@@ -332,7 +332,7 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	WHERE series_universe = ?
 	AND geo_handle = ?
 	AND frequency = ?
-	AND ((MATCH(series_name, series_description, data_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
+	AND ((MATCH(series_name, series_description, series_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR (MATCH(category_name) AGAINST(? IN NATURAL LANGUAGE MODE))
 	  OR LOWER(CONCAT(series_name,
 	  		COALESCE(series_description, ''),

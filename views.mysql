@@ -30,6 +30,7 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
     series.id AS series_id,
     series.name AS series_name,
     series.description AS series_description,
+    series.dataPortalName AS series_portal_name,    /* THIS COL INTRODUCED TO SOLVE full-text matching problem in API. If this view gets replaced with table, maybe we don't need */
     series.frequency,
     series.seasonally_adjusted,
     series.seasonal_adjustment,
