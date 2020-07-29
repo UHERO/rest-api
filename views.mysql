@@ -61,11 +61,11 @@ CREATE OR REPLACE VIEW portal_all_v AS SELECT
     LEFT JOIN sources ON sources.id = series.source_id
     LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
     LEFT JOIN source_details ON source_details.id = series.source_detail_id
-    LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
+    LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id ;
 
 CREATE OR REPLACE VIEW portal_v AS
     SELECT * FROM portal_all_v
-    WHERE NOT (category_hidden OR category_masked OR quarantined OR restricted)
+    WHERE NOT (category_hidden OR category_masked OR quarantined OR restricted) ;
 
 CREATE OR REPLACE VIEW `series_all_v` AS SELECT
         series.*,
@@ -90,9 +90,9 @@ CREATE OR REPLACE VIEW `series_all_v` AS SELECT
         x.quarantined,
         x.created_at AS xs_created_at,
         x.updated_at AS xs_updated_at
-    FROM series JOIN xseries x ON x.id = series.xseries_id
+    FROM series JOIN xseries x ON x.id = series.xseries_id ;
 
 CREATE OR REPLACE view `series_v` AS
     SELECT * FROM series_all_v
-    WHERE NOT (restricted OR quarantined)
+    WHERE NOT (restricted OR quarantined) ;
 
