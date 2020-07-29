@@ -69,6 +69,7 @@ CREATE OR REPLACE VIEW portal_v AS
 
 CREATE OR REPLACE VIEW `series_all_v` AS SELECT
         series.*,
+        CONCAT(name,'|',COALESCE(description,''),'|',COALESCE(dataPortalName,'')) AS series_search_text,
         x.primary_series_id,
         x.frequency,
         x.seasonally_adjusted,

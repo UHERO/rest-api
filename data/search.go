@@ -50,14 +50,9 @@ func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, univ
 	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
 	WHERE series_universe = ?
-	AND ((MATCH(series_name, series_description, data_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR (MATCH(category_name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series_name,
-	  		COALESCE(series_description, ''),
-	  		COALESCE(data_portal_name, ''),
-	  		COALESCE(category_name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	AND ext_search_text REGEXP ?
 	GROUP BY series_id
-	LIMIT 50;`, universeText, searchText, searchText, searchText)
+	LIMIT 50;`, universeText, searchText)
 	if err != nil {
 		return
 	}
@@ -94,20 +89,18 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	    JOIN (
 			SELECT series_id FROM measurement_series WHERE measurement_id IN (
 				SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
-					SELECT data_list_id FROM categories
+					SELECT data_list_id FROM categories c
 					WHERE universe = ?
-					AND ((MATCH(name) AGAINST(? IN NATURAL LANGUAGE MODE))
-						OR (LOWER(COALESCE(name, '')) LIKE CONCAT('%', LOWER(?), '%')))
+					AND c.name REGEXP ?
 				)
 			)
 			UNION
 			SELECT id AS series_id FROM <%SERIES%>
 			WHERE universe = ?
-			AND ((MATCH(name, description, dataPortalName) AGAINST(? IN NATURAL LANGUAGE MODE))
-				OR LOWER(CONCAT(name, COALESCE(description, ''), COALESCE(dataPortalName, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+			AND series_search_text REGEXP ?
 	    ) AS s ON s.series_id = series.id `,
-		universeText, searchText, searchText,
-		universeText, searchText, searchText).Scan(
+		universeText, searchText,
+		universeText, searchText).Scan(
 		&observationStart,
 		&observationEnd,
 	)
@@ -137,14 +130,8 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	SELECT DISTINCT geo_fips, geo_display_name, geo_display_name_short, geo_handle AS geo, RIGHT(series_name, 1) as freq
 	FROM <%PORTAL%> pv
 	WHERE series_universe = ?
-	AND ((MATCH(series_name, series_description, data_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR (MATCH(category_name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series_name,
-	  		COALESCE(series_description, ''),
-	  		COALESCE(data_portal_name, ''),
-	  		COALESCE(category_name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
-	ORDER BY 1,2,3,4;`, universeText, searchText, searchText, searchText)
-												/**** REPLACE LIKE+CONCAT with REGEXP! no need LOWER ****/
+	AND ext_search_text REGEXP ?
+	ORDER BY 1,2,3,4;`, universeText, searchText)
 	if err != nil {
 		return
 	}
@@ -252,19 +239,12 @@ func (r *FooRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	WHERE series_universe = ?
 	AND geo_handle = ?
 	AND frequency = ?
-	AND ((MATCH(series_name, series_description, data_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR (MATCH(category_name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series_name,
-	  		COALESCE(series_description, ''),
-	  		COALESCE(data_portal_name, ''),
-	  		COALESCE(category_name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	AND ext_search_text REGEXP ?
 	GROUP BY series_id
 	LIMIT 50;`,
 		universeText,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
-		searchText,
-		searchText,
 		searchText,
 	)
 
@@ -332,19 +312,12 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	WHERE series_universe = ?
 	AND geo_handle = ?
 	AND frequency = ?
-	AND ((MATCH(series_name, series_description, series_portal_name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR (MATCH(category_name) AGAINST(? IN NATURAL LANGUAGE MODE))
-	  OR LOWER(CONCAT(series_name,
-	  		COALESCE(series_description, ''),
-	  		COALESCE(data_portal_name, ''),
-	  		COALESCE(category_name, ''))) LIKE CONCAT('%', LOWER(?), '%'))
+	AND ext_search_text REGEXP ?
 	GROUP BY series_id
 	LIMIT 50;`,
 		universeText,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
-		searchText,
-		searchText,
 		searchText,
 	)
 	if err != nil {
