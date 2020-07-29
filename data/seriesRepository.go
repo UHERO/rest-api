@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/UHERO/rest-api/models"
 	"strconv"
 	"strings"
@@ -519,10 +520,13 @@ func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []model
 }
 
 func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
+	var catFilt string
+	if categoryId > 0 {
+		catFilt = fmt.Sprintf(" AND category_id = %d ", categoryId)
+	}
 	rows, err := r.RunQuery(
-		strings.Join([]string{siblingsPrefix, " AND category_id = ? ", siblingSortStmt}, ""),
+		strings.Join([]string{siblingsPrefix, catFilt, siblingSortStmt}, ""),
 		seriesId,
-		categoryId,
 	)
 	if err != nil {
 		return
