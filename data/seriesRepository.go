@@ -2,7 +2,6 @@ package data
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/UHERO/rest-api/models"
 	"strconv"
 	"strings"
