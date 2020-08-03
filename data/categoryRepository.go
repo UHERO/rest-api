@@ -147,12 +147,14 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
                MIN(public_data_points.date) AS startdate,
                MAX(public_data_points.date) AS enddate
 		FROM <%PORTAL%> pv
-		JOIN geographies AS catgeo ON catgeo.id = category_geo_id
-		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = pv.series_id
+		LEFT JOIN geographies AS catgeo ON catgeo.id = category_geo_id
+		LEFT JOIN <%SERIES%> AS series
+		    ON series.id = pv.series_id
+		   AND series.geography_id = category_geo_id
+		   AND RIGHT(series.name, 1) = category_freq
+		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = series.id
 		WHERE category_universe = ?
 		AND category_ancestry IS NOT NULL
-		AND series_geo_id = category_geo_id
-		AND RIGHT(series_name, 1) = category_freq
 		GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
 		ORDER BY category_list_order, COALESCE(catgeo.list_order, 999), catgeo.handle`, universe)
 	if err != nil {
