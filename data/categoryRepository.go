@@ -119,9 +119,12 @@ func (r *FooRepository) GetAllCategories() (categories []models.Category, err er
 }
 
 func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
+	var hidden string
+	if !r.ShowHiddenCats {
+		hidden = `AND NOT (categories.hidden OR categories.masked)`
+	}
 	//language=MySQL
-	rows, err := r.RunQuery(`/* SELECT
-            categories.id,
+	query := `SELECT categories.id,
 			categories.name AS catname,
 			categories.universe AS universe,
 			categories.ancestry AS ancest,
@@ -141,22 +144,14 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 		   AND series.geography_id = categories.default_geo_id
 		   AND RIGHT(series.name, 1) = categories.default_freq
 		   AND NOT series.restricted
-		LEFT JOIN public_data_points ON public_data_points.series_id = series.id */
-		SELECT category_id, category_name, category_universe, category_ancestry, category_freq, 
-			   catgeo.handle, catgeo.fips, catgeo.display_name, catgeo.display_name_short,
-               MIN(public_data_points.date) AS startdate,
-               MAX(public_data_points.date) AS enddate
-		FROM <%PORTAL%> pv
-		LEFT JOIN geographies AS catgeo ON catgeo.id = category_geo_id
-		LEFT JOIN <%SERIES%> AS series
-		    ON series.id = pv.series_id
-		   AND series.geography_id = category_geo_id
-		   AND RIGHT(series.name, 1) = category_freq
-		LEFT JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = series.id
-		WHERE category_universe = ?
-		AND category_ancestry IS NOT NULL
-		GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
-		ORDER BY category_list_order, COALESCE(catgeo.list_order, 999), catgeo.handle`, universe)
+		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
+		WHERE categories.universe = ?
+		AND categories.ancestry IS NOT NULL
+		<%HIDDEN_COND%>
+		GROUP BY categories.id, categories.name, categories.universe, categories.ancestry, categories.default_geo_id, categories.default_freq,
+		         geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short
+		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
+	rows, err := r.RunQuery(ReplaceTemplateTag(query, "HIDDEN_COND", hidden), universe)
 	if err != nil {
 		return
 	}
