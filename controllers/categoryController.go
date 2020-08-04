@@ -60,6 +60,7 @@ func GetCategory(categoryRepository *data.FooRepository, c *data.CacheRepository
 	}
 }
 
+// it seems this method is no longer used
 func GetCategoryByIdGeoFreq(categoryRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idParam, ok := mux.Vars(r)["id"]

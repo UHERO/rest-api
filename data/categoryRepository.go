@@ -296,10 +296,12 @@ func (r *FooRepository) GetCategoryRootByUniverse(universe string) (category mod
 	return
 }
 
+// it seems this method is no longer used
 func (r *FooRepository) GetCategoryById(id int64) (models.Category, error) {
 	return r.GetCategoryByIdGeoFreq(id, "", "")
 }
 
+// it seems this method is no longer used
 func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
 	dataPortalCategory := models.Category{}
 	//language=MySQL
@@ -541,6 +543,7 @@ func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err
 	return
 }
 
+// it seems this method is no longer used
 func (r *FooRepository) getCategoryTree(
 	id int64,
 	geo string,
@@ -586,6 +589,7 @@ func (r *FooRepository) getCategoryTree(
 	return
 }
 
+// it seems this method is no longer used
 func (r *FooRepository) CreateCategoryPackage(
 	id int64,
 	geo string,
