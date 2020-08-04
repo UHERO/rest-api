@@ -144,7 +144,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 		    ON series.id = measurement_series.series_id
 		   AND series.geography_id = categories.default_geo_id
 		   AND RIGHT(series.name, 1) = categories.default_freq
-		   <%RESTR%>
+		   <%RESTR_COND%>
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 		WHERE categories.universe = ?
 		AND categories.ancestry IS NOT NULL
@@ -152,7 +152,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 		GROUP BY categories.id, categories.name, categories.universe, categories.ancestry, categories.default_geo_id, categories.default_freq,
 		         geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short
 		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
-	rows, err := r.RunQuery(ReplaceTemplateTag(ReplaceTemplateTag(query, "RESTR", restrict), "HIDDEN_COND", hidden), universe)
+	rows, err := r.RunQuery(ReplaceTemplateTag(ReplaceTemplateTag(query, "RESTR_COND", restrict), "HIDDEN_COND", hidden), universe)
 	if err != nil {
 		return
 	}
