@@ -59,7 +59,7 @@ func main() {
 		PortalView: "portal_v",
 		SeriesView: "series_v",
 		DataPointsView: "public_data_points",
-		ShowHiddenCats: false,
+		ShowHidden: false,
 	}
 	if view, ok := os.LookupEnv("API_PORTAL_VIEW"); ok {
 		uhRepo.PortalView = view
@@ -70,8 +70,8 @@ func main() {
 	if view, ok := os.LookupEnv("API_DATAPOINTS_VIEW"); ok {
 		uhRepo.DataPointsView = view
 	}
-	if show, ok := os.LookupEnv("API_SHOW_HIDDEN_CATS"); ok && show == "true" {
-		uhRepo.ShowHiddenCats = true
+	if show, ok := os.LookupEnv("API_SHOW_HIDDEN"); ok && show == "true" {
+		uhRepo.ShowHidden = true
 	}
 	uhRepo.InitializeFoo()
 

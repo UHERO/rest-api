@@ -21,7 +21,7 @@ func (r *FooRepository) GetNavCategories() (categories []models.Category, err er
 
 func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories []models.Category, err error) {
 	var hidden string
-	if !r.ShowHiddenCats {
+	if !r.ShowHidden {
 		hidden = `AND NOT (categories.hidden OR categories.masked)`
 	}
 	//language=MySQL
@@ -119,9 +119,10 @@ func (r *FooRepository) GetAllCategories() (categories []models.Category, err er
 }
 
 func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
-	var hidden string
-	if !r.ShowHiddenCats {
+	var hidden, restrict string
+	if !r.ShowHidden {
 		hidden = `AND NOT (categories.hidden OR categories.masked)`
+		restrict = `AND NOT series.restricted`
 	}
 	//language=MySQL
 	query := `SELECT categories.id,
@@ -143,7 +144,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 		    ON series.id = measurement_series.series_id
 		   AND series.geography_id = categories.default_geo_id
 		   AND RIGHT(series.name, 1) = categories.default_freq
-		   AND NOT series.restricted
+		   <%RESTR%>
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 		WHERE categories.universe = ?
 		AND categories.ancestry IS NOT NULL
@@ -151,7 +152,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 		GROUP BY categories.id, categories.name, categories.universe, categories.ancestry, categories.default_geo_id, categories.default_freq,
 		         geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short
 		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
-	rows, err := r.RunQuery(ReplaceTemplateTag(query, "HIDDEN_COND", hidden), universe)
+	rows, err := r.RunQuery(ReplaceTemplateTag(ReplaceTemplateTag(query, "RESTR", restrict), "HIDDEN_COND", hidden), universe)
 	if err != nil {
 		return
 	}
@@ -438,7 +439,7 @@ func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, origi
 
 func (r *FooRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
 	var hidden string
-	if !r.ShowHiddenCats {
+	if !r.ShowHidden {
 		hidden = `AND NOT (hidden OR masked)`
 	}
 	//language=MySQL
@@ -475,7 +476,7 @@ func (r *FooRepository) GetCategoriesByName(name string) (categories []models.Ca
 
 func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
 	var hidden string
-	if !r.ShowHiddenCats {
+	if !r.ShowHidden {
 		hidden = `AND NOT (categories.hidden OR categories.masked)`
 	}
 	//language=MySQL

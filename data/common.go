@@ -42,7 +42,7 @@ type FooRepository struct {
 	SeriesView		string
 	DataPointsView	string
 	ReplaceViews	func([]byte) []byte
-	ShowHiddenCats	bool
+	ShowHidden		bool
 }
 
 var FindViewTags *regexp.Regexp
