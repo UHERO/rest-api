@@ -83,7 +83,7 @@ func ValidApiKey(applicationRepository *data.FooRepository) func(http.ResponseWr
 			common.DisplayAppError(
 				w,
 				err,
-				"Error Veryfying API Key!",
+				"Error verifying API key!",
 				500,
 			)
 			return
