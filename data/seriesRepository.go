@@ -731,7 +731,7 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 	//language=MySQL
 	row, err := r.RunQuery(`
 		SELECT
-		   s.id, s.name, universe, s.description, frequency, seasonally_adjusted, seasonal_adjustment,
+		   s.id, s.name, s.universe, s.description, frequency, seasonally_adjusted, seasonal_adjustment,
 		   units.long_label, units.short_label, data_portal_name, percent, s.real,
 		   sources.description, COALESCE(series.source_link, sources.link) AS source_link, source_details.description,
 		   NULL, NULL, NULL, NULL, NULL, NULL, decimals,
