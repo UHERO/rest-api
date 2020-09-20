@@ -730,13 +730,18 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 func (r *FooRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
 	//language=MySQL
 	row, err := r.RunQuery(`
-		SELECT DISTINCT
-		   series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
-		   units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
-		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL, base_year, decimals,
-		   geo_fips, geo_handle, geo_display_name, geo_display_name_short
-		FROM <%PORTAL%> pv
-		WHERE series_name = ? AND series_universe = ? ;`, name, universe)
+		SELECT
+		   id, s.name, universe, s.description, frequency, seasonally_adjusted, seasonal_adjustment,
+		   units.long_label, units.short_label, data_portal_name, percent, s.real,
+		   sources.description, COALESCE(series.source_link, sources.link) AS source_link, source_details.description,
+		   NULL, NULL, NULL, NULL, NULL, NULL, decimals,
+		   geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short
+		FROM <%SERIES%> s
+		JOIN geographies ON geographies.id = s.geography_id
+		LEFT JOIN units ON units.id = s.unit_id
+		LEFT JOIN sources ON sources.id = s.source_id
+		LEFT JOIN source_details ON source_details.id = s.source_detail_id
+		WHERE s.name = ? AND s.universe = ? ;`, name, universe)
 	if err != nil {
 		return
 	}
