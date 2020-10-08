@@ -8,7 +8,7 @@ import (
 
 func SetGeographyRoutes(
 	router *mux.Router,
-	geoRepository *data.GeographyRepository,
+	geoRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
 	router.HandleFunc("/v1/category/geo", controllers.GetGeographiesByCategory(geoRepository, cacheRepository)).Methods("GET").Queries(

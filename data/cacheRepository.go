@@ -2,13 +2,13 @@ package data
 
 import (
 	"errors"
-	"log"
 	"github.com/garyburd/redigo/redis"
+	"log"
 )
 
 type CacheRepository struct {
-	Pool *redis.Pool
-	TTL  int
+	Pool 	*redis.Pool
+	TTL  	int
 }
 
 func (r *CacheRepository) GetCache(key string) ([]byte, error) {

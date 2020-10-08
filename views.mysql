@@ -1,0 +1,98 @@
+CREATE OR REPLACE VIEW portal_all_v AS SELECT
+    categories.universe AS category_universe,
+    categories.id AS category_id,
+    categories.name AS category_name,
+    categories.default_geo_id AS category_geo_id,
+    categories.default_freq AS category_freq,
+    categories.list_order AS category_list_order,
+    categories.ancestry AS category_ancestry,
+    categories.header AS category_header,
+    categories.hidden AS category_hidden,
+    categories.masked AS category_masked,
+    data_lists.universe AS data_list_universe,
+    data_lists.id AS data_list_id,
+    data_lists.name AS data_list_name,
+    data_list_measurements.list_order AS dlm_list_order,
+    data_list_measurements.indent AS dlm_indent,
+    geographies.id AS geo_id,
+    geographies.fips AS geo_fips,
+    geographies.handle AS geo_handle,
+    geographies.display_name AS geo_display_name,
+    geographies.display_name_short AS geo_display_name_short,
+    geographies.list_order AS geo_list_order,
+    measurements.universe AS measurement_universe,
+    measurements.id AS measurement_id,
+    measurements.prefix,
+    measurements.data_portal_name AS measurement_portal_name,
+    measurements.table_prefix,
+    measurements.table_postfix,
+    series.universe AS series_universe,
+    series.id AS series_id,
+    series.name AS series_name,
+    series.description AS series_description,
+    series.dataPortalName AS series_portal_name,    /* THIS COL INTRODUCED TO SOLVE full-text matching problem in API. If this view gets replaced with table, maybe we don't need */
+    series.frequency,
+    series.seasonally_adjusted,
+    series.seasonal_adjustment,
+    series.geography_id AS series_geo_id,
+    series.base_year,
+    series.decimals,
+    series.percent,
+    series.`real`,
+    series.quarantined,
+    series.restricted,
+    CONCAT(series.name,'|',COALESCE(series.description,''),'|',COALESCE(series.dataPortalName,'')) AS series_search_text,
+    CONCAT(series.name,'|',COALESCE(series.description,''),'|',COALESCE(series.dataPortalName,''),'|',COALESCE(categories.name,'')) AS ext_search_text,
+    COALESCE(units.short_label, measurement_units.short_label) AS units_short,
+    COALESCE(units.long_label, measurement_units.long_label) AS units_long,
+    COALESCE(series.dataPortalName, measurements.data_portal_name) AS data_portal_name,
+    COALESCE(sources.description, measurement_sources.description) AS source_description,
+    COALESCE(source_details.description, measurement_source_details.description) AS source_detail_description,
+    COALESCE(series.source_link, measurements.source_link, sources.link, measurement_sources.link) AS source_link
+    FROM series_all_v AS series
+    JOIN geographies ON geographies.id = series.geography_id
+    JOIN measurement_series ON measurement_series.series_id = series.id
+    JOIN measurements ON measurements.id = measurement_series.measurement_id
+    JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
+    JOIN data_lists ON data_lists.id = data_list_measurements.data_list_id
+    JOIN categories ON categories.data_list_id = data_lists.id
+    LEFT JOIN units ON units.id = series.unit_id
+    LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
+    LEFT JOIN sources ON sources.id = series.source_id
+    LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
+    LEFT JOIN source_details ON source_details.id = series.source_detail_id
+    LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id ;
+
+CREATE OR REPLACE VIEW portal_v AS
+    SELECT * FROM portal_all_v
+    WHERE NOT (category_hidden OR category_masked OR quarantined OR restricted) ;
+
+CREATE OR REPLACE VIEW `series_all_v` AS SELECT
+        series.*,
+        CONCAT(name,'|',COALESCE(description,''),'|',COALESCE(dataPortalName,'')) AS series_search_text,
+        x.primary_series_id,
+        x.frequency,
+        x.seasonally_adjusted,
+        x.seasonal_adjustment,
+        x.units,
+        x.percent,
+        x.`real`,
+        x.last_demetra_datestring,
+        x.last_demetra_date,
+        x.factors,
+        x.factor_application,
+        x.aremos_missing,
+        x.aremos_diff,
+        x.mult,
+        x.base_year,
+        x.frequency_transform,
+        x.restricted,
+        x.quarantined,
+        x.created_at AS xs_created_at,
+        x.updated_at AS xs_updated_at
+    FROM series JOIN xseries x ON x.id = series.xseries_id ;
+
+CREATE OR REPLACE view `series_v` AS
+    SELECT * FROM series_all_v
+    WHERE NOT (restricted OR quarantined) ;
+

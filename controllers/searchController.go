@@ -50,7 +50,7 @@ func GetSearchPackage(
 	}
 }
 
-func GetSeriesBySearchText(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesBySearchText(searchRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
@@ -67,7 +67,7 @@ func GetSeriesBySearchText(searchRepository *data.SeriesRepository, c *data.Cach
 	}
 }
 
-func GetSeriesBySearchTextAndUniverse(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetSeriesBySearchTextAndUniverse(searchRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
@@ -178,7 +178,7 @@ func GetSearchSummaryByUniverse(searchRepository *data.SearchRepository, c *data
 	}
 }
 
-func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetSearchResultByGeoAndFreq(searchRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
@@ -199,7 +199,7 @@ func GetSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository, c *dat
 	}
 }
 
-func GetSearchResultByGeoAndFreqAndUniverse(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetSearchResultByGeoAndFreqAndUniverse(searchRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
@@ -230,7 +230,7 @@ func GetSearchResultByGeoAndFreqAndUniverse(searchRepository *data.SeriesReposit
 	}
 }
 
-func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {
@@ -251,7 +251,7 @@ func GetInflatedSearchResultByGeoAndFreq(searchRepository *data.SeriesRepository
 	}
 }
 
-func GetInflatedSearchResultByGeoAndFreqAndUniverse(searchRepository *data.SeriesRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+func GetInflatedSearchResultByGeoAndFreqAndUniverse(searchRepository *data.FooRepository, c *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		searchText, ok := mux.Vars(r)["search_text"]
 		if !ok {

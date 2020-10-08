@@ -8,12 +8,12 @@ import (
 )
 
 func InitRoutes(
-	applicationRepository *data.ApplicationRepository,
-	categoryRepository *data.CategoryRepository,
-	seriesRepository *data.SeriesRepository,
+	applicationRepository *data.FooRepository,
+	categoryRepository *data.FooRepository,
+	seriesRepository *data.FooRepository,
 	searchRepository *data.SearchRepository,
-	measurementRepository *data.MeasurementRepository,
-	geographyRepository *data.GeographyRepository,
+	measurementRepository *data.FooRepository,
+	geographyRepository *data.FooRepository,
 	feedbackRepository *data.FeedbackRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {

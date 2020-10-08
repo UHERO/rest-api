@@ -3,10 +3,12 @@ package data
 import (
 	"database/sql"
 	"github.com/UHERO/rest-api/models"
+	"log"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"sort"
 )
 
 var freqLabel map[string]string = map[string]string{
@@ -32,6 +34,54 @@ var indentationLevel map[string]int = map[string]int{
 	"indent1": 1,
 	"indent2": 2,
 	"indent3": 3,
+}
+
+type FooRepository struct {
+	DB				*sql.DB
+	PortalView		string
+	SeriesView		string
+	DataPointsView	string
+	ReplaceViews	func([]byte) []byte
+	ShowHidden		bool
+}
+
+var FindViewTags *regexp.Regexp
+
+func (r *FooRepository) InitializeFoo() {
+	var err error
+	FindViewTags, err = regexp.Compile(`<%[A-Z_]+%>`)
+	if err != nil {
+		log.Fatal("Failed to compile the FindViewTags regex")
+	}
+	r.ReplaceViews = func(str []byte) []byte {
+		var result string
+		switch tag := string(str); tag {
+		case "<%PORTAL%>":
+			result = r.PortalView
+		case "<%SERIES%>":
+			result = r.SeriesView
+		case "<%DATAPOINTS%>":
+			result = r.DataPointsView
+		default:
+			log.Fatalf("Unknown view tag %s", tag)
+		}
+		return []byte(result)
+	}
+}
+
+func ReplaceTemplateTag(query, tag, repl string) string {
+	TagRe, _ := regexp.Compile("<%" + tag + "%>")
+	return string(TagRe.ReplaceAllLiteral([]byte(query), []byte(repl)))  // silly that we need to cast back and forth like this :/
+}
+
+func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
+	query = string(FindViewTags.ReplaceAllFunc([]byte(query), r.ReplaceViews))  // silly that we need to cast back and forth like this :/
+	return r.DB.Query(query, args...)
+}
+
+func (r *FooRepository) RunQueryRow(query string, args ...interface{}) *sql.Row {
+	query = string(FindViewTags.ReplaceAllFunc([]byte(query), r.ReplaceViews))
+	return r.DB.QueryRow(query, args...)
 }
 
 type boolSet map[string]bool
@@ -160,7 +210,7 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	return
 }
 
-func getAllFreqsGeos(r *SeriesRepository, seriesId int64, categoryId int64) (
+func getAllFreqsGeos(r *FooRepository, seriesId int64, categoryId int64) (
 	[]models.DataPortalGeography,
 	[]models.DataPortalFrequency,
 	error,

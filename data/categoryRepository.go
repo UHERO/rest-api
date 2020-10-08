@@ -14,14 +14,18 @@ type CategoryRepository struct {
 	DB *sql.DB
 }
 
-func (r *CategoryRepository) GetNavCategories() (categories []models.Category, err error) {
+func (r *FooRepository) GetNavCategories() (categories []models.Category, err error) {
 	categories, err = r.GetNavCategoriesByUniverse("UHERO")
 	return
 }
 
-func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (categories []models.Category, err error) {
-	rows, err := r.DB.Query(
-		`SELECT categories.id,
+func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories []models.Category, err error) {
+	var hidden string
+	if !r.ShowHidden {
+		hidden = `AND NOT (categories.hidden OR categories.masked)`
+	}
+	//language=MySQL
+	query := `SELECT categories.id,
 			categories.name,
 			categories.universe,
 			categories.ancestry,
@@ -33,10 +37,12 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 			geographies.display_name_short AS catgeonameshort
 		FROM categories
 		LEFT JOIN geographies ON geographies.id = categories.default_geo_id
-		WHERE NOT (categories.hidden OR categories.masked)
+		WHERE TRUE
+		<%HIDDEN_COND%>
 		AND categories.ancestry = CONVERT(
 			(SELECT id from categories WHERE universe = ? AND ancestry IS NULL), CHAR)
-		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, universe)
+		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
+	rows, err := r.RunQuery(ReplaceTemplateTag(query, "HIDDEN_COND", hidden), universe)
 	if err != nil {
 		return
 	}
@@ -94,7 +100,7 @@ func (r *CategoryRepository) GetNavCategoriesByUniverse(universe string) (catego
 	return
 }
 
-func (r *CategoryRepository) GetDefaultNavCategory(universe string) (category models.Category, err error) {
+func (r *FooRepository) GetDefaultNavCategory(universe string) (category models.Category, err error) {
 	categories, err := r.GetNavCategoriesByUniverse(universe)
 	if err != nil {
 		return
@@ -107,14 +113,19 @@ func (r *CategoryRepository) GetDefaultNavCategory(universe string) (category mo
 	return
 }
 
-func (r *CategoryRepository) GetAllCategories() (categories []models.Category, err error) {
+func (r *FooRepository) GetAllCategories() (categories []models.Category, err error) {
 	categories, err = r.GetAllCategoriesByUniverse("UHERO")
 	return
 }
 
-func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
-	rows, err := r.DB.Query(
-		`SELECT categories.id,
+func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories []models.Category, err error) {
+	var hidden, restrict string
+	if !r.ShowHidden {
+		hidden = `AND NOT (categories.hidden OR categories.masked)`
+		restrict = `AND NOT series.restricted`
+	}
+	//language=MySQL
+	query := `SELECT categories.id,
 			categories.name AS catname,
 			categories.universe AS universe,
 			categories.ancestry AS ancest,
@@ -133,14 +144,15 @@ func (r *CategoryRepository) GetAllCategoriesByUniverse(universe string) (catego
 		    ON series.id = measurement_series.series_id
 		   AND series.geography_id = categories.default_geo_id
 		   AND RIGHT(series.name, 1) = categories.default_freq
-		   AND NOT series.restricted
+		   <%RESTR_COND%>
 		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
 		WHERE categories.universe = ?
 		AND categories.ancestry IS NOT NULL
-		AND NOT (categories.hidden OR categories.masked)
+		<%HIDDEN_COND%>
 		GROUP BY categories.id, categories.name, categories.universe, categories.ancestry, categories.default_geo_id, categories.default_freq,
 		         geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short
-		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, universe)
+		ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
+	rows, err := r.RunQuery(ReplaceTemplateTag(ReplaceTemplateTag(query, "RESTR_COND", restrict), "HIDDEN_COND", hidden), universe)
 	if err != nil {
 		return
 	}
@@ -217,8 +229,9 @@ func getParentId(ancestry sql.NullString) (parentId int64) {
 	return
 }
 
-func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT id, name, universe FROM categories WHERE ancestry IS NULL ORDER BY list_order;`)
+func (r *FooRepository) GetCategoryRoots() (categories []models.Category, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT id, name, universe FROM categories WHERE ancestry IS NULL ORDER BY list_order;`)
 	if err != nil {
 		return
 	}
@@ -237,11 +250,12 @@ func (r *CategoryRepository) GetCategoryRoots() (categories []models.Category, e
 	return
 }
 
-func (r *CategoryRepository) GetCategoryRootByUniverse(universe string) (category models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT categories.id, categories.name, categories.universe, categories.default_freq,
+func (r *FooRepository) GetCategoryRootByUniverse(universe string) (category models.Category, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT categories.id, categories.name, categories.universe, categories.default_freq,
 					geographies.handle, geographies.display_name, geographies.display_name_short
 				FROM categories
-				  LEFT JOIN geographies on geographies.id = categories.default_geo_id
+				LEFT JOIN geographies on geographies.id = categories.default_geo_id
 				WHERE categories.universe = ?
 				AND categories.ancestry IS NULL;`, universe)
 	if err != nil {
@@ -277,19 +291,22 @@ func (r *CategoryRepository) GetCategoryRootByUniverse(universe string) (categor
 				ShortName: scanCat.DefaultGeoShortName.String,
 			}
 		}
-		return
+		break
 	}
 	return
 }
 
-func (r *CategoryRepository) GetCategoryById(id int64) (models.Category, error) {
+// it seems this method is no longer used
+func (r *FooRepository) GetCategoryById(id int64) (models.Category, error) {
 	return r.GetCategoryByIdGeoFreq(id, "", "")
 }
 
-func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
+// it seems this method is no longer used
+func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
 	dataPortalCategory := models.Category{}
-	rows, err := r.DB.Query(
-		`SELECT categories.id,
+	//language=MySQL
+	rows, err := r.RunQuery(`/* SELECT
+		    categories.id,
 			categories.name AS catname,
 			categories.universe AS universe,
 			parentcat.id AS parent_id,
@@ -307,19 +324,28 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
   		LEFT JOIN geographies mygeo ON mygeo.id = categories.default_geo_id
 		LEFT JOIN categories parentcat ON parentcat.id = SUBSTRING_INDEX(categories.ancestry, '/', -1)
 		LEFT JOIN geographies parentgeo ON parentgeo.id = parentcat.default_geo_id
-	        LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
+	    LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
 		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
 		LEFT JOIN series_v AS series
 		    ON series.id = measurement_series.series_id
 		   AND NOT series.restricted
 		LEFT JOIN geographies ON geographies.id = series.geography_id
-		LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-		WHERE categories.id = ?
-		AND public_data_points.value IS NOT null /* suppress those with no public data */
-		GROUP BY categories.id, categories.name, categories.universe, parentcat.id, categories.header, COALESCE(mygeo.handle, parentgeo.handle),
-		         COALESCE(categories.default_freq, parentcat.default_freq), geographies.id, geographies.handle, RIGHT(series.name, 1),
-		         geographies.fips, geographies.display_name, geographies.display_name_short
-		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, id)
+		LEFT JOIN public_data_points ON public_data_points.series_id = series.id */
+		-- -------------------- WORKING
+		SELECT category_id, category_name, category_universe, parent.id AS parent_id, category_header,
+		    COALESCE(catgeo.handle, parentgeo.handle) AS def_geo,
+		    COALESCE(category_freq, parent.default_freq) AS def_freq,
+		    geo_handle, RIGHT(series_name, 1), geo_fips, geo_display_name, geo_display_name_short, 
+			MIN(public_data_points.date) AS startdate,
+			MAX(public_data_points.date) AS enddate
+		FROM <%PORTAL%> pv
+		JOIN categories AS parent ON parent.id = SUBSTRING_INDEX(category_ancestry, '/', -1)
+		JOIN geographies AS catgeo ON catgeo.id = category_geo_id
+		JOIN geographies AS parentgeo ON parentgeo.id = parent.default_geo_id
+		JOIN <%DATAPOINTS%> AS public_data_points ON public_data_points.series_id = pv.series_id
+		WHERE category_id = ?
+		GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+		ORDER BY COALESCE(geo_list_order, 999), geo_handle`, id)
 	if err != nil {
 		return dataPortalCategory, err
 	}
@@ -413,11 +439,18 @@ func (r *CategoryRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, 
 	return dataPortalCategory, err
 }
 
-func (r *CategoryRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
-	fuzzyString := "%" + name + "%"
-	rows, err := r.DB.Query(`SELECT id, name, universe, ancestry FROM categories
-							 WHERE LOWER(name) LIKE ? AND NOT (hidden OR masked)
-							 ORDER BY list_order;`, fuzzyString)
+func (r *FooRepository) GetCategoriesByName(name string) (categories []models.Category, err error) {
+	var hidden string
+	if !r.ShowHidden {
+		hidden = `AND NOT (hidden OR masked)`
+	}
+	//language=MySQL
+	query := `SELECT id, name, universe, ancestry FROM categories
+			 	WHERE LOWER(name) REGEXP ?
+				<%HIDDEN_COND%>
+				ORDER BY list_order`
+
+	rows, err := r.RunQuery(ReplaceTemplateTag(query, "HIDDEN_COND", hidden), name)
 	if err != nil {
 		return
 	}
@@ -443,13 +476,20 @@ func (r *CategoryRepository) GetCategoriesByName(name string) (categories []mode
 	return
 }
 
-func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
-	rows, err := r.DB.Query(`SELECT categories.id, categories.universe, categories.name, header, ancestry,
-												geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
-										FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
-										WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
-										AND NOT (categories.hidden OR categories.masked)
-										ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`, id)
+func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err error) {
+	var hidden string
+	if !r.ShowHidden {
+		hidden = `AND NOT (categories.hidden OR categories.masked)`
+	}
+	//language=MySQL
+	query := `SELECT categories.id, categories.universe, categories.name, header, ancestry,
+						geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
+			  FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
+			  WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
+			  <%HIDDEN_COND%>
+			  ORDER BY categories.list_order, COALESCE(geographies.list_order, 999), geographies.handle`
+
+	rows, err := r.RunQuery(ReplaceTemplateTag(query, "HIDDEN_COND", hidden), id)
 	if err != nil {
 		return
 	}
@@ -503,11 +543,12 @@ func (r *CategoryRepository) GetChildrenOf(id int64) (children []models.Category
 	return
 }
 
-func (r *CategoryRepository) getCategoryTree(
+// it seems this method is no longer used
+func (r *FooRepository) getCategoryTree(
 	id int64,
 	geo string,
 	freq string,
-	seriesRepository *SeriesRepository,
+	seriesRepository *FooRepository,
 ) (tree []models.CategoryWithInflatedSeries, err error) {
 	kids, err := r.GetChildrenOf(id)
 	if err != nil {
@@ -548,11 +589,12 @@ func (r *CategoryRepository) getCategoryTree(
 	return
 }
 
-func (r *CategoryRepository) CreateCategoryPackage(
+// it seems this method is no longer used
+func (r *FooRepository) CreateCategoryPackage(
 	id int64,
 	geo string,
 	freq string,
-	seriesRepository *SeriesRepository,
+	seriesRepository *FooRepository,
 ) (pkg models.DataPortalCategoryPackage, err error) {
 
 	tree, err := r.getCategoryTree(id, geo, freq, seriesRepository)

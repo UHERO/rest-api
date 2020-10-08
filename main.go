@@ -53,26 +53,48 @@ func main() {
 		log.Fatal("Cannot login to MySQL server - check all DB_* environment variables")
 	}
 
+	// Set up the FooRepository
+	uhRepo := &data.FooRepository{
+		DB: db,
+		PortalView: "portal_v",
+		SeriesView: "series_v",
+		DataPointsView: "public_data_points",
+		ShowHidden: false,
+	}
+	if view, ok := os.LookupEnv("API_PORTAL_VIEW"); ok {
+		uhRepo.PortalView = view
+	}
+	if view, ok := os.LookupEnv("API_SERIES_VIEW"); ok {
+		uhRepo.SeriesView = view
+	}
+	if view, ok := os.LookupEnv("API_DATAPOINTS_VIEW"); ok {
+		uhRepo.DataPointsView = view
+	}
+	if show, ok := os.LookupEnv("API_SHOW_HIDDEN"); ok && show == "true" {
+		uhRepo.ShowHidden = true
+	}
+	uhRepo.InitializeFoo()
+
 	// Set up Redis
-	var redis_server, authpw string
-	if redis_url, ok := os.LookupEnv("REDIS_URL"); ok {
-		if u, err := url.Parse(redis_url); err == nil {
-			redis_server = u.Host // includes port where specified
+	var redisServer, authpw string
+	if redisUrl, ok := os.LookupEnv("REDIS_URL"); ok {
+		if u, err := url.Parse(redisUrl); err == nil {
+			redisServer = u.Host // includes port where specified
 			authpw, _ = u.User.Password()
 		}
 	}
-	if redis_server == "" {
+	if redisServer == "" {
 		log.Print("Valid REDIS_URL var not found; using redis @ localhost:6379")
-		redis_server = "localhost:6379"
+		redisServer = "localhost:6379"
 	}
 	pool := &redis.Pool{
 		MaxIdle:     10,
 		MaxActive:   50,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", redis_server)
+			c, err := redis.Dial("tcp", redisServer)
 			if err != nil {
-				log.Printf("*** Cannot contact redis server at %s. No caching!", redis_server)
+				log.Printf("*** Cannot contact redis server at %s. No caching!", redisServer)
 				return nil, err
 			}
 			if authpw != "" {
@@ -82,7 +104,7 @@ func main() {
 					return nil, err
 				}
 			}
-			log.Printf("Redis connection to %s established", redis_server)
+			log.Printf("Redis connection to %s established", redisServer)
 			return c, nil
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
@@ -105,12 +127,12 @@ func main() {
 	}
 	log.Printf("Cache TTL is %d minutes", ttlMinutes)
 
-	applicationRepository := &data.ApplicationRepository{DB: db}
-	categoryRepository := &data.CategoryRepository{DB: db}
-	seriesRepository := &data.SeriesRepository{DB: db}
+	applicationRepository := uhRepo
+	categoryRepository := uhRepo
+	seriesRepository := uhRepo
+	measurementRepository := uhRepo
+	geographyRepository := uhRepo
 	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
-	measurementRepository := &data.MeasurementRepository{DB: db}
-	geographyRepository := &data.GeographyRepository{DB: db}
 	feedbackRepository := &data.FeedbackRepository{}
 	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes} // TTL stored in seconds
 

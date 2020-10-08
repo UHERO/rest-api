@@ -2,7 +2,6 @@ package data
 
 import (
 	"database/sql"
-
 	"github.com/UHERO/rest-api/models"
 )
 
@@ -10,79 +9,27 @@ type GeographyRepository struct {
 	DB *sql.DB
 }
 
-func (r *GeographyRepository) GetGeographiesByCategory(categoryId int64) (geographies []models.DataPortalGeography, err error) {
-	rows, err := r.DB.Query(
-		`SELECT DISTINCT geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short, geographies.list_order
-		FROM categories
-		LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-		LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
-		LEFT JOIN geographies ON geographies.id = series.geography_id
-		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-		WHERE (categories.id = ? OR categories.ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]'))
-		AND NOT (categories.hidden OR categories.masked)
-		AND NOT series.restricted
-		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, categoryId, categoryId,
+func (r *FooRepository) GetGeographiesByCategory(categoryId int64) (geographies []models.DataPortalGeography, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(
+		`SELECT DISTINCT geo_fips, geo_handle, geo_display_name, geo_display_name_short
+		FROM <%PORTAL%> pv
+		WHERE (category_id = ? OR category_ancestry REGEXP CONCAT('[[:<:]]', ?, '[[:>:]]'))
+		ORDER BY COALESCE(geo_list_order, 999), geo_handle`, categoryId, categoryId,
 	)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
-		var listOrder sql.NullInt64  // I hate that Go forces me to have this var to scan into, when SQL forces me to select it, but I don't need it :(
 		geography := models.Geography{}
 		err = rows.Scan(
 			&geography.FIPS,
 			&geography.Handle,
 			&geography.Name,
 			&geography.ShortName,
-			&listOrder,
 		)
 		if err != nil {
 			return
-		}
-		dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
-		if geography.FIPS.Valid {
-			dataPortalGeography.FIPS = geography.FIPS.String
-		}
-		if geography.Name.Valid {
-			dataPortalGeography.Name = geography.Name.String
-		}
-		if geography.ShortName.Valid {
-			dataPortalGeography.ShortName = geography.ShortName.String
-		}
-		geographies = append(geographies, dataPortalGeography)
-	}
-	return
-}
-
-func (r *GeographyRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []models.DataPortalGeography, err error) {
-	rows, err := r.DB.Query(
-		`SELECT DISTINCT geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short, geographies.list_order
-		FROM series_v AS series
-		JOIN (SELECT name, universe FROM series where id = ?) AS original_series  /* This "series" is base table, not confused with previous alias! */
-		LEFT JOIN geographies ON geographies.id = series.geography_id
-		LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-		WHERE series.universe = original_series.universe
-		AND substring_index(series.name, '@', 1) = substring_index(original_series.name, '@', 1) /* prefixes are equal */
-		AND NOT series.restricted
-		AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, seriesId)
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		var listOrder sql.NullInt64  // I hate that Go forces me to have this var to scan into, when SQL forces me to select it, but I don't need it :(
-		geography := models.Geography{}
-		err = rows.Scan(
-			&geography.FIPS,
-			&geography.Handle,
-			&geography.Name,
-			&geography.ShortName,
-			&listOrder,
-		)
-		if err != nil {
-			continue
 		}
 		dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
 		if geography.FIPS.Valid {

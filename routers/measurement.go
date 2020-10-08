@@ -8,7 +8,7 @@ import (
 
 func SetMeasurementRoutes(
 	router *mux.Router,
-	seriesRepository *data.SeriesRepository,
+	seriesRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
 	router.HandleFunc(

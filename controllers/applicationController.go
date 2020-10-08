@@ -16,7 +16,7 @@ import (
 const authPrefix = "Bearer "
 
 // CreateApplication returns a handler that will create applications
-func CreateApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
+func CreateApplication(applicationRepository data.AppRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dataResource ApplicationResource
 		err := json.NewDecoder(r.Body).Decode(&dataResource)
@@ -66,7 +66,7 @@ func CreateApplication(applicationRepository data.Repository) func(http.Response
 	}
 }
 
-func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
+func ValidApiKey(applicationRepository *data.FooRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		authString := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authString, authPrefix) {
@@ -83,7 +83,7 @@ func ValidApiKey(applicationRepository *data.ApplicationRepository) func(http.Re
 			common.DisplayAppError(
 				w,
 				err,
-				"Error Veryfying API Key!",
+				"Error verifying API key!",
 				500,
 			)
 			return
@@ -131,7 +131,7 @@ func CORSOptionsHandler(w http.ResponseWriter, r *http.Request, next http.Handle
 }
 
 // UpdateApplication will return a handler for updating an application
-func UpdateApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
+func UpdateApplication(applicationRepository data.AppRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dataResource ApplicationResource
 		// Decode the incoming application json
@@ -181,7 +181,7 @@ func UpdateApplication(applicationRepository data.Repository) func(http.Response
 }
 
 // ReadApplications returns a handler that returns all of the user's applications
-func ReadApplications(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
+func ReadApplications(applicationRepository data.AppRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		appClaims, ok := common.FromContext(r.Context())
 		if ok != true {
@@ -208,7 +208,7 @@ func ReadApplications(applicationRepository data.Repository) func(http.ResponseW
 }
 
 // DeleteApplication returns a handler that deletes an application
-func DeleteApplication(applicationRepository data.Repository) func(http.ResponseWriter, *http.Request) {
+func DeleteApplication(applicationRepository data.AppRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseInt(vars["id"], 10, 64)

@@ -39,107 +39,125 @@ var transformations = map[string]transformation{
 	Levels: { // untransformed value
 		//language=MySQL
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
-		FROM public_data_points
-		LEFT JOIN series_v AS series ON public_data_points.series_id = series.id
-		WHERE series_id = ?;`,
+					FROM <%DATAPOINTS%> dp
+					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
+					WHERE dp.series_id = ?;`,
 		PlaceholderCount: 1,
 		Label:            "lvl",
 	},
 	YOYPercentChange: { // percent change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.value/t2.last_value - 1)*100 AS yoy,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
-				      FROM public_data_points WHERE series_id = ?) AS t1
-				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
-				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date)
-				LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 2,
+		Statement: `SELECT t1.date, (t1.value/t2.value - 1) * 100 AS yoy,
+							(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
+					FROM <%DATAPOINTS%> AS t1
+					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
+										  		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
+					JOIN <%SERIES%> AS series ON series.id = t1.series_id
+					WHERE t1.series_id = ?;`,
+		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
+
 	YOYChange: { // change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.value - t2.last_value)/series.units AS yoy,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-				FROM (SELECT series_id, value, date, pseudo_history, DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
-				      FROM public_data_points WHERE series_id = ?) AS t1
-				LEFT JOIN (SELECT value AS last_value, date, pseudo_history
-				           FROM public_data_points WHERE series_id = ?) AS t2 ON (t1.last_year = t2.date)
-				LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 2,
+		Statement: `SELECT t1.date, (t1.value - t2.value) / series.units AS yoy,
+			 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
+					FROM <%DATAPOINTS%> AS t1
+					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
+										 		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
+					JOIN <%SERIES%> AS series ON series.id = t1.series_id
+					WHERE t1.series_id = ?;`,
+		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
+
 	YTDChange: { // ytd change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.ytd/t1.count - t2.last_ytd/t2.last_count)/series.units AS ytd,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-	  FROM (SELECT date, value, series_id, pseudo_history, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
-	  		  @count := IF(@year = YEAR(date), @count, 0) + 1 AS count,
-              @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year
-            FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-            WHERE series_id = ? ORDER BY date) AS t1
-	  LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
-				   @count := IF(@year = YEAR(date), @count, 0) + 1 AS last_count,
-                   @year := year(date), pseudo_history
-                 FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-                 WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date)
-      LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 2,
+		Statement: `
+		WITH ytd_agg AS (
+			SELECT p1.series_id, p1.date, p1.value, p1.pseudo_history, sum(p2.value) AS ytd_sum, sum(p2.value)/count(*) AS ytd_avg
+			FROM <%DATAPOINTS%> AS p1 JOIN <%DATAPOINTS%> AS p2
+			   ON p2.series_id = p1.series_id
+			  AND year(p2.date) = year(p1.date)
+			  AND p2.date <= p1.date
+			WHERE p1.series_id = ?
+			GROUP BY 1, 2, 3, 4
+		)
+		SELECT t1.date, (t1.ytd_avg - t2.ytd_avg) / series.units AS ytd_change,
+			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
+		FROM ytd_agg AS t1
+		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		PlaceholderCount: 1,
 		Label:            "ytd",
 	},
+
 	YTDPercentChange: { // ytd percent change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.ytd/t2.last_ytd - 1)*100 AS ytd,
-				(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-      FROM (SELECT series_id, date, value, @sum := IF(@year = YEAR(date), @sum, 0) + value AS ytd,
-              @year := year(date), DATE_SUB(date, INTERVAL 1 YEAR) AS last_year, pseudo_history
-            FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-            WHERE series_id = ? ORDER BY date) AS t1
-      LEFT JOIN (SELECT date, @sum := IF(@year = YEAR(date), @sum, 0) + value AS last_ytd,
-                   @year := year(date), pseudo_history
-                 FROM public_data_points CROSS JOIN (SELECT @sum := 0, @year := 0) AS init
-                 WHERE series_id = ? ORDER BY date) AS t2 ON (t1.last_year = t2.date)
-      LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 2,
+		Statement: `
+		WITH ytd_agg AS (
+			SELECT p1.series_id, p1.date, p1.value, p1.pseudo_history, sum(p2.value) AS ytd_sum, sum(p2.value)/count(*) AS ytd_avg
+			FROM <%DATAPOINTS%> AS p1 JOIN <%DATAPOINTS%> AS p2
+			   ON p2.series_id = p1.series_id
+			  AND year(p2.date) = year(p1.date)
+			  AND p2.date <= p1.date
+			WHERE p1.series_id = ?
+			GROUP BY 1, 2, 3, 4
+		)
+		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
+			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
+		FROM ytd_agg AS t1
+		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		PlaceholderCount: 1,
 		Label:            "ytd",
 	},
+
 	C5MAPercentChange: { // c5ma percent change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.c5ma/t2.last_c5ma - 1)*100 AS c5ma, 
-			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, last_year, pseudo_history) AS t1
-			LEFT JOIN (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS last_c5ma, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
-      			LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 4,
+		Statement: `
+		WITH c5ma_agg AS (
+			SELECT p1.series_id, p1.date, p1.pseudo_history, CASE WHEN count(*) = 5 THEN AVG(p2.value) ELSE NULL END AS c5ma
+			FROM <%DATAPOINTS%> AS p1
+			JOIN <%DATAPOINTS%> AS p2 ON p2.series_id = p1.series_id
+								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
+													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
+			WHERE p1.series_id = ?
+			GROUP BY 1, 2, 3
+		)
+		SELECT cur.date, (cur.c5ma / lastyear.c5ma - 1) * 100 AS c5ma_pct_change,
+			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
+		FROM c5ma_agg AS cur
+		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
 	C5MAChange: { // cm5a change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.c5ma - t2.last_c5ma)/series.units AS c5ma, 
-			(t1.pseudo_history = b'1') AND (t2.pseudo_history = b'1') AS ph, series.decimals
-			FROM (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS c5ma, DATE_SUB(pdp1.date, INTERVAL 1 YEAR) AS last_year, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, last_year, pseudo_history) AS t1
-			LEFT JOIN (SELECT pdp2.series_id, pdp1.date, CASE WHEN count(*) = 5 THEN avg(pdp2.value) ELSE NULL END AS last_c5ma, pdp1.pseudo_history FROM
-				(SELECT date, value, pseudo_history FROM public_data_points WHERE series_id = ?) AS pdp1
-				INNER JOIN public_data_points AS pdp2 ON pdp2.date BETWEEN DATE_SUB(pdp1.date, INTERVAL 2 YEAR) AND DATE_ADD(pdp1.date, INTERVAL 2 YEAR) WHERE series_id = ?
-				GROUP by series_id, date, pseudo_history) AS t2 ON (t1.last_year = t2.date)
-			LEFT JOIN series_v AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 4,
+		Statement: `
+		WITH c5ma_agg AS (
+			SELECT p1.series_id, p1.date, p1.pseudo_history, CASE WHEN count(*) = 5 THEN AVG(p2.value) ELSE NULL END AS c5ma
+			FROM <%DATAPOINTS%> AS p1
+			JOIN <%DATAPOINTS%> AS p2 ON p2.series_id = p1.series_id
+								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
+													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
+			WHERE p1.series_id = ?
+			GROUP BY 1, 2, 3
+		)
+		SELECT cur.date, (cur.c5ma - lastyear.c5ma) / series.units AS c5ma_change,
+			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
+		FROM c5ma_agg AS cur
+		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
 }
 
 //language=MySQL
-var seriesPrefix = `SELECT
-	series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
+var seriesPrefix = `/* SELECT
+    series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
 	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
@@ -166,9 +184,16 @@ var seriesPrefix = `SELECT
 	WHERE categories.id = ?
 	AND NOT (categories.hidden OR categories.masked)
 	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
+	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined) */
+	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
+	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
+	FROM <%PORTAL%> pv
+	WHERE category_id = ? `
+
 //language=MySQL
-var measurementSeriesPrefix = `SELECT
+var measurementSeriesPrefix = `/* SELECT
 	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
@@ -189,28 +214,30 @@ var measurementSeriesPrefix = `SELECT
 	LEFT JOIN sources ON sources.id = series.source_id
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE measurements.id = ?
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
-var geoFilter = ` AND geographies.handle = UPPER(?) `
-var freqFilter = ` AND series.frequency = ? `
-var measurementPostfix = ` GROUP BY series.id;`
-var sortStmt = ` GROUP BY series.id ORDER BY MAX(data_list_measurements.list_order);`
-var siblingSortStmt = ` GROUP BY series.id;`
+	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id */
+	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL,
+	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
+	FROM <%PORTAL%> pv
+	WHERE measurement_id = ? ;`
+var geoFilter = ` AND geo_handle = ? `
+var freqFilter = ` AND frequency = ? `
+var measurementPostfix = ""  // this part of query no longer needed, but too troublesome to change all the code
+var sortStmt = ` GROUP BY series_id ORDER BY MAX(dlm_list_order);`
+var siblingSortStmt = ` GROUP BY series_id;`
 //language=MySQL
-var siblingsPrefix = `SELECT
+var siblingsPrefix = `/* SELECT
     series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
 	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
 	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
+	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)),
+       series.percent, series.real,
 	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
 	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
 	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
-	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
-	MAX(measurements.id), MAX(measurements.data_portal_name),
-	NULL, series.base_year, series.decimals,
+	MAX(measurements.table_prefix), MAX(measurements.table_postfix), MAX(measurements.id), MAX(measurements.data_portal_name), NULL,
+       series.base_year, series.decimals,
 	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name), MAX(geographies.display_name_short)
 	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
 	LEFT JOIN measurements ON measurements.id = measure.measurement_id
@@ -225,12 +252,16 @@ var siblingsPrefix = `SELECT
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE NOT series.restricted
-	AND public_data_points.value IS NOT NULL
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)`
+	WHERE public_data_points.value IS NOT NULL */
+	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   MAX(table_prefix), MAX(table_postfix), MAX(pv.measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
+	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
+	FROM <%PORTAL%> pv
+	JOIN (SELECT measurement_id FROM measurement_series WHERE series_id = ?) AS mfilt ON mfilt.measurement_id = pv.measurement_id
+	WHERE EXISTS(SELECT * FROM public_data_points WHERE series_id = pv.series_id) `
 
-func (r *SeriesRepository) GetSeriesByGroupAndFreq(
+func (r *FooRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
 	freq string,
 	groupType GroupType,
@@ -243,7 +274,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, freqFilter, sort}, ""),
 		groupId,
 		freqDbNames[strings.ToUpper(freq)],
@@ -267,7 +298,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
+func (r *FooRepository) GetSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
@@ -281,7 +312,7 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
@@ -306,7 +337,7 @@ func (r *SeriesRepository) GetSeriesByGroupGeoAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
+func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
@@ -320,7 +351,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
 		geoHandle,
@@ -350,7 +381,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByGroupAndGeo(
+func (r *FooRepository) GetSeriesByGroupAndGeo(
 	groupId int64,
 	geoHandle string,
 	groupType GroupType,
@@ -363,7 +394,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndGeo(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, geoFilter, sort}, ""),
 		groupId,
 		geoHandle,
@@ -387,7 +418,7 @@ func (r *SeriesRepository) GetSeriesByGroupAndGeo(
 	return
 }
 
-func (r *SeriesRepository) GetInflatedSeriesByGroup(
+func (r *FooRepository) GetInflatedSeriesByGroup(
 	groupId int64,
 	groupType GroupType,
 ) (seriesList []models.InflatedSeries, err error) {
@@ -399,7 +430,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroup(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, sort}, ""),
 		groupId,
 	)
@@ -427,7 +458,7 @@ func (r *SeriesRepository) GetInflatedSeriesByGroup(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByGroup(
+func (r *FooRepository) GetSeriesByGroup(
 	groupId int64,
 	groupType GroupType,
 ) (seriesList []models.DataPortalSeries, err error) {
@@ -439,7 +470,7 @@ func (r *SeriesRepository) GetSeriesByGroup(
 		sort = measurementPostfix
 		catId = 0
 	}
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, sort}, ""),
 		groupId,
 	)
@@ -462,18 +493,11 @@ func (r *SeriesRepository) GetSeriesByGroup(
 	return
 }
 
-func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
-	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
-	FROM categories
-	LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-	LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE categories.id = ?
-	AND NOT (categories.hidden OR categories.masked)
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
-	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
+func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series_name, 1)) AS freq
+							 FROM <%PORTAL%> pv WHERE category_id = ?
+							 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
 	if err != nil {
 		return
 	}
@@ -494,11 +518,10 @@ func (r *SeriesRepository) GetFreqByCategory(categoryId int64) (frequencies []mo
 
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(
+func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
+	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, siblingSortStmt}, ""),
 		seriesId,
-		categoryId,
 	)
 	if err != nil {
 		return
@@ -519,13 +542,13 @@ func (r *SeriesRepository) GetSeriesSiblingsById(seriesId int64, categoryId int6
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
+func (r *FooRepository) GetSeriesSiblingsByIdAndFreq(
 	seriesId int64,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(strings.Join(
+	rows, err := r.RunQuery(strings.Join(
 		[]string{siblingsPrefix, freqFilter, siblingSortStmt}, ""),
-		seriesId, 0,
+		seriesId,
 		freqDbNames[strings.ToUpper(freq)],
 	)
 	if err != nil {
@@ -547,13 +570,13 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
+func (r *FooRepository) GetSeriesSiblingsByIdAndGeo(
 	seriesId int64,
 	geo string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, geoFilter, siblingSortStmt}, ""),
-		seriesId, 0,
+		seriesId,
 		geo,
 	)
 	if err != nil {
@@ -575,14 +598,14 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdAndGeo(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
+func (r *FooRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	seriesId int64,
 	geo string,
 	freq string,
 ) (seriesList []models.DataPortalSeries, err error) {
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		strings.Join([]string{siblingsPrefix, geoFilter, freqFilter, siblingSortStmt}, ""),
-		seriesId, 0,
+		seriesId,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
 	)
@@ -605,18 +628,56 @@ func (r *SeriesRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesSiblingsFreqById(
+func (r *FooRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []models.DataPortalGeography, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(
+		`SELECT DISTINCT geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short
+		FROM <%SERIES%> AS series
+		JOIN (SELECT name, universe FROM <%SERIES%> where id = ?) AS original_series
+		JOIN geographies ON geographies.id = series.geography_id
+		WHERE series.universe = original_series.universe
+		AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =  /* name prefixes are equal */
+			TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
+		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, seriesId)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		geography := models.Geography{}
+		err = rows.Scan(
+			&geography.FIPS,
+			&geography.Handle,
+			&geography.Name,
+			&geography.ShortName,
+		)
+		if err != nil {
+			continue
+		}
+		dataPortalGeography := models.DataPortalGeography{Handle: geography.Handle}
+		if geography.FIPS.Valid {
+			dataPortalGeography.FIPS = geography.FIPS.String
+		}
+		if geography.Name.Valid {
+			dataPortalGeography.Name = geography.Name.String
+		}
+		if geography.ShortName.Valid {
+			dataPortalGeography.ShortName = geography.ShortName.String
+		}
+		geographies = append(geographies, dataPortalGeography)
+	}
+	return
+}
+
+func (r *FooRepository) GetSeriesSiblingsFreqById(
 	seriesId int64,
 ) (frequencyList []models.DataPortalFrequency, err error) {
-	rows, err := r.DB.Query(`SELECT DISTINCT(RIGHT(series.name, 1)) as freq
-	FROM series_v AS series
-	JOIN (SELECT name, universe FROM series WHERE id = ?) as original_series /* This "series" is base table, not confused with previous alias! */
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series.name, 1)) AS freq
+	FROM <%SERIES%> AS series
+	JOIN (SELECT name, universe FROM <%SERIES%> WHERE id = ?) AS original_series
 	WHERE series.universe = original_series.universe
-	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =
+	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =  /* name prefixes are equal */
 	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined)
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
 		return
@@ -637,33 +698,16 @@ func (r *SeriesRepository) GetSeriesSiblingsFreqById(
 	return
 }
 
-func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPortalSeries models.DataPortalSeries, err error) {
-	row, err := r.DB.Query(`SELECT DISTINCT
-	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
-	COALESCE(NULLIF(units.short_label, ''), NULLIF(measurement_units.short_label, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
-	NULL, series.base_year, series.decimals,
-	geo.fips, geo.handle AS shandle, geo.display_name, geo.display_name_short
-	FROM series_v AS series
-	LEFT JOIN geographies geo ON geo.id = series.geography_id
-	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
-	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
-	LEFT JOIN units ON units.id = series.unit_id
-	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
-	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
-	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.id = ?
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, seriesId)
+func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPortalSeries models.DataPortalSeries, err error) {
+	//language=MySQL
+	row, err := r.RunQuery(`
+		SELECT DISTINCT
+		   series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+		   units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL, base_year, decimals,
+		   geo_fips, geo_handle, geo_display_name, geo_display_name_short
+		FROM <%PORTAL%> pv
+		WHERE series_id = ? ;`, seriesId)  // No MAX() aggregations here because the loop below breaks after first iteration
 	if err != nil {
 		return
 	}
@@ -683,34 +727,21 @@ func (r *SeriesRepository) GetSeriesById(seriesId int64, categoryId int64) (data
 	return
 }
 
-func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
-	row, err := r.DB.Query(`SELECT DISTINCT
-	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(units.long_label, ''), NULLIF(measurement_units.long_label, '')),
-	COALESCE(NULLIF(units.short_label, ''), NULLIF(measurement_units.short_label, '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), measurements.data_portal_name), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(measurement_sources.description, '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(measurements.source_link, ''), NULLIF(sources.link, ''), NULLIF(measurement_sources.link, '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(measurement_source_details.description, '')),
-	measurements.table_prefix, measurements.table_postfix,
-	measurements.id, measurements.data_portal_name,
-	NULL, series.base_year, series.decimals,
-	geo.fips, geo.handle AS shandle, geo.display_name, geo.display_name_short
-	FROM series_v AS series
-	LEFT JOIN geographies geo ON geo.id = series.geography_id
-	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
-	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
-	LEFT JOIN units ON units.id = series.unit_id
-	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
-	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
-	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE series.name = ?
-	AND series.universe = ?
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined);`, name, universe)
+func (r *FooRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
+	//language=MySQL
+	row, err := r.RunQuery(`
+		SELECT
+		   s.id, s.name, s.universe, s.description, frequency, seasonally_adjusted, seasonal_adjustment,
+		   units.long_label, units.short_label, s.dataPortalName, s.percent, s.real,
+		   sources.description, COALESCE(s.source_link, sources.link) AS source_link, source_details.description,
+		   NULL, NULL, NULL, NULL, NULL, NULL, decimals,
+		   geographies.fips, geographies.handle, geographies.display_name, geographies.display_name_short
+		FROM <%SERIES%> s
+		JOIN geographies ON geographies.id = s.geography_id
+		LEFT JOIN units ON units.id = s.unit_id
+		LEFT JOIN sources ON sources.id = s.source_id
+		LEFT JOIN source_details ON source_details.id = s.source_detail_id
+		WHERE s.name = ? AND s.universe = ? ;`, name, universe)
 	if err != nil {
 		return
 	}
@@ -740,24 +771,23 @@ func (r *SeriesRepository) GetSeriesByName(name string, universe string, expand 
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
 //    It has now been turned into a decorator for a more flexible method that allows selection of transformations
-func (r *SeriesRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
+func (r *FooRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
 	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"))
 }
 
-func (r *SeriesRepository) GetSeriesTransformations(seriesId int64, include boolSet) (seriesObservations models.SeriesObservations, err error) {
+func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string
 	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, C5MAPercentChange
 
-	err = r.DB.QueryRow(`SELECT universe, percent FROM series_v WHERE id = ?`, seriesId).Scan(&universe, &percent)
+	//language=MySQL
+	err = r.RunQueryRow(`SELECT universe, percent FROM <%SERIES%> WHERE id = ? ;`, seriesId).Scan(&universe, &percent)
 	if err != nil {
 		return
 	}
 	if percent.Valid && percent.Bool {
-		YOY = YOYChange
-		YTD = YTDChange
-		C5MA = C5MAChange
+		YOY, YTD, C5MA = YOYChange, YTDChange, C5MAChange
 	}
 
 	var transform models.TransformationResult
@@ -803,7 +833,7 @@ func variadicSeriesId(seriesId int64, count int) []interface{} {
 	return variadic
 }
 
-func (r *SeriesRepository) GetTransformation(
+func (r *FooRepository) GetTransformation(
 	transformation string,
 	seriesId int64,
 	currentStart *time.Time,
@@ -813,7 +843,7 @@ func (r *SeriesRepository) GetTransformation(
 	err error,
 ) {
 	var observationStart, observationEnd time.Time
-	rows, err := r.DB.Query(
+	rows, err := r.RunQuery(
 		transformations[transformation].Statement,
 		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
 	)
@@ -863,11 +893,11 @@ func (r *SeriesRepository) GetTransformation(
 	return
 }
 
-func (r *SeriesRepository) CreateSeriesPackage(
+func (r *FooRepository) CreateSeriesPackage(
 	id int64,
 	universe string,
 	categoryId int64,
-	categoryRepository *CategoryRepository,
+	categoryRepository *FooRepository,
 )  (pkg models.DataPortalSeriesPackage, err error) {
 
 	series, err := r.GetSeriesById(id, categoryId)
@@ -896,10 +926,10 @@ func (r *SeriesRepository) CreateSeriesPackage(
 	return
 }
 
-func (r *SeriesRepository) CreateAnalyzerPackage(
+func (r *FooRepository) CreateAnalyzerPackage(
 	ids []int64,
 	universe string,
-	categoryRepository *CategoryRepository,
+	categoryRepository *FooRepository,
 ) (pkg models.DataPortalAnalyzerPackage, err error) {
 
 	pkg.InflatedSeries = []models.InflatedSeries{}
@@ -926,9 +956,10 @@ func (r *SeriesRepository) CreateAnalyzerPackage(
 	return
 }
 
-func (r *SeriesRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
-	rows, err := r.DB.Query(
-		`select s.id, s.universe, s.name, s.dataPortalName from series s
+func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(
+		`select s.id, s.universe, s.name, s.dataPortalName from <%SERIES%> s
 		 join export_series es on es.series_id = s.id and es.export_id = ?
 		 order by es.list_order`, id)
 	if err != nil {

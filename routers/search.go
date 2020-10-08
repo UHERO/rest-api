@@ -9,7 +9,7 @@ import (
 func SetSearchRoutes(
 	router *mux.Router,
 	searchRepository *data.SearchRepository,
-	seriesRepository *data.SeriesRepository,
+	seriesRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
 	// deprecated

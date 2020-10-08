@@ -8,9 +8,9 @@ import (
 
 func SetCategoryRoutes(
 	router *mux.Router,
-	categoryRepository *data.CategoryRepository,
-	seriesRepository *data.SeriesRepository,
-	measurementRepository *data.MeasurementRepository,
+	categoryRepository *data.FooRepository,
+	seriesRepository *data.FooRepository,
+	measurementRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
 	router.HandleFunc(
