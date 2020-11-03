@@ -71,5 +71,13 @@ func SetPackageRoutes(
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
+
+	/* Following route exclusively for in-house staff use, returns unrestricted data. Only available to special in-house API instance */
+	router.HandleFunc(
+		"/v1.u/package/export",
+		controllers.GetExportPackage(seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+	)
 	return router
 }
