@@ -52,5 +52,23 @@ func SetSeriesRoutes(
 	router.HandleFunc("/v1/series/observations", controllers.GetSeriesObservations(seriesRepository, cacheRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
 	)
+
+	/* Following routes exclusively for in-house staff use, return unrestricted data. Only available to special in-house API instance */
+	router.HandleFunc("/v1.u/series", controllers.GetSeriesByName(seriesRepository, cacheRepository)).Methods("GET").Queries(
+		"name", "{name:.+}",
+		"u",	"{universe:[A-Za-z0-9]+}",
+		"expand", "{exp:[a-z]+}",
+	)
+	router.HandleFunc("/v1.u/series", controllers.GetSeriesByName(seriesRepository, cacheRepository)).Methods("GET").Queries(
+		"name", "{name:.+}",
+		"expand", "{exp:[a-z]+}",
+	)
+	router.HandleFunc("/v1.u/series", controllers.GetSeriesByName(seriesRepository, cacheRepository)).Methods("GET").Queries(
+		"name", "{name:.+}",
+		"u",	"{universe:[A-Za-z0-9]+}",
+	)
+	router.HandleFunc("/v1.u/series", controllers.GetSeriesByName(seriesRepository, cacheRepository)).Methods("GET").Queries(
+		"name", "{name:.+}",
+	)
 	return router
 }
