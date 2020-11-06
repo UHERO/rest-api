@@ -282,6 +282,7 @@ func (r *FooRepository) GetSeriesByGroupAndFreq(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -321,6 +322,7 @@ func (r *FooRepository) GetSeriesByGroupGeoAndFreq(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -360,6 +362,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -402,6 +405,7 @@ func (r *FooRepository) GetSeriesByGroupAndGeo(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -437,6 +441,7 @@ func (r *FooRepository) GetInflatedSeriesByGroup(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -477,6 +482,7 @@ func (r *FooRepository) GetSeriesByGroup(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -501,6 +507,7 @@ func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []model
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		frequency := models.Frequency{}
 		err = rows.Scan(
@@ -526,6 +533,7 @@ func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) 
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -554,6 +562,7 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndFreq(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -582,6 +591,7 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndGeo(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -612,6 +622,7 @@ func (r *FooRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -642,6 +653,7 @@ func (r *FooRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		geography := models.Geography{}
 		err = rows.Scan(
@@ -682,6 +694,7 @@ func (r *FooRepository) GetSeriesSiblingsFreqById(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		frequency := models.Frequency{}
 		err = rows.Scan(
@@ -711,6 +724,7 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 	if err != nil {
 		return
 	}
+	defer row.Close()
 	for row.Next() {
 		dataPortalSeries, err = getNextSeriesFromRows(row)
 		if err != nil {
@@ -748,6 +762,7 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 	var series models.DataPortalSeries
 	var observations models.SeriesObservations
 
+	defer row.Close()
 	if !row.Next() {
 		err = row.Err()
 		return
@@ -783,6 +798,7 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 
 	//language=MySQL
 	err = r.RunQueryRow(`SELECT universe, percent FROM <%SERIES%> WHERE id = ? ;`, seriesId).Scan(&universe, &percent)
+	// @@@ HERE
 	if err != nil {
 		return
 	}
@@ -856,6 +872,7 @@ func (r *FooRepository) GetTransformation(
 		obsPseudoHist []bool
 	)
 
+	defer rows.Close()
 	for rows.Next() {
 		observation := models.Observation{}
 		err = rows.Scan(
@@ -969,6 +986,7 @@ func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeri
 	var dpn sql.NullString
 	var observations models.SeriesObservations
 
+	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&series.Id, &series.Universe, &series.Name, &dpn)
 		if err != nil {

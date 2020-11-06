@@ -103,6 +103,7 @@ func (r *FooRepository) GetAllApplications(username string) (applications []mode
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		application := models.Application{}
 		err = rows.Scan(
@@ -124,6 +125,7 @@ func (r *FooRepository) GetApplicationsByApiKey(apiKey string) (applications []m
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		application := models.Application{}
 		err = rows.Scan(
@@ -142,7 +144,7 @@ func (r *FooRepository) GetApplicationsByApiKey(apiKey string) (applications []m
 
 func (r *FooRepository) GetApplicationById(username string, id int64) (application models.Application, err error) {
 	err = r.DB.QueryRow(`SELECT id, name, hostname, api_key FROM api_applications WHERE id = ? AND github_nickname = ?;`,
-		id, username).Scan(
+		id, username).Scan(  // @@@ HERE
 			&application.Id,
 			&application.Name,
 			&application.Hostname,

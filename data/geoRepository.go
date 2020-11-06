@@ -20,6 +20,7 @@ func (r *FooRepository) GetGeographiesByCategory(categoryId int64) (geographies 
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		geography := models.Geography{}
 		err = rows.Scan(

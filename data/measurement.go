@@ -29,6 +29,7 @@ func (r *FooRepository) GetMeasurementsByCategory(categoryId int64) (
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		measurement := models.Measurement{}
 		indentString := sql.NullString{}

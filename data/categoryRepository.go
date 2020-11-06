@@ -46,6 +46,7 @@ func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories 
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		category := models.CategoryWithAncestry{}
 		err = rows.Scan(
@@ -156,6 +157,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		category := models.CategoryWithAncestry{}
 		err = rows.Scan(
@@ -235,6 +237,7 @@ func (r *FooRepository) GetCategoryRoots() (categories []models.Category, err er
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		category := models.Category{}
 		err = rows.Scan(
@@ -261,6 +264,7 @@ func (r *FooRepository) GetCategoryRootByUniverse(universe string) (category mod
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	scanCat := models.CategoryWithAncestry{}
 	for rows.Next() {
 		err = rows.Scan(
@@ -352,6 +356,7 @@ func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, origi
 	var geosResult []models.DataPortalGeography
 	var freqsResult []models.DataPortalFrequency
 
+	defer rows.Close()
 	for rows.Next() {
 		var handle, seriesFreq string
 		category := models.CategoryWithAncestry{}
@@ -454,6 +459,7 @@ func (r *FooRepository) GetCategoriesByName(name string) (categories []models.Ca
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		category := models.CategoryWithAncestry{}
 		err = rows.Scan(
@@ -493,6 +499,7 @@ func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalCategory := models.Category{}
 		category := models.CategoryWithAncestry{}
