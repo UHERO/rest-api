@@ -144,7 +144,7 @@ func (r *FooRepository) GetApplicationsByApiKey(apiKey string) (applications []m
 
 func (r *FooRepository) GetApplicationById(username string, id int64) (application models.Application, err error) {
 	err = r.DB.QueryRow(`SELECT id, name, hostname, api_key FROM api_applications WHERE id = ? AND github_nickname = ?;`,
-		id, username).Scan(  // @@@ HERE
+		id, username).Scan(
 			&application.Id,
 			&application.Name,
 			&application.Hostname,

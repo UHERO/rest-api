@@ -798,7 +798,6 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 
 	//language=MySQL
 	err = r.RunQueryRow(`SELECT universe, percent FROM <%SERIES%> WHERE id = ? ;`, seriesId).Scan(&universe, &percent)
-	// @@@ HERE
 	if err != nil {
 		return
 	}

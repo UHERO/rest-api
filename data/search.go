@@ -102,7 +102,6 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	    ) AS s ON s.series_id = series.id `,
 		universeText, searchText,
 		universeText, searchText).Scan(
-			// @@@ HERE
 		&observationStart,
 		&observationEnd,
 	)
