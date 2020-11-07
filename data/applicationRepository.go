@@ -103,6 +103,7 @@ func (r *FooRepository) GetAllApplications(username string) (applications []mode
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		application := models.Application{}
 		err = rows.Scan(
@@ -124,6 +125,7 @@ func (r *FooRepository) GetApplicationsByApiKey(apiKey string) (applications []m
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		application := models.Application{}
 		err = rows.Scan(

@@ -56,6 +56,7 @@ func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, univ
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -138,6 +139,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	seenGeos := map[string]models.DataPortalGeography{}
 	seenFreqs := map[string]models.DataPortalFrequency{}
 
+	defer rows.Close()
 	for rows.Next() {
 		scangeo := models.Geography{}
 		frequency := models.DataPortalFrequency{}
@@ -251,6 +253,7 @@ func (r *FooRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -323,6 +326,7 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
