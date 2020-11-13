@@ -55,7 +55,9 @@ func WriteResponse(w http.ResponseWriter, payload []byte) {
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write(payload)
 	if err != nil {
-		log.Fatal(err.Error())
+		if !errors.Is(err, syscall.EPIPE) {
+			log.Fatal(err.Error())
+		}
 	}
 }
 
