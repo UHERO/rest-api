@@ -3,15 +3,16 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/data"
+	"github.com/UHERO/rest-api/models"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
-	"github.com/UHERO/rest-api/common"
-	"github.com/UHERO/rest-api/data"
-	"github.com/UHERO/rest-api/models"
-	"github.com/gorilla/mux"
+	"syscall"
 )
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
