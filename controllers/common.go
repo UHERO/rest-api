@@ -3,15 +3,16 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/data"
+	"github.com/UHERO/rest-api/models"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
-	"github.com/UHERO/rest-api/common"
-	"github.com/UHERO/rest-api/data"
-	"github.com/UHERO/rest-api/models"
-	"github.com/gorilla/mux"
+	"syscall"
 )
 
 func CheckCache(c *data.CacheRepository) func(http.ResponseWriter, *http.Request, http.HandlerFunc) {
@@ -55,7 +56,9 @@ func WriteResponse(w http.ResponseWriter, payload []byte) {
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write(payload)
 	if err != nil {
-		log.Fatal(err.Error())
+		if !errors.Is(err, syscall.EPIPE) {
+			log.Fatal(err.Error())
+		}
 	}
 }
 
