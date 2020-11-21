@@ -215,15 +215,15 @@ var measurementSeriesPrefix = `/* SELECT
 	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
 	LEFT JOIN source_details ON source_details.id = series.source_detail_id
 	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id */
-	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+	SELECT DISTINCT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
 	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
 		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL,
 	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
-	WHERE measurement_id = ? ;`
+	WHERE measurement_id = ? `
 var geoFilter = ` AND geo_handle = ? `
 var freqFilter = ` AND frequency = ? `
-var measurementPostfix = ""  // this part of query no longer needed, but too troublesome to change all the code
+var measurementPostfix = " ;"  // this part of query no longer needed, but too troublesome to change all the code
 var sortStmt = ` GROUP BY series_id ORDER BY MAX(dlm_list_order);`
 var siblingSortStmt = ` GROUP BY series_id;`
 //language=MySQL
