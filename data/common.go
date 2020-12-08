@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var freqLabel map[string]string = map[string]string{
+var freqLabel = map[string]string{
 	"A": "Annual",
 	"S": "Semiannual",
 	"Q": "Quarterly",
@@ -20,7 +20,7 @@ var freqLabel map[string]string = map[string]string{
 	"D": "Daily",
 }
 
-var freqDbNames map[string]string = map[string]string{
+var freqDbNames = map[string]string{
 	"A": "year",
 	"S": "semi",
 	"Q": "quarter",
@@ -29,7 +29,7 @@ var freqDbNames map[string]string = map[string]string{
 	"D": "day",
 }
 
-var indentationLevel map[string]int = map[string]int{
+var indentationLevel = map[string]int{
 	"indent0": 0,
 	"indent1": 1,
 	"indent2": 2,
