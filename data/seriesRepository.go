@@ -41,7 +41,8 @@ var transformations = map[string]transformation{
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
 					FROM <%DATAPOINTS%> dp
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
-					WHERE dp.series_id = ?;`,
+					WHERE dp.series_id = ?
+					AND date >= ?;`,
 		PlaceholderCount: 1,
 		Label:            "lvl",
 	},
@@ -53,7 +54,8 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										  		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
-					WHERE t1.series_id = ?;`,
+					WHERE t1.series_id = ?
+					AND t1.date >= ?;`,
 		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
@@ -66,7 +68,8 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										 		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
-					WHERE t1.series_id = ?;`,
+					WHERE t1.series_id = ?
+					AND t1.date >= ?;`,
 		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
@@ -87,7 +90,8 @@ var transformations = map[string]transformation{
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id
+		WHERE t1.date >= ?;`,
 		PlaceholderCount: 1,
 		Label:            "ytd",
 	},
@@ -108,7 +112,8 @@ var transformations = map[string]transformation{
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id
+		WHERE t1.date >= ?;`,
 		PlaceholderCount: 1,
 		Label:            "ytd",
 	},
@@ -129,7 +134,8 @@ var transformations = map[string]transformation{
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id
+		WHERE cur.date >= ?;`,
 		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
@@ -149,7 +155,8 @@ var transformations = map[string]transformation{
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id
+		WHERE cur.date >= ?;`,
 		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
@@ -809,28 +816,28 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	var transform models.TransformationResult
 
 	if include[Levels] || include["all"] {
-		transform, err = r.GetTransformation(Levels, seriesId, &start, &end)
+		transform, err = r.GetTransformation(Levels, seriesId, startDate, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[YOY] || include["all"] && universe != "NTA" {
-		transform, err = r.GetTransformation(YOY, seriesId, &start, &end)
+		transform, err = r.GetTransformation(YOY, seriesId, startDate, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[YTD] || include["all"] && universe != "NTA" {
-		transform, err = r.GetTransformation(YTD, seriesId, &start, &end)
+		transform, err = r.GetTransformation(YTD, seriesId, startDate, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[C5MA] || include["all"] && universe == "NTA" {
-		transform, err = r.GetTransformation(C5MA, seriesId, &start, &end)
+		transform, err = r.GetTransformation(C5MA, seriesId, startDate, &start, &end)
 		if err != nil {
 			return
 		}
@@ -841,17 +848,10 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	return
 }
 
-func variadicSeriesId(seriesId int64, count int) []interface{} {
-	variadic := make([]interface{}, count, count)
-	for i := range variadic {
-		variadic[i] = seriesId
-	}
-	return variadic
-}
-
 func (r *FooRepository) GetTransformation(
 	transformation string,
 	seriesId int64,
+	startDate string,
 	currentStart *time.Time,
 	currentEnd *time.Time,
 ) (
@@ -859,10 +859,10 @@ func (r *FooRepository) GetTransformation(
 	err error,
 ) {
 	var observationStart, observationEnd time.Time
-	rows, err := r.RunQuery(
-		transformations[transformation].Statement,
-		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
-	)
+	if startDate == "" {
+		startDate = "1800-01-01"  // impossibly long ago
+	}
+	rows, err := r.RunQuery(transformations[transformation].Statement, seriesId, startDate)
 	if err != nil {
 		return
 	}
