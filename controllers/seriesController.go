@@ -94,7 +94,11 @@ func GetInflatedSeriesByGroupIdGeoAndFreq(
 		if !ok {
 			return
 		}
-		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, groupType)
+		startDate, ok := getStartDate(w, r)
+		if !ok {
+			return
+		}
+		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, startDate, groupType)
 		returnInflatedSeriesList(seriesList, err, w, r, cacheRepository)
 	}
 }
@@ -274,7 +278,7 @@ func GetSeriesObservations(seriesRepository *data.FooRepository, cacheRepository
 		if !ok {
 			return
 		}
-		series, err := seriesRepository.GetSeriesObservations(id)
+		series, err := seriesRepository.GetSeriesObservations(id, "")
 		if err != nil {
 			common.DisplayAppError(
 				w,

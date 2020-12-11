@@ -343,6 +343,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
+	startDate string,
 	groupType GroupType,
 ) (seriesList []models.InflatedSeries, err error) {
 	prefix := seriesPrefix
@@ -374,7 +375,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		}
 		dataPortalSeries.Geographies = &geos
 		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, startDate)
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -453,7 +454,7 @@ func (r *FooRepository) GetInflatedSeriesByGroup(
 		}
 		dataPortalSeries.Geographies = &geos
 		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, "")
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -774,7 +775,7 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 	SeriesPkg.Series = series
 
 	if expand {
-		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id)
+		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id, "")
 		if err != nil {
 			return
 		}
@@ -786,11 +787,11 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
 //    It has now been turned into a decorator for a more flexible method that allows selection of transformations
-func (r *FooRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
-	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"))
+func (r *FooRepository) GetSeriesObservations(seriesId int64, startDate string) (seriesObservations models.SeriesObservations, err error) {
+	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"), startDate)
 }
 
-func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet) (seriesObservations models.SeriesObservations, err error) {
+func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet, startDate string) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string
@@ -928,7 +929,7 @@ func (r *FooRepository) CreateSeriesPackage(
 	}
 	pkg.Categories = categories
 
-	observations, err := r.GetSeriesObservations(id)
+	observations, err := r.GetSeriesObservations(id, "")
 	if err != nil {
 		return
 	}
@@ -956,7 +957,7 @@ func (r *FooRepository) CreateAnalyzerPackage(
 			err = anErr
 			return
 		}
-		observations, anErr := r.GetSeriesObservations(id)
+		observations, anErr := r.GetSeriesObservations(id, "")
 		if anErr != nil {
 			err = anErr
 			return
@@ -994,7 +995,7 @@ func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeri
 		if dpn.Valid {
 			series.Title = dpn.String
 		}
-		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels))
+		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels), "")
 		if err != nil {
 			return
 		}

@@ -584,7 +584,7 @@ func (r *FooRepository) getCategoryTree(
 		inflatedCat.Category = category
 
 		if geo != "" && freq != "" {
-			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kid.Id, geo, freq, Category)
+			seriesList, anErr := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(kid.Id, geo, freq, "", Category)
 			if anErr != nil {
 				err = anErr
 				return

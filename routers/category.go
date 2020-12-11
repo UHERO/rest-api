@@ -76,6 +76,16 @@ func SetCategoryRoutes(
 		"id", "{id:[0-9]+}",
 		"geo", "{geo:[A-Za-z0-9]+}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
+		"start", "{start_from:[12][0-9]{3}-[01][0-9]-[0-3][0-9]}",
+		"expand", "true",
+	)
+	router.HandleFunc(
+		"/v1/category/series",
+		controllers.GetInflatedSeriesByGroupIdGeoAndFreq(seriesRepository, cacheRepository, data.Category),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+		"geo", "{geo:[A-Za-z0-9]+}",
+		"freq", "{freq:[ASQMWDasqmwd]}",
 		"expand", "true",
 	)
 	router.HandleFunc(
