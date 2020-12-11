@@ -749,7 +749,7 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 	return
 }
 
-func (r *FooRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
+func (r *FooRepository) GetSeriesByName(name, universe, startDate string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
 	//language=MySQL
 	row, err := r.RunQuery(`
 		SELECT
@@ -782,7 +782,7 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 	SeriesPkg.Series = series
 
 	if expand {
-		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id, "")
+		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id, startDate)
 		if err != nil {
 			return
 		}

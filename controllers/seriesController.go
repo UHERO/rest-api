@@ -142,9 +142,10 @@ func GetSeriesByName(seriesRepository *data.FooRepository, cacheRepository *data
 		if !ok {
 			universe = "UHERO"
 		}
+		startDate, _ := getStrParam(r, "start_from")
 		expand, _ := getStrParam(r, "exp")
 
-		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, expand == "true")
+		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, startDate, expand == "true")
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
