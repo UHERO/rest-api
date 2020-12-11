@@ -914,6 +914,7 @@ func (r *FooRepository) CreateSeriesPackage(
 	id int64,
 	universe string,
 	categoryId int64,
+	startDate string,
 	categoryRepository *FooRepository,
 )  (pkg models.DataPortalSeriesPackage, err error) {
 
@@ -929,7 +930,7 @@ func (r *FooRepository) CreateSeriesPackage(
 	}
 	pkg.Categories = categories
 
-	observations, err := r.GetSeriesObservations(id, "")
+	observations, err := r.GetSeriesObservations(id, startDate)
 	if err != nil {
 		return
 	}

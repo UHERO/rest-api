@@ -6,7 +6,6 @@ import (
 
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
-	"github.com/gorilla/mux"
 )
 
 func GetSeriesByGroupId(
@@ -316,11 +315,13 @@ func GetSeriesPackage(
 		if !ok {
 			catId = 0
 		}
-		universe, ok := mux.Vars(r)["universe_text"]
+		universe, ok := getStrParam(r, "universe_text")
 		if !ok {
 			return
 		}
-		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, catId, categoryRepository)
+		startDate, _ := getStrParam(r, "start_from")
+
+		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, catId, startDate, categoryRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
@@ -346,7 +347,7 @@ func GetAnalyzerPackage(
 		if !ok {
 			return
 		}
-		universe, ok := mux.Vars(r)["universe_text"]
+		universe, ok := getStrParam(r, "universe_text")
 		if !ok {
 			return
 		}
