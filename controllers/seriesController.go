@@ -94,10 +94,8 @@ func GetInflatedSeriesByGroupIdGeoAndFreq(
 		if !ok {
 			return
 		}
-		startDate, ok := getStartDate(w, r)
-		if !ok {
-			return
-		}
+		startDate, _ := getStrParam(r, "start_from")
+
 		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, startDate, groupType)
 		returnInflatedSeriesList(seriesList, err, w, r, cacheRepository)
 	}
@@ -145,7 +143,7 @@ func GetSeriesByName(seriesRepository *data.FooRepository, cacheRepository *data
 		if !ok {
 			universe = "UHERO"
 		}
-		expand, ok := getStrParam(r, "exp")
+		expand, _ := getStrParam(r, "exp")
 
 		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, expand == "true")
 		if err != nil {

@@ -318,7 +318,3 @@ func getIdGeoAndFreq(w http.ResponseWriter, r *http.Request) (id int64, geo stri
 	}
 	return
 }
-
-func getStartDate(w http.ResponseWriter, r *http.Request) (startDate string, ok bool) {
-	return
-}
