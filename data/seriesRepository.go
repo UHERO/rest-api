@@ -43,7 +43,7 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
 					WHERE dp.series_id = ?
 					AND date >= ?;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "lvl",
 	},
 	YOYPercentChange: { // percent change from 1 year ago
@@ -56,7 +56,7 @@ var transformations = map[string]transformation{
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
 					WHERE t1.series_id = ?
 					AND t1.date >= ?;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "pc1",
 	},
 
@@ -70,7 +70,7 @@ var transformations = map[string]transformation{
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
 					WHERE t1.series_id = ?
 					AND t1.date >= ?;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "pc1",
 	},
 
@@ -92,7 +92,7 @@ var transformations = map[string]transformation{
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = t1.series_id
 		WHERE t1.date >= ?;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
 
@@ -114,7 +114,7 @@ var transformations = map[string]transformation{
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = t1.series_id
 		WHERE t1.date >= ?;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
 
@@ -136,7 +136,7 @@ var transformations = map[string]transformation{
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = cur.series_id
 		WHERE cur.date >= ?;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
 	C5MAChange: { // cm5a change from 1 year ago
@@ -157,7 +157,7 @@ var transformations = map[string]transformation{
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = cur.series_id
 		WHERE cur.date >= ?;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
 }
@@ -860,7 +860,7 @@ func (r *FooRepository) GetTransformation(
 ) {
 	var observationStart, observationEnd time.Time
 	if startDate == "" {
-		startDate = "1800-01-01"  // impossibly long ago
+		startDate = "1806-01-02"  // impossibly long ago
 	}
 	rows, err := r.RunQuery(transformations[transformation].Statement, seriesId, startDate)
 	if err != nil {
