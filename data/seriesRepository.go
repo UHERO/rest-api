@@ -42,7 +42,7 @@ var transformations = map[string]transformation{
 					FROM <%DATAPOINTS%> dp
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
 					WHERE dp.series_id = ?
-					AND date >= ?;`,
+					AND dp.date >= ?;`,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "lvl",
 	},
@@ -84,14 +84,14 @@ var transformations = map[string]transformation{
 			  AND year(p2.date) = year(p1.date)
 			  AND p2.date <= p1.date
 			WHERE p1.series_id = ?
+			  AND p1.date >= ?
 			GROUP BY 1, 2, 3, 4
 		)
 		SELECT t1.date, (t1.ytd_avg - t2.ytd_avg) / series.units AS ytd_change,
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id
-		WHERE t1.date >= ?;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
@@ -106,14 +106,14 @@ var transformations = map[string]transformation{
 			  AND year(p2.date) = year(p1.date)
 			  AND p2.date <= p1.date
 			WHERE p1.series_id = ?
+		      AND p1.date >= ?
 			GROUP BY 1, 2, 3, 4
 		)
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id
-		WHERE t1.date >= ?;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
@@ -128,14 +128,14 @@ var transformations = map[string]transformation{
 								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
 													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
 			WHERE p1.series_id = ?
+			  AND p1.date >= ?
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma / lastyear.c5ma - 1) * 100 AS c5ma_pct_change,
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id
-		WHERE cur.date >= ?;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
@@ -149,14 +149,14 @@ var transformations = map[string]transformation{
 								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
 													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
 			WHERE p1.series_id = ?
+			WHERE p1.date >= ?
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma - lastyear.c5ma) / series.units AS c5ma_change,
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id
-		WHERE cur.date >= ?;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
