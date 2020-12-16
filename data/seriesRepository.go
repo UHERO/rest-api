@@ -149,7 +149,7 @@ var transformations = map[string]transformation{
 								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
 													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
 			WHERE p1.series_id = ?
-			WHERE p1.date >= ?
+			  AND p1.date >= ?
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma - lastyear.c5ma) / series.units AS c5ma_change,
