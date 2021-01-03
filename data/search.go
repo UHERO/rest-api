@@ -338,7 +338,7 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 		}
 		dataPortalSeries.Geographies = &geos
 		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, "")
 		if scanErr != nil {
 			return seriesList, scanErr
 		}

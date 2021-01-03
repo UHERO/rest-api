@@ -32,6 +32,6 @@ func DisplayAppError(
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	w.WriteHeader(code)
 	if j, err := json.Marshal(errorResource{Data: errObj}); err == nil {
-		w.Write(j)
+		_, _ = w.Write(j)
 	}
 }

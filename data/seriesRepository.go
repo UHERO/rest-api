@@ -41,8 +41,9 @@ var transformations = map[string]transformation{
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
 					FROM <%DATAPOINTS%> dp
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
-					WHERE dp.series_id = ?;`,
-		PlaceholderCount: 1,
+					WHERE dp.series_id = ?
+					AND dp.date >= ?;`,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "lvl",
 	},
 	YOYPercentChange: { // percent change from 1 year ago
@@ -53,8 +54,9 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										  		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
-					WHERE t1.series_id = ?;`,
-		PlaceholderCount: 1,
+					WHERE t1.series_id = ?
+					AND t1.date >= ?;`,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "pc1",
 	},
 
@@ -66,8 +68,9 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										 		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
-					WHERE t1.series_id = ?;`,
-		PlaceholderCount: 1,
+					WHERE t1.series_id = ?
+					AND t1.date >= ?;`,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "pc1",
 	},
 
@@ -81,6 +84,7 @@ var transformations = map[string]transformation{
 			  AND year(p2.date) = year(p1.date)
 			  AND p2.date <= p1.date
 			WHERE p1.series_id = ?
+			  AND p1.date >= ?
 			GROUP BY 1, 2, 3, 4
 		)
 		SELECT t1.date, (t1.ytd_avg - t2.ytd_avg) / series.units AS ytd_change,
@@ -88,7 +92,7 @@ var transformations = map[string]transformation{
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
 
@@ -102,6 +106,7 @@ var transformations = map[string]transformation{
 			  AND year(p2.date) = year(p1.date)
 			  AND p2.date <= p1.date
 			WHERE p1.series_id = ?
+		      AND p1.date >= ?
 			GROUP BY 1, 2, 3, 4
 		)
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
@@ -109,7 +114,7 @@ var transformations = map[string]transformation{
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
 
@@ -123,6 +128,7 @@ var transformations = map[string]transformation{
 								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
 													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
 			WHERE p1.series_id = ?
+			  AND p1.date >= ?
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma / lastyear.c5ma - 1) * 100 AS c5ma_pct_change,
@@ -130,7 +136,7 @@ var transformations = map[string]transformation{
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
 	C5MAChange: { // cm5a change from 1 year ago
@@ -143,6 +149,7 @@ var transformations = map[string]transformation{
 								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
 													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
 			WHERE p1.series_id = ?
+			  AND p1.date >= ?
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma - lastyear.c5ma) / series.units AS c5ma_change,
@@ -150,7 +157,7 @@ var transformations = map[string]transformation{
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
-		PlaceholderCount: 1,
+		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
 }
@@ -343,6 +350,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
+	startDate string,
 	groupType GroupType,
 ) (seriesList []models.InflatedSeries, err error) {
 	prefix := seriesPrefix
@@ -374,7 +382,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		}
 		dataPortalSeries.Geographies = &geos
 		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, startDate)
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -453,7 +461,7 @@ func (r *FooRepository) GetInflatedSeriesByGroup(
 		}
 		dataPortalSeries.Geographies = &geos
 		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id)
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, "")
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -741,7 +749,7 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 	return
 }
 
-func (r *FooRepository) GetSeriesByName(name string, universe string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
+func (r *FooRepository) GetSeriesByName(name, universe, startDate string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
 	//language=MySQL
 	row, err := r.RunQuery(`
 		SELECT
@@ -774,7 +782,7 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 	SeriesPkg.Series = series
 
 	if expand {
-		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id)
+		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id, startDate)
 		if err != nil {
 			return
 		}
@@ -786,11 +794,11 @@ func (r *FooRepository) GetSeriesByName(name string, universe string, expand boo
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
 //    It has now been turned into a decorator for a more flexible method that allows selection of transformations
-func (r *FooRepository) GetSeriesObservations(seriesId int64) (seriesObservations models.SeriesObservations, err error) {
-	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"))
+func (r *FooRepository) GetSeriesObservations(seriesId int64, startDate string) (seriesObservations models.SeriesObservations, err error) {
+	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"), startDate)
 }
 
-func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet) (seriesObservations models.SeriesObservations, err error) {
+func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet, startDate string) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string
@@ -808,28 +816,28 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	var transform models.TransformationResult
 
 	if include[Levels] || include["all"] {
-		transform, err = r.GetTransformation(Levels, seriesId, &start, &end)
+		transform, err = r.GetTransformation(Levels, seriesId, startDate, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[YOY] || include["all"] && universe != "NTA" {
-		transform, err = r.GetTransformation(YOY, seriesId, &start, &end)
+		transform, err = r.GetTransformation(YOY, seriesId, startDate, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[YTD] || include["all"] && universe != "NTA" {
-		transform, err = r.GetTransformation(YTD, seriesId, &start, &end)
+		transform, err = r.GetTransformation(YTD, seriesId, startDate, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[C5MA] || include["all"] && universe == "NTA" {
-		transform, err = r.GetTransformation(C5MA, seriesId, &start, &end)
+		transform, err = r.GetTransformation(C5MA, seriesId, startDate, &start, &end)
 		if err != nil {
 			return
 		}
@@ -840,17 +848,10 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	return
 }
 
-func variadicSeriesId(seriesId int64, count int) []interface{} {
-	variadic := make([]interface{}, count, count)
-	for i := range variadic {
-		variadic[i] = seriesId
-	}
-	return variadic
-}
-
 func (r *FooRepository) GetTransformation(
 	transformation string,
 	seriesId int64,
+	startDate string,
 	currentStart *time.Time,
 	currentEnd *time.Time,
 ) (
@@ -858,10 +859,10 @@ func (r *FooRepository) GetTransformation(
 	err error,
 ) {
 	var observationStart, observationEnd time.Time
-	rows, err := r.RunQuery(
-		transformations[transformation].Statement,
-		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
-	)
+	if startDate == "" {
+		startDate = "1806-01-02"  // impossibly long ago
+	}
+	rows, err := r.RunQuery(transformations[transformation].Statement, seriesId, startDate)
 	if err != nil {
 		return
 	}
@@ -913,6 +914,7 @@ func (r *FooRepository) CreateSeriesPackage(
 	id int64,
 	universe string,
 	categoryId int64,
+	startDate string,
 	categoryRepository *FooRepository,
 )  (pkg models.DataPortalSeriesPackage, err error) {
 
@@ -928,7 +930,7 @@ func (r *FooRepository) CreateSeriesPackage(
 	}
 	pkg.Categories = categories
 
-	observations, err := r.GetSeriesObservations(id)
+	observations, err := r.GetSeriesObservations(id, startDate)
 	if err != nil {
 		return
 	}
@@ -956,7 +958,7 @@ func (r *FooRepository) CreateAnalyzerPackage(
 			err = anErr
 			return
 		}
-		observations, anErr := r.GetSeriesObservations(id)
+		observations, anErr := r.GetSeriesObservations(id, "")
 		if anErr != nil {
 			err = anErr
 			return
@@ -994,7 +996,7 @@ func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeri
 		if dpn.Valid {
 			series.Title = dpn.String
 		}
-		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels))
+		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels), "")
 		if err != nil {
 			return
 		}

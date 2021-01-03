@@ -6,7 +6,6 @@ import (
 
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
-	"github.com/gorilla/mux"
 )
 
 func GetSeriesByGroupId(
@@ -94,7 +93,9 @@ func GetInflatedSeriesByGroupIdGeoAndFreq(
 		if !ok {
 			return
 		}
-		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, groupType)
+		startDate, _ := getStrParam(r, "start_from")
+
+		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, startDate, groupType)
 		returnInflatedSeriesList(seriesList, err, w, r, cacheRepository)
 	}
 }
@@ -141,9 +142,10 @@ func GetSeriesByName(seriesRepository *data.FooRepository, cacheRepository *data
 		if !ok {
 			universe = "UHERO"
 		}
-		expand, ok := getStrParam(r, "exp")
+		startDate, _ := getStrParam(r, "start_from")
+		expand, _ := getStrParam(r, "exp")
 
-		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, expand == "true")
+		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, startDate, expand == "true")
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
@@ -274,7 +276,7 @@ func GetSeriesObservations(seriesRepository *data.FooRepository, cacheRepository
 		if !ok {
 			return
 		}
-		series, err := seriesRepository.GetSeriesObservations(id)
+		series, err := seriesRepository.GetSeriesObservations(id, "")
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -314,11 +316,13 @@ func GetSeriesPackage(
 		if !ok {
 			catId = 0
 		}
-		universe, ok := mux.Vars(r)["universe_text"]
+		universe, ok := getStrParam(r, "universe_text")
 		if !ok {
 			return
 		}
-		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, catId, categoryRepository)
+		startDate, _ := getStrParam(r, "start_from")
+
+		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, catId, startDate, categoryRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
@@ -344,7 +348,7 @@ func GetAnalyzerPackage(
 		if !ok {
 			return
 		}
-		universe, ok := mux.Vars(r)["universe_text"]
+		universe, ok := getStrParam(r, "universe_text")
 		if !ok {
 			return
 		}

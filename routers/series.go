@@ -57,6 +57,17 @@ func SetSeriesRoutes(
 	router.HandleFunc("/v1.u/series", controllers.GetSeriesByName(seriesRepository, cacheRepository)).Methods("GET").Queries(
 		"name", "{name:.+}",
 		"u",	"{universe:[A-Za-z0-9]+}",
+		"start", "{start_from:[12][0-9]{3}-[01][0-9]-[0-3][0-9]}",
+		"expand", "{exp:[a-z]+}",
+	)
+	router.HandleFunc("/v1.u/series", controllers.GetSeriesByName(seriesRepository, cacheRepository)).Methods("GET").Queries(
+		"name", "{name:.+}",
+		"u",	"{universe:[A-Za-z0-9]+}",
+		"expand", "{exp:[a-z]+}",
+	)
+	router.HandleFunc("/v1.u/series", controllers.GetSeriesByName(seriesRepository, cacheRepository)).Methods("GET").Queries(
+		"name", "{name:.+}",
+		"start", "{start_from:[12][0-9]{3}-[01][0-9]-[0-3][0-9]}",
 		"expand", "{exp:[a-z]+}",
 	)
 	router.HandleFunc("/v1.u/series", controllers.GetSeriesByName(seriesRepository, cacheRepository)).Methods("GET").Queries(
