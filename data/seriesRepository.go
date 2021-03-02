@@ -42,7 +42,7 @@ var transformations = map[string]transformation{
 					FROM <%DATAPOINTS%> dp
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
 					WHERE dp.series_id = ?
-					AND dp.date >= ?;`,
+					AND dp.date >= ? `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "lvl",
 	},
@@ -55,7 +55,7 @@ var transformations = map[string]transformation{
 										  		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
 					WHERE t1.series_id = ?
-					AND t1.date >= ?;`,
+					AND t1.date >= ? `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "pc1",
 	},
@@ -69,7 +69,7 @@ var transformations = map[string]transformation{
 										 		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
 					WHERE t1.series_id = ?
-					AND t1.date >= ?;`,
+					AND t1.date >= ? `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "pc1",
 	},
@@ -91,7 +91,7 @@ var transformations = map[string]transformation{
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
@@ -113,7 +113,7 @@ var transformations = map[string]transformation{
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
@@ -135,7 +135,7 @@ var transformations = map[string]transformation{
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
@@ -156,7 +156,7 @@ var transformations = map[string]transformation{
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
@@ -788,7 +788,7 @@ func (r *FooRepository) GetTransformation(
 	if startDate == "" {
 		startDate = "1806-01-02"  // impossibly long ago
 	}
-	rows, err := r.RunQuery(transformations[transformation].Statement, seriesId, startDate)
+	rows, err := r.RunQuery(transformations[transformation].Statement + " ORDER BY 1;", seriesId, startDate)
 	if err != nil {
 		return
 	}
