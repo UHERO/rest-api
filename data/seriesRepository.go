@@ -42,7 +42,7 @@ var transformations = map[string]transformation{
 					FROM <%DATAPOINTS%> dp
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
 					WHERE dp.series_id = ?
-					AND dp.date >= ?;`,
+					AND dp.date >= ? `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "lvl",
 	},
@@ -55,7 +55,7 @@ var transformations = map[string]transformation{
 										  		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
 					WHERE t1.series_id = ?
-					AND t1.date >= ?;`,
+					AND t1.date >= ? `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "pc1",
 	},
@@ -69,7 +69,7 @@ var transformations = map[string]transformation{
 										 		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
 					WHERE t1.series_id = ?
-					AND t1.date >= ?;`,
+					AND t1.date >= ? `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "pc1",
 	},
@@ -91,7 +91,7 @@ var transformations = map[string]transformation{
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
@@ -113,7 +113,7 @@ var transformations = map[string]transformation{
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM ytd_agg AS t1
 		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "ytd",
 	},
@@ -135,7 +135,7 @@ var transformations = map[string]transformation{
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
@@ -156,42 +156,14 @@ var transformations = map[string]transformation{
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
 		PlaceholderCount: 1,  // this is now obsolete/unused
 		Label:            "c5ma",
 	},
 }
 
 //language=MySQL
-var seriesPrefix = `/* SELECT
-    series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
-	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
-	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
-	MAX(measurements.id), MAX(measurements.data_portal_name),
-	MAX(data_list_measurements.indent), series.base_year, series.decimals,
-	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name), MAX(geographies.display_name_short)
-	FROM series_v AS series
-	LEFT JOIN measurement_series ON measurement_series.series_id = series.id
-	LEFT JOIN measurements ON measurements.id = measurement_series.measurement_id
-	LEFT JOIN data_list_measurements ON data_list_measurements.measurement_id = measurements.id
-	LEFT JOIN categories ON categories.data_list_id = data_list_measurements.data_list_id
-	LEFT JOIN geographies ON geographies.id = series.geography_id
-	LEFT JOIN units ON units.id = series.unit_id
-	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
-	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
-	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	LEFT JOIN feature_toggles ON feature_toggles.universe = series.universe AND feature_toggles.name = 'filter_by_quarantine'
-	WHERE categories.id = ?
-	AND NOT (categories.hidden OR categories.masked)
-	AND NOT series.restricted
-	AND (feature_toggles.status IS NULL OR NOT feature_toggles.status OR NOT series.quarantined) */
+var seriesPrefix = `
 	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
 	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
 		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
@@ -200,28 +172,7 @@ var seriesPrefix = `/* SELECT
 	WHERE category_id = ? `
 
 //language=MySQL
-var measurementSeriesPrefix = `/* SELECT
-	series.id, series.name, series.universe, series.description, frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
-	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)), series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
-	MAX(measurements.table_prefix), MAX(measurements.table_postfix),
-	MAX(measurements.id), MAX(measurements.data_portal_name),
-	NULL, series.base_year, series.decimals,
-	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name), MAX(geographies.display_name_short)
-	FROM measurements
-	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
-	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
-	LEFT JOIN geographies ON geographies.id = series.geography_id
-	LEFT JOIN units ON units.id = series.unit_id
-	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
-	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
-	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id */
+var measurementSeriesPrefix = `
 	SELECT DISTINCT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
 	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
 		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL,
@@ -234,32 +185,7 @@ var measurementPostfix = " ;"  // this part of query no longer needed, but too t
 var sortStmt = ` GROUP BY series_id ORDER BY MAX(dlm_list_order);`
 var siblingSortStmt = ` GROUP BY series_id;`
 //language=MySQL
-var siblingsPrefix = `/* SELECT
-    series.id, series.name, series.universe, series.description, series.frequency, series.seasonally_adjusted, series.seasonal_adjustment,
-	COALESCE(NULLIF(units.long_label, ''), NULLIF(MAX(measurement_units.long_label), '')),
-	COALESCE(NULLIF(units.short_label, ''), NULLIF(MAX(measurement_units.short_label), '')),
-	COALESCE(NULLIF(series.dataPortalName, ''), MAX(measurements.data_portal_name)),
-       series.percent, series.real,
-	COALESCE(NULLIF(sources.description, ''), NULLIF(MAX(measurement_sources.description), '')),
-	COALESCE(NULLIF(series.source_link, ''), NULLIF(MAX(measurements.source_link), ''), NULLIF(sources.link, ''), NULLIF(MAX(measurement_sources.link), '')),
-	COALESCE(NULLIF(source_details.description, ''), NULLIF(MAX(measurement_source_details.description), '')),
-	MAX(measurements.table_prefix), MAX(measurements.table_postfix), MAX(measurements.id), MAX(measurements.data_portal_name), NULL,
-       series.base_year, series.decimals,
-	MAX(geographies.fips), MAX(geographies.handle) AS shandle, MAX(geographies.display_name), MAX(geographies.display_name_short)
-	FROM (SELECT measurement_id FROM measurement_series where series_id = ?) as measure
-	LEFT JOIN measurements ON measurements.id = measure.measurement_id
-	LEFT JOIN measurement_series ON measurement_series.measurement_id = measurements.id
-	LEFT JOIN series_v AS series ON series.id = measurement_series.series_id
-	LEFT JOIN public_data_points ON public_data_points.series_id = series.id
-	LEFT JOIN categories ON categories.id = ?
-	LEFT JOIN geographies ON geographies.id = series.geography_id
-	LEFT JOIN units ON units.id = series.unit_id
-	LEFT JOIN units AS measurement_units ON measurement_units.id = measurements.unit_id
-	LEFT JOIN sources ON sources.id = series.source_id
-	LEFT JOIN sources AS measurement_sources ON measurement_sources.id = measurements.source_id
-	LEFT JOIN source_details ON source_details.id = series.source_detail_id
-	LEFT JOIN source_details AS measurement_source_details ON measurement_source_details.id = measurements.source_detail_id
-	WHERE public_data_points.value IS NOT NULL */
+var siblingsPrefix = `
 	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
 	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
 		   MAX(table_prefix), MAX(table_postfix), MAX(pv.measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
@@ -862,7 +788,7 @@ func (r *FooRepository) GetTransformation(
 	if startDate == "" {
 		startDate = "1806-01-02"  // impossibly long ago
 	}
-	rows, err := r.RunQuery(transformations[transformation].Statement, seriesId, startDate)
+	rows, err := r.RunQuery(transformations[transformation].Statement + " ORDER BY 1;", seriesId, startDate)
 	if err != nil {
 		return
 	}

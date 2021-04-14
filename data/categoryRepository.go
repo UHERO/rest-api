@@ -309,33 +309,7 @@ func (r *FooRepository) GetCategoryById(id int64) (models.Category, error) {
 func (r *FooRepository) GetCategoryByIdGeoFreq(id int64, originGeo string, originFreq string) (models.Category, error) {
 	dataPortalCategory := models.Category{}
 	//language=MySQL
-	rows, err := r.RunQuery(`/* SELECT
-		    categories.id,
-			categories.name AS catname,
-			categories.universe AS universe,
-			parentcat.id AS parent_id,
-			categories.header AS header,
-			COALESCE(mygeo.handle, parentgeo.handle) AS def_geo,
-			COALESCE(categories.default_freq, parentcat.default_freq) AS def_freq,
-			geographies.handle AS series_geo,
-			RIGHT(series.name, 1) AS series_freq,
-			geographies.fips AS geofips,
-			geographies.display_name AS geoname,
-			geographies.display_name_short AS geonameshort,
-			MIN(public_data_points.date) AS startdate,
-			MAX(public_data_points.date) AS enddate
-		FROM categories
-  		LEFT JOIN geographies mygeo ON mygeo.id = categories.default_geo_id
-		LEFT JOIN categories parentcat ON parentcat.id = SUBSTRING_INDEX(categories.ancestry, '/', -1)
-		LEFT JOIN geographies parentgeo ON parentgeo.id = parentcat.default_geo_id
-	    LEFT JOIN data_list_measurements ON data_list_measurements.data_list_id = categories.data_list_id
-		LEFT JOIN measurement_series ON measurement_series.measurement_id = data_list_measurements.measurement_id
-		LEFT JOIN series_v AS series
-		    ON series.id = measurement_series.series_id
-		   AND NOT series.restricted
-		LEFT JOIN geographies ON geographies.id = series.geography_id
-		LEFT JOIN public_data_points ON public_data_points.series_id = series.id */
-		-- -------------------- WORKING
+	rows, err := r.RunQuery(`
 		SELECT category_id, category_name, category_universe, parent.id AS parent_id, category_header,
 		    COALESCE(catgeo.handle, parentgeo.handle) AS def_geo,
 		    COALESCE(category_freq, parent.default_freq) AS def_freq,
