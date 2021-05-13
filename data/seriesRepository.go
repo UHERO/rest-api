@@ -297,6 +297,8 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		return
 	}
 	defer rows.Close()
+
+	seriesList = make([]models.InflatedSeries, 0, 30)
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -312,8 +314,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
-		seriesList = append(seriesList, inflatedSeries)
+		seriesList = append(seriesList, models.InflatedSeries{dataPortalSeries, seriesObservations})
 	}
 	return
 }
@@ -792,15 +793,13 @@ func (r *FooRepository) GetTransformation(
 	if err != nil {
 		return
 	}
-	var (
-		obsDates      []string
-		obsValues     []string
-		obsPseudoHist []bool
-	)
-
 	defer rows.Close()
+	obsDates := make([]string, 0, 1000)
+	obsValues := make([]string, 0, 1000)
+	obsPseudoHist := make([]bool, 0, 1000)
+
+	observation := models.Observation{}
 	for rows.Next() {
-		observation := models.Observation{}
 		err = rows.Scan(
 			&observation.Date,
 			&observation.Value,
@@ -823,6 +822,7 @@ func (r *FooRepository) GetTransformation(
 		obsValues = append(obsValues, strconv.FormatFloat(observation.Value.Float64, 'f', observation.Decimals, 64))
 		obsPseudoHist = append(obsPseudoHist, observation.PseudoHistory.Bool)
 	}
+	rows.Close()
 	if currentStart.IsZero() || (!observationStart.IsZero() && currentStart.After(observationStart)) {
 		*currentStart = observationStart
 	}

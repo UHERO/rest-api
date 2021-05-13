@@ -247,8 +247,10 @@ func getAllFreqsGeos(r *FooRepository, seriesId int64, categoryId int64) (
 	if err != nil {
 		return nil, nil, err
 	}
-	geosResult := []models.DataPortalGeography{}
-	freqsResult := []models.DataPortalFrequency{}
+	defer rows.Close()
+
+	geosResult := make([]models.DataPortalGeography, 0, 10)
+	freqsResult := make([]models.DataPortalFrequency, 0, 10)
 	for rows.Next() {
 		var gftype sql.NullString
 		var listOrder sql.NullInt64  // thrown away, but we need to Scan it
