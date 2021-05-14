@@ -297,6 +297,7 @@ func getAllFreqsGeos(r *FooRepository, seriesId int64, categoryId int64) (
 			freqsResult = append(freqsResult, f)
 		}
 	}
+	rows.Close()
 	sort.Sort(models.ByFrequency(freqsResult))
 	return geosResult, freqsResult, err
 }

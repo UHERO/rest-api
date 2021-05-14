@@ -741,6 +741,7 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	}
 
 	var transform models.TransformationResult
+	seriesObservations.TransformationResults = make([]models.TransformationResult, 0, 4)
 
 	if include[Levels] || include["all"] {
 		transform, err = r.GetTransformation(Levels, seriesId, startDate, &start, &end)
