@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
+	"net/http"
+	"strings"
 )
 
 func GetSeriesByGroupId(
@@ -138,6 +138,7 @@ func GetSeriesByName(seriesRepository *data.FooRepository, cacheRepository *data
 		if !ok {
 			return
 		}
+		name = strings.Replace(name, "-", "&", -1)  // replace all "-" placeholders with "&"
 		universe, ok := getStrParam(r, "universe")
 		if !ok {
 			universe = "UHERO"
