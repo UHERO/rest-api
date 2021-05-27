@@ -4,7 +4,7 @@
 	"GodepVersion": "v74",
 	"Deps": [
 		{
-			"ImportPath": "github.com/codegangsta/negroni",
+			"ImportPath": "github.com/urfave/negroni",
 			"Comment": "v0.2.0-55-gdc6b9d0",
 			"Rev": "dc6b9d037e8dab60cbfc09c61d6932537829be8b"
 		},

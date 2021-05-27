@@ -108,6 +108,7 @@ var transformations = map[string]transformation{
 			FROM public_data_points
 			CROSS JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
+			  AND date >= ?
 			ORDER BY date
 		), t2 AS (
 			SELECT date,
@@ -117,14 +118,15 @@ var transformations = map[string]transformation{
 			FROM public_data_points
 			CROSS JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
+			  AND date >= ?
 			ORDER BY date
 		 )
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 		FROM t1
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
-		JOIN series_all_v AS series ON series.id = t1.series_id;`,
-		PlaceholderCount: 2,
+		JOIN series_all_v AS series ON series.id = t1.series_id `,
+		PlaceholderCount: 4,
 		Label: "ytd",
 	},
 
@@ -784,6 +786,14 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	return
 }
 
+func variadicSeriesId(seriesId int64, count int) []int {
+	variadic := make([]int, count)
+	for i := range variadic {
+		variadic[i] = int(seriesId)
+	}
+	return variadic
+}
+
 func (r *FooRepository) GetTransformation(
 	transformation string,
 	seriesId int64,
@@ -798,7 +808,9 @@ func (r *FooRepository) GetTransformation(
 	if startDate == "" {
 		startDate = "1806-01-02"  // impossibly long ago
 	}
-	rows, err := r.RunQuery(transformations[transformation].Statement + " ORDER BY 1;", seriesId, startDate)
+	rows, err := r.RunQuery(transformations[transformation].Statement + " ORDER BY 1;",
+		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
+	)
 	if err != nil {
 		return
 	}
