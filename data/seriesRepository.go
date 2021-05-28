@@ -106,23 +106,20 @@ var transformations = map[string]transformation{
 				   series_id,
 				   pseudo_history
 			FROM public_data_points
-			CROSS JOIN (SELECT @sum := null, @yr := null) AS init
+			JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
-			  AND date >= ?
-			ORDER BY date
 		), t2 AS (
 			SELECT date,
 				   @sum := if(@yr = year(date), @sum, 0) + value AS ytd_sum,
 				   @yr := year(date),
 				   pseudo_history
 			FROM public_data_points
-			CROSS JOIN (SELECT @sum := null, @yr := null) AS init
+			JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
-			  AND date >= ?
-			ORDER BY date
-		 )
+		)
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
-			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
+			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph,
+		    series.decimals
 		FROM t1
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
 		JOIN series_all_v AS series ON series.id = t1.series_id `,
