@@ -74,7 +74,7 @@ func ReplaceTemplateTag(query, tag, repl string) string {
 	return string(TagRe.ReplaceAllLiteral([]byte(query), []byte(repl)))  // silly that we need to cast back and forth like this :/
 }
 
-func (r *FooRepository) RunQuery(query string, args ...int) (*sql.Rows, error) {
+func (r *FooRepository) RunQuery(query string, args ...interface{}) (*sql.Rows, error) {
 	query = string(FindViewTags.ReplaceAllFunc([]byte(query), r.ReplaceViews))  // silly that we need to cast back and forth like this :/
 	return r.DB.Query(query, args...)
 }
