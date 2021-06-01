@@ -43,7 +43,7 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
 					WHERE dp.series_id = ?
 					AND dp.date >= ? `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+		PlaceholderCount: 1,
 		Label:            "lvl",
 	},
 	YOYPercentChange: { // percent change from 1 year ago
@@ -56,7 +56,7 @@ var transformations = map[string]transformation{
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
 					WHERE t1.series_id = ?
 					AND t1.date >= ? `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
 
@@ -70,7 +70,7 @@ var transformations = map[string]transformation{
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
 					WHERE t1.series_id = ?
 					AND t1.date >= ? `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
 
@@ -93,7 +93,7 @@ var transformations = map[string]transformation{
 				@yr := year(date),
 			    pseudo_history
 			FROM public_data_points
-			JOIN (SELECT @sum := null, @year := null) AS init
+			JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
 		)
 		SELECT t1.date, (t1.ytd_sum / t1.count - t2.ytd_sum / t2.count) / series.units AS ytd_change,
@@ -102,7 +102,7 @@ var transformations = map[string]transformation{
 		FROM t1
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
 		JOIN series_all_v AS series ON t1.series_id = series.id;`,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
 
