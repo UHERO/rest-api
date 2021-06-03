@@ -41,8 +41,7 @@ var transformations = map[string]transformation{
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
 					FROM <%DATAPOINTS%> dp
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
-					WHERE dp.series_id = ?
-					AND dp.date >= ? `,
+					WHERE dp.series_id = ? `,
 		PlaceholderCount: 1,
 		Label:            "lvl",
 	},
@@ -54,8 +53,7 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										  		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
-					WHERE t1.series_id = ?
-					AND t1.date >= ? `,
+					WHERE t1.series_id = ? `,
 		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
@@ -68,8 +66,7 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										 		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
-					WHERE t1.series_id = ?
-					AND t1.date >= ? `,
+					WHERE t1.series_id = ? `,
 		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
@@ -147,15 +144,14 @@ var transformations = map[string]transformation{
 								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
 													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
 			WHERE p1.series_id = ?
-			  AND p1.date >= ?
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma / lastyear.c5ma - 1) * 100 AS c5ma_pct_change,
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
 	C5MAChange: { // cm5a change from 1 year ago
@@ -168,15 +164,14 @@ var transformations = map[string]transformation{
 								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
 													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
 			WHERE p1.series_id = ?
-			  AND p1.date >= ?
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma - lastyear.c5ma) / series.units AS c5ma_change,
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
 }
