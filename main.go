@@ -133,7 +133,6 @@ func main() {
 	measurementRepository := uhRepo
 	geographyRepository := uhRepo
 	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
-	feedbackRepository := &data.FeedbackRepository{}
 	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes} // TTL stored in seconds
 
 	// Get the mux router object
@@ -144,7 +143,6 @@ func main() {
 		searchRepository,
 		measurementRepository,
 		geographyRepository,
-		feedbackRepository,
 		cacheRepository,
 	)
 	// Create a negroni instance
