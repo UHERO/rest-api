@@ -84,7 +84,7 @@ var transformations = map[string]transformation{
 				@yr := year(date),
 			    series_id,
 			    pseudo_history
-			FROM public_data_points
+			FROM <%DATAPOINTS%>
 			JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
 		), t2 AS (
@@ -92,7 +92,7 @@ var transformations = map[string]transformation{
 				@count := IF(@yr = year(date), @count, 0) + 1 AS count,
 				@yr := year(date),
 			    pseudo_history
-			FROM public_data_points
+			FROM <%DATAPOINTS%>
 			JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
 		)
@@ -101,7 +101,7 @@ var transformations = map[string]transformation{
 				series.decimals
 		FROM t1
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
-		JOIN series_all_v AS series ON t1.series_id = series.id;`,
+		JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
@@ -115,7 +115,7 @@ var transformations = map[string]transformation{
 				   @yr := year(date),
 				   series_id,
 				   pseudo_history
-			FROM public_data_points
+			FROM <%DATAPOINTS%>
 			JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
 		), t2 AS (
@@ -123,7 +123,7 @@ var transformations = map[string]transformation{
 				   @sum := if(@yr = year(date), @sum, 0) + value AS ytd_sum,
 				   @yr := year(date),
 				   pseudo_history
-			FROM public_data_points
+			FROM <%DATAPOINTS%>
 			JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
 		)
@@ -132,7 +132,7 @@ var transformations = map[string]transformation{
 		    series.decimals
 		FROM t1
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
-		JOIN series_all_v AS series ON series.id = t1.series_id `,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
 		PlaceholderCount: 2,
 		Label: "ytd",
 	},
