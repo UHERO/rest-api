@@ -39,6 +39,7 @@ func main() {
 		Addr:      net.JoinHostPort(os.Getenv("DB_HOST"), dbPort),
 		Loc:       time.Local,
 		ParseTime: true,
+		AllowNativePasswords: true,
 		DBName:    dbName,
 	}
 	connectionString := mysqlConfig.FormatDSN()
