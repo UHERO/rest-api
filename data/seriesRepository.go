@@ -98,7 +98,7 @@ var transformations = map[string]transformation{
 				series.decimals
 		FROM t1
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON t1.series_id = series.id;`,
+		JOIN <%SERIES%> AS series ON t1.series_id = series.id `,
 		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
@@ -129,7 +129,7 @@ var transformations = map[string]transformation{
 		    series.decimals
 		FROM t1
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = t1.series_id `,
 		PlaceholderCount: 2,
 		Label: "ytd",
 	},
@@ -150,7 +150,7 @@ var transformations = map[string]transformation{
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
 		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
@@ -170,7 +170,7 @@ var transformations = map[string]transformation{
 			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = cur.series_id;`,
+		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
 		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
