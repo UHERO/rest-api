@@ -41,9 +41,8 @@ var transformations = map[string]transformation{
 		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals
 					FROM <%DATAPOINTS%> dp
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
-					WHERE dp.series_id = ?
-					AND dp.date >= ? `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+					WHERE dp.series_id = ? `,
+		PlaceholderCount: 1,
 		Label:            "lvl",
 	},
 	YOYPercentChange: { // percent change from 1 year ago
@@ -54,9 +53,8 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										  		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
-					WHERE t1.series_id = ?
-					AND t1.date >= ? `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+					WHERE t1.series_id = ? `,
+		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
 
@@ -68,54 +66,72 @@ var transformations = map[string]transformation{
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										 		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
 					JOIN <%SERIES%> AS series ON series.id = t1.series_id
-					WHERE t1.series_id = ?
-					AND t1.date >= ? `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+					WHERE t1.series_id = ? `,
+		PlaceholderCount: 1,
 		Label:            "pc1",
 	},
 
 	YTDChange: { // ytd change from 1 year ago
 		//language=MySQL
 		Statement: `
-		WITH ytd_agg AS (
-			SELECT p1.series_id, p1.date, p1.value, p1.pseudo_history, sum(p2.value) AS ytd_sum, sum(p2.value)/count(*) AS ytd_avg
-			FROM <%DATAPOINTS%> AS p1 JOIN <%DATAPOINTS%> AS p2
-			   ON p2.series_id = p1.series_id
-			  AND year(p2.date) = year(p1.date)
-			  AND p2.date <= p1.date
-			WHERE p1.series_id = ?
-			  AND p1.date >= ?
-			GROUP BY 1, 2, 3, 4
+	    WITH t1 AS (
+			SELECT date,
+				@sum := IF(@yr = year(date), @sum, 0) + value AS ytd_sum,
+				@count := IF(@yr = year(date), @count, 0) + 1 AS count,
+				@yr := year(date),
+			    series_id,
+			    pseudo_history
+			FROM <%DATAPOINTS%>
+			JOIN (SELECT @sum := null, @yr := null) AS init
+			WHERE series_id = ?
+		), t2 AS (
+			SELECT date, @sum := IF(@yr = year(date), @sum, 0) + value AS ytd_sum,
+				@count := IF(@yr = year(date), @count, 0) + 1 AS count,
+				@yr := year(date),
+			    pseudo_history
+			FROM <%DATAPOINTS%>
+			JOIN (SELECT @sum := null, @yr := null) AS init
+			WHERE series_id = ?
 		)
-		SELECT t1.date, (t1.ytd_avg - t2.ytd_avg) / series.units AS ytd_change,
-			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
-		FROM ytd_agg AS t1
-		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
-		JOIN <%SERIES%> AS series ON series.id = t1.series_id `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+		SELECT t1.date, (t1.ytd_sum / t1.count - t2.ytd_sum / t2.count) / series.units AS ytd_change,
+				(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph,
+				series.decimals
+		FROM t1
+		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
+		JOIN <%SERIES%> AS series ON t1.series_id = series.id `,
+		PlaceholderCount: 2,
 		Label:            "ytd",
 	},
 
 	YTDPercentChange: { // ytd percent change from 1 year ago
 		//language=MySQL
 		Statement: `
-		WITH ytd_agg AS (
-			SELECT p1.series_id, p1.date, p1.value, p1.pseudo_history, sum(p2.value) AS ytd_sum, sum(p2.value)/count(*) AS ytd_avg
-			FROM <%DATAPOINTS%> AS p1 JOIN <%DATAPOINTS%> AS p2
-			   ON p2.series_id = p1.series_id
-			  AND year(p2.date) = year(p1.date)
-			  AND p2.date <= p1.date
-			WHERE p1.series_id = ?
-		      AND p1.date >= ?
-			GROUP BY 1, 2, 3, 4
+		WITH t1 AS (
+			SELECT date,
+				   @sum := if(@yr = year(date), @sum, 0) + value AS ytd_sum,
+				   @yr := year(date),
+				   series_id,
+				   pseudo_history
+			FROM <%DATAPOINTS%>
+			JOIN (SELECT @sum := null, @yr := null) AS init
+			WHERE series_id = ?
+		), t2 AS (
+			SELECT date,
+				   @sum := if(@yr = year(date), @sum, 0) + value AS ytd_sum,
+				   @yr := year(date),
+				   pseudo_history
+			FROM <%DATAPOINTS%>
+			JOIN (SELECT @sum := null, @yr := null) AS init
+			WHERE series_id = ?
 		)
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
-			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
-		FROM ytd_agg AS t1
-		LEFT JOIN ytd_agg AS t2 ON t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
+			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph,
+		    series.decimals
+		FROM t1
+		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = t1.series_id `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
-		Label:            "ytd",
+		PlaceholderCount: 2,
+		Label: "ytd",
 	},
 
 	C5MAPercentChange: { // c5ma percent change from 1 year ago
@@ -128,7 +144,6 @@ var transformations = map[string]transformation{
 								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
 													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
 			WHERE p1.series_id = ?
-			  AND p1.date >= ?
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma / lastyear.c5ma - 1) * 100 AS c5ma_pct_change,
@@ -136,7 +151,7 @@ var transformations = map[string]transformation{
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
 	C5MAChange: { // cm5a change from 1 year ago
@@ -149,7 +164,6 @@ var transformations = map[string]transformation{
 								     AND p2.date BETWEEN DATE_SUB(p1.date, INTERVAL 2 YEAR)
 													 AND DATE_ADD(p1.date, INTERVAL 2 YEAR)
 			WHERE p1.series_id = ?
-			  AND p1.date >= ?
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma - lastyear.c5ma) / series.units AS c5ma_change,
@@ -157,7 +171,7 @@ var transformations = map[string]transformation{
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
-		PlaceholderCount: 1,  // this is now obsolete/unused
+		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
 }
@@ -297,6 +311,8 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		return
 	}
 	defer rows.Close()
+
+	seriesList = make([]models.InflatedSeries, 0, 30)
 	for rows.Next() {
 		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
 		if scanErr != nil {
@@ -312,8 +328,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
-		seriesList = append(seriesList, inflatedSeries)
+		seriesList = append(seriesList, models.InflatedSeries{dataPortalSeries, seriesObservations})
 	}
 	return
 }
@@ -740,6 +755,7 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	}
 
 	var transform models.TransformationResult
+	seriesObservations.TransformationResults = make([]models.TransformationResult, 0, 4)
 
 	if include[Levels] || include["all"] {
 		transform, err = r.GetTransformation(Levels, seriesId, startDate, &start, &end)
@@ -774,6 +790,14 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	return
 }
 
+func variadicSeriesId(seriesId int64, count int) []interface{} {
+	variadic := make([]interface{}, count)
+	for i := range variadic {
+		variadic[i] = seriesId
+	}
+	return variadic
+}
+
 func (r *FooRepository) GetTransformation(
 	transformation string,
 	seriesId int64,
@@ -788,19 +812,19 @@ func (r *FooRepository) GetTransformation(
 	if startDate == "" {
 		startDate = "1806-01-02"  // impossibly long ago
 	}
-	rows, err := r.RunQuery(transformations[transformation].Statement + " ORDER BY 1;", seriesId, startDate)
+	rows, err := r.RunQuery(transformations[transformation].Statement + " ORDER BY 1;",
+		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
+	)
 	if err != nil {
 		return
 	}
-	var (
-		obsDates      []string
-		obsValues     []string
-		obsPseudoHist []bool
-	)
-
 	defer rows.Close()
+	obsDates := make([]string, 0, 1000)
+	obsValues := make([]string, 0, 1000)
+	obsPseudoHist := make([]bool, 0, 1000)
+
+	observation := models.Observation{}
 	for rows.Next() {
-		observation := models.Observation{}
 		err = rows.Scan(
 			&observation.Date,
 			&observation.Value,
@@ -823,6 +847,7 @@ func (r *FooRepository) GetTransformation(
 		obsValues = append(obsValues, strconv.FormatFloat(observation.Value.Float64, 'f', observation.Decimals, 64))
 		obsPseudoHist = append(obsPseudoHist, observation.PseudoHistory.Bool)
 	}
+	rows.Close()
 	if currentStart.IsZero() || (!observationStart.IsZero() && currentStart.After(observationStart)) {
 		*currentStart = observationStart
 	}
