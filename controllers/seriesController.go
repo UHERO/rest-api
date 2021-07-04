@@ -93,9 +93,9 @@ func GetInflatedSeriesByGroupIdGeoAndFreq(
 		if !ok {
 			return
 		}
-		startDate, _ := getStrParam(r, "start_from")
+		forecast, _ := getStrParam(r, "forecast")
 
-		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, startDate, groupType)
+		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, forecast, groupType)
 		returnInflatedSeriesList(seriesList, err, w, r, cacheRepository)
 	}
 }

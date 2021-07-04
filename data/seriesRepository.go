@@ -183,7 +183,8 @@ var seriesPrefix = `
 		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), MAX(dlm_indent),
 	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
-	WHERE category_id = ? `
+	WHERE category_id = ?
+	AND series_name REGEXP ? `
 
 //language=MySQL
 var measurementSeriesPrefix = `
@@ -192,7 +193,8 @@ var measurementSeriesPrefix = `
 		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL,
 	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
-	WHERE measurement_id = ? `
+	WHERE measurement_id = ?
+	AND series_name REGEXP ? `
 var geoFilter = ` AND geo_handle = ? `
 var freqFilter = ` AND frequency = ? `
 var measurementPostfix = " ;"  // this part of query no longer needed, but too troublesome to change all the code
@@ -206,7 +208,8 @@ var siblingsPrefix = `
 	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
 	JOIN (SELECT measurement_id FROM measurement_series WHERE series_id = ?) AS mfilt ON mfilt.measurement_id = pv.measurement_id
-	WHERE EXISTS(SELECT * FROM public_data_points WHERE series_id = pv.series_id) `
+	WHERE EXISTS(SELECT * FROM public_data_points WHERE series_id = pv.series_id)
+	AND series_name REGEXP ? `
 
 func (r *FooRepository) GetSeriesByGroupAndFreq(
 	groupId int64,
@@ -290,7 +293,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
-	startDate string,
+	forecast string,
 	groupType GroupType,
 ) (seriesList []models.InflatedSeries, err error) {
 	prefix := seriesPrefix
@@ -304,6 +307,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	rows, err := r.RunQuery(
 		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
 		groupId,
+		forecast,
 		geoHandle,
 		freqDbNames[strings.ToUpper(freq)],
 	)
