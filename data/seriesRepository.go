@@ -475,7 +475,31 @@ func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []model
 		)
 	}
 	return
+}
 
+func (r *FooRepository) GetForecastByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(series_name, '@', 1), '&', -1) AS forecast
+							 FROM <%PORTAL%> pv
+							 WHERE category_id = ? ORDER BY 1;`, categoryId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		frequency := models.Frequency{}
+		err = rows.Scan(
+			&frequency.Freq,
+		)
+		if err != nil {
+			return
+		}
+		frequencies = append(
+			frequencies,
+			models.DataPortalFrequency{Freq: frequency.Freq, Label: freqLabel[frequency.Freq]},
+		)
+	}
+	return
 }
 
 func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {

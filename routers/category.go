@@ -70,6 +70,13 @@ func SetCategoryRoutes(
 		"id", "{id:[0-9]+}",
 	)
 	router.HandleFunc(
+		"/v1/category/fc",
+		controllers.GetForecastByCategoryId(seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+	)
+
+	router.HandleFunc(
 		"/v1/category/series",
 		controllers.GetInflatedSeriesByGroupIdGeoAndFreq(seriesRepository, cacheRepository, data.Category),
 	).Methods("GET").Queries(

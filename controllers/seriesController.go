@@ -271,6 +271,37 @@ func GetFreqByCategoryId(seriesRepository *data.FooRepository, cacheRepository *
 	}
 }
 
+func GetForecastByCategoryId(seriesRepository *data.FooRepository, cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, ok := getId(w, r)
+		if !ok {
+			return
+		}
+		frequencyList, err := seriesRepository.GetForecastByCategory(id)
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error has occurred",
+				500,
+			)
+			return
+		}
+		j, err := json.Marshal(ForecastListResource{Data: frequencyList})
+		if err != nil {
+			common.DisplayAppError(
+				w,
+				err,
+				"An unexpected error processing JSON has occurred",
+				500,
+			)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
+	}
+}
+
 func GetSeriesObservations(seriesRepository *data.FooRepository, cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := getId(w, r)
