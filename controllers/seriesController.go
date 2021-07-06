@@ -277,24 +277,14 @@ func GetForecastByCategoryId(seriesRepository *data.FooRepository, cacheReposito
 		if !ok {
 			return
 		}
-		frequencyList, err := seriesRepository.GetForecastByCategory(id)
+		forecastList, err := seriesRepository.GetForecastByCategory(id)
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
 		}
-		j, err := json.Marshal(ForecastListResource{Data: frequencyList})
+		j, err := json.Marshal(ForecastListResource{Data: forecastList})
 		if err != nil {
-			common.DisplayAppError(
-				w,
-				err,
-				"An unexpected error processing JSON has occurred",
-				500,
-			)
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred",  500)
 			return
 		}
 		WriteResponse(w, j)
