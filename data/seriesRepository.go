@@ -328,7 +328,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		}
 		dataPortalSeries.Geographies = &geos
 		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, startDate)
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, "")
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
