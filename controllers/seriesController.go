@@ -94,6 +94,9 @@ func GetInflatedSeriesByGroupIdGeoAndFreq(
 			return
 		}
 		forecast, _ := getStrParam(r, "forecast")
+		if !ok {
+			forecast = "@"  // a regex that will match any series name
+		}
 
 		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, forecast, groupType)
 		returnInflatedSeriesList(seriesList, err, w, r, cacheRepository)
