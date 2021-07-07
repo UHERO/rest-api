@@ -450,11 +450,13 @@ func (r *FooRepository) GetSeriesByGroup(
 	return
 }
 
-func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
+func (r *FooRepository) GetFreqByCategory(categoryId int64, forecast string) (frequencies []models.DataPortalFrequency, err error) {
 	//language=MySQL
 	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series_name, 1)) AS freq
-							 FROM <%PORTAL%> pv WHERE category_id = ?
-							 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
+							 FROM <%PORTAL%> pv
+							 WHERE category_id = ?
+							 AND series_name REGEXP ?
+							 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId, forecast)
 	if err != nil {
 		return
 	}

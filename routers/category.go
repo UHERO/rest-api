@@ -68,6 +68,13 @@ func SetCategoryRoutes(
 		controllers.GetFreqByCategoryId(seriesRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
+		"fc", "{forecast:[0-9Q]+[FH]([0-9]+|F)}",
+	)
+	router.HandleFunc(
+		"/v1/category/freq",
+		controllers.GetFreqByCategoryId(seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
 	)
 	router.HandleFunc(
 		"/v1/category/fc",

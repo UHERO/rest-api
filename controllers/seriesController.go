@@ -246,7 +246,11 @@ func GetFreqByCategoryId(seriesRepository *data.FooRepository, cacheRepository *
 		if !ok {
 			return
 		}
-		frequencyList, err := seriesRepository.GetFreqByCategory(id)
+		forecast, ok := getStrParam(r, "forecast")
+		if !ok {
+			forecast = "@"  // a regex that will match any series name
+		}
+		frequencyList, err := seriesRepository.GetFreqByCategory(id, forecast)
 		if err != nil {
 			common.DisplayAppError(
 				w,

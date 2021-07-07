@@ -33,7 +33,12 @@ func GetGeographiesByCategory(geographyRepository *data.FooRepository, c *data.C
 			)
 			return
 		}
-		geographies, err := geographyRepository.GetGeographiesByCategory(id)
+		forecast, ok := getStrParam(r, "forecast")
+		if !ok {
+			forecast = "@"  // a regex that will match any series name
+		}
+
+		geographies, err := geographyRepository.GetGeographiesByCategory(id, forecast)
 		if err != nil {
 			common.DisplayAppError(
 				w,
