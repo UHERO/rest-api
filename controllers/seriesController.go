@@ -93,7 +93,7 @@ func GetInflatedSeriesByGroupIdGeoAndFreq(
 		if !ok {
 			return
 		}
-		forecast, _ := getStrParam(r, "forecast")
+		forecast, ok := getStrParam(r, "forecast")
 		if !ok {
 			forecast = "@"  // a regex that will match any series name
 		}
@@ -349,7 +349,7 @@ func GetSeriesPackage(
 		if !ok {
 			return
 		}
-		forecast, _ := getStrParam(r, "forecast")
+		forecast, ok := getStrParam(r, "forecast")
 		if !ok {
 			forecast = "@"  // a regex that will match any series name
 		}
