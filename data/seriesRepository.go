@@ -497,10 +497,11 @@ func (r *FooRepository) GetForecastByCategory(categoryId int64) (forecasts []str
 	return
 }
 
-func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
+func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, forecast string, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
 	rows, err := r.RunQuery(
-		strings.Join([]string{siblingsPrefix, siblingSortStmt}, ""),
+		strings.Join([]string{siblingsPrefix, fcFilter, siblingSortStmt}, ""),
 		seriesId,
+		forecast,
 	)
 	if err != nil {
 		return
@@ -888,7 +889,7 @@ func (r *FooRepository) CreateSeriesPackage(
 	id int64,
 	universe string,
 	categoryId int64,
-	startDate string,
+	forecast string,
 	categoryRepository *FooRepository,
 )  (pkg models.DataPortalSeriesPackage, err error) {
 
@@ -904,13 +905,13 @@ func (r *FooRepository) CreateSeriesPackage(
 	}
 	pkg.Categories = categories
 
-	observations, err := r.GetSeriesObservations(id, startDate)
+	observations, err := r.GetSeriesObservations(id, "")
 	if err != nil {
 		return
 	}
 	pkg.Observations = &observations
 
-	siblings, err := r.GetSeriesSiblingsById(id, categoryId)
+	siblings, err := r.GetSeriesSiblingsById(id, forecast, categoryId)
 	if err != nil {
 		return
 	}
