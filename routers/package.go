@@ -20,7 +20,7 @@ func SetPackageRoutes(
 		"id", "{id:[0-9]+}",
 		"cat", "{cat:[0-9]+}",
 		"u", "{universe_text:.+}",
-		"fc", "{forecast:[0-9Q]+[FH]([0-9]+|F)}",
+		"fc", "{forecast:[0-9Q]+[FH](?:[0-9]+|F)}",
 	)
 	router.HandleFunc(
 		"/v1/package/series",

@@ -13,7 +13,7 @@ func SetGeographyRoutes(
 ) *mux.Router {
 	router.HandleFunc("/v1/category/geo", controllers.GetGeographiesByCategory(geoRepository, cacheRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
-		"fc", "{forecast:[0-9Q]+[FH]([0-9]+|F)}",
+		"fc", "{forecast:[0-9Q]+[FH](?:[0-9]+|F)}",
 	)
 	router.HandleFunc("/v1/category/geo", controllers.GetGeographiesByCategory(geoRepository, cacheRepository)).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
