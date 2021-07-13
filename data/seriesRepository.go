@@ -251,6 +251,7 @@ func (r *FooRepository) GetSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
+	forecast string,
 	groupType GroupType,
 ) (seriesList []models.DataPortalSeries, err error) {
 	prefix := seriesPrefix
@@ -262,8 +263,9 @@ func (r *FooRepository) GetSeriesByGroupGeoAndFreq(
 		catId = 0
 	}
 	rows, err := r.RunQuery(
-		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
+		strings.Join([]string{prefix, fcFilter, geoFilter, freqFilter, sort}, ""),
 		groupId,
+		forecast,
 		geoHandle,
 		freqDbNames[strings.ToUpper(freq)],
 	)

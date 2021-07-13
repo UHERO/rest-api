@@ -78,7 +78,11 @@ func GetSeriesByGroupIdGeoHandleAndFreq(
 		if !ok {
 			return
 		}
-		seriesList, err := seriesRepository.GetSeriesByGroupGeoAndFreq(id, geoHandle, freq, groupType)
+		forecast, ok := getStrParam(r, "forecast")
+		if !ok {
+			forecast = "@"  // a regex that will match any series name
+		}
+		seriesList, err := seriesRepository.GetSeriesByGroupGeoAndFreq(id, geoHandle, freq, forecast, groupType)
 		returnSeriesList(seriesList, err, w, r, cacheRepository)
 	}
 }

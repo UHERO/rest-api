@@ -68,7 +68,7 @@ func SetCategoryRoutes(
 		controllers.GetFreqByCategoryId(seriesRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
-		"fc", "{forecast:[0-9Q]+[FH](?:[0-9]+|F)}",
+		"fc", "{forecast:[0-9Qq]+[FfHh](?:[0-9]+|Ff)}",
 	)
 	router.HandleFunc(
 		"/v1/category/freq",
@@ -100,7 +100,7 @@ func SetCategoryRoutes(
 		"id", "{id:[0-9]+}",
 		"geo", "{geo:[A-Za-z0-9]+}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
-		"fc", "{forecast:[0-9Q]+[FH](?:[0-9]+|F)}",
+		"fc", "{forecast:[0-9Qq]+[FfHh](?:[0-9]+|Ff)}",
 		"expand", "true",
 	)
 	router.HandleFunc(
@@ -111,6 +111,15 @@ func SetCategoryRoutes(
 		"geo", "{geo:[A-Za-z0-9]+}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
 		"expand", "true",
+	)
+	router.HandleFunc(
+		"/v1/category/series",
+		controllers.GetSeriesByGroupIdGeoHandleAndFreq(seriesRepository, cacheRepository, data.Category),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+		"geo", "{geo:[A-Za-z0-9]+}",
+		"freq", "{freq:[ASQMWDasqmwd]}",
+		"fc", "{forecast:[0-9Qq]+[FfHh](?:[0-9]+|Ff)}",
 	)
 	router.HandleFunc(
 		"/v1/category/series",
