@@ -8,9 +8,9 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
-	"regexp"
 )
 
 const authPrefix = "Bearer "
@@ -40,7 +40,7 @@ func CreateApplication(applicationRepository data.AppRepository) func(http.Respo
 			)
 			return
 		}
-		log.Printf("username: %s", appClaims.Username)
+		//log.Printf("username: %s", appClaims.Username)
 		_, err = applicationRepository.CreateApplication(appClaims.Username, application)
 		if err != nil {
 			common.DisplayAppError(

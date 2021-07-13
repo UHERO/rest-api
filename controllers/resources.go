@@ -58,6 +58,10 @@ type (
 		Data []models.DataPortalFrequency `json:"data"`
 	}
 
+	ForecastListResource struct {
+		Data []string `json:"data"`
+	}
+
 	// GET - /series
 	SeriesResource struct {
 		Data models.DataPortalSeries `json:"data"`
