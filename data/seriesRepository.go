@@ -501,7 +501,7 @@ func (r *FooRepository) GetForecastByCategory(categoryId int64) (forecasts []str
 
 func (r *FooRepository) GetForecastsById(seriesId int64) (forecasts []models.DataPortalForecast, err error) {
 	//language=MySQL
-	rows, err := r.RunQuery(`SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(series_name, '@', 1), '&', -1) AS fc, frequency
+	rows, err := r.RunQuery(`SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(series_name, '@', 1), '&', -1) AS fc, pv.frequency
 							 FROM <%PORTAL%> pv
 							 JOIN (SELECT * FROM <%SERIES%> WHERE id = ?) s
 								 ON SUBSTRING_INDEX(s.name, '&', 1) = SUBSTRING_INDEX(pv.series_name, '&', 1)
@@ -511,13 +511,14 @@ func (r *FooRepository) GetForecastsById(seriesId int64) (forecasts []models.Dat
 		return
 	}
 	defer rows.Close()
-	var fcName, freqLabel string
+	var fcName, freqFull string
 	for rows.Next() {
-		err = rows.Scan(&fcName, &freqLabel)
+		err = rows.Scan(&fcName, &freqFull)
 		if err != nil {
 			return
 		}
-		forecasts = append(forecasts, models.DataPortalForecast{Forecast: fcName, Label: freqLabel, Freq: freqDbCodes[freqLabel]})
+		code := freqDbCodes[freqFull]
+		forecasts = append(forecasts, models.DataPortalForecast{Forecast: fcName, Freq: code, Label: freqLabel[code]})
 	}
 	return
 }
