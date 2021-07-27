@@ -121,6 +121,13 @@ type DataPortalFrequency struct {
 	ObservationEnd   *time.Time `json:"observationEnd,omitempty"`
 }
 
+type DataPortalForecast struct {
+	Forecast	string `json:"forecast"`
+	Freq		string `json:"freq,omitempty"`
+	Label		string `json:"label,omitempty"`
+}
+
+
 // ByGeography/ByFrequency implement sort.Interface
 type ByGeography []DataPortalGeography
 type ByFrequency []DataPortalFrequency
@@ -185,6 +192,7 @@ type DataPortalSeriesPackage struct {
 	Categories	[]Category		`json:"categories,omitempty"`
 	Observations	*SeriesObservations	`json:"observations,omitempty"`
 	Siblings	[]DataPortalSeries	`json:"siblings,omitempty"`
+	Forecasts	[]DataPortalForecast	`json:"forecasts,omitempty"`
 }
 
 type DataPortalSeries struct {

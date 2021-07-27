@@ -499,9 +499,36 @@ func (r *FooRepository) GetForecastByCategory(categoryId int64) (forecasts []str
 	return
 }
 
+func (r *FooRepository) GetForecastsById(seriesId int64) (forecasts []models.DataPortalForecast, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(series_name, '@', 1), '&', -1) AS fc, frequency
+							 FROM <%PORTAL%> pv
+							 JOIN (SELECT * FROM <%SERIES%> WHERE id = ?) s
+								 ON SUBSTRING_INDEX(s.name, '&', 1) = SUBSTRING_INDEX(pv.series_name, '&', 1)
+								AND s.geography_id = pv.series_geo_id
+							 WHERE pv.series_universe = 'FC' ORDER BY 1;`, seriesId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	var fcName, freqLabel string
+	for rows.Next() {
+		err = rows.Scan(&fcName, &freqLabel)
+		if err != nil {
+			return
+		}
+		forecasts = append(forecasts, models.DataPortalForecast{Forecast: fcName, Label: freqLabel, Freq: freqDbCodes[freqLabel]})
+	}
+	return
+}
+
 func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, forecast string, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
+	foofar := fcFilter
+	if forecast != "@" {
+		foofar += " AND "
+	}
 	rows, err := r.RunQuery(
-		strings.Join([]string{siblingsPrefix, fcFilter, siblingSortStmt}, ""),
+		strings.Join([]string{siblingsPrefix, foofar, siblingSortStmt}, ""),
 		seriesId,
 		forecast,
 	)
@@ -918,6 +945,12 @@ func (r *FooRepository) CreateSeriesPackage(
 		return
 	}
 	pkg.Siblings = siblings
+
+	forecasts, err := r.GetForecastsById(id)
+	if err != nil {
+		return
+	}
+	pkg.Forecasts = forecasts
 	return
 }
 
