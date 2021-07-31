@@ -193,6 +193,7 @@ var measurementSeriesPrefix = `
 	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
 	FROM <%PORTAL%> pv
 	WHERE measurement_id = ? `
+var fcFilter = ` AND series_name REGEXP ? `
 var geoFilter = ` AND geo_handle = ? `
 var freqFilter = ` AND frequency = ? `
 var measurementPostfix = " ;"  // this part of query no longer needed, but too troublesome to change all the code
@@ -250,6 +251,7 @@ func (r *FooRepository) GetSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
+	forecast string,
 	groupType GroupType,
 ) (seriesList []models.DataPortalSeries, err error) {
 	prefix := seriesPrefix
@@ -261,8 +263,9 @@ func (r *FooRepository) GetSeriesByGroupGeoAndFreq(
 		catId = 0
 	}
 	rows, err := r.RunQuery(
-		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
+		strings.Join([]string{prefix, fcFilter, geoFilter, freqFilter, sort}, ""),
 		groupId,
+		forecast,
 		geoHandle,
 		freqDbNames[strings.ToUpper(freq)],
 	)
@@ -290,7 +293,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	groupId int64,
 	geoHandle string,
 	freq string,
-	startDate string,
+	forecast string,
 	groupType GroupType,
 ) (seriesList []models.InflatedSeries, err error) {
 	prefix := seriesPrefix
@@ -302,8 +305,9 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		catId = 0
 	}
 	rows, err := r.RunQuery(
-		strings.Join([]string{prefix, geoFilter, freqFilter, sort}, ""),
+		strings.Join([]string{prefix, fcFilter, geoFilter, freqFilter, sort}, ""),
 		groupId,
+		forecast,
 		geoHandle,
 		freqDbNames[strings.ToUpper(freq)],
 	)
@@ -324,7 +328,7 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 		}
 		dataPortalSeries.Geographies = &geos
 		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, startDate)
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, "")
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
@@ -448,11 +452,13 @@ func (r *FooRepository) GetSeriesByGroup(
 	return
 }
 
-func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []models.DataPortalFrequency, err error) {
+func (r *FooRepository) GetFreqByCategory(categoryId int64, forecast string) (frequencies []models.DataPortalFrequency, err error) {
 	//language=MySQL
 	rows, err := r.RunQuery(`SELECT DISTINCT(RIGHT(series_name, 1)) AS freq
-							 FROM <%PORTAL%> pv WHERE category_id = ?
-							 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId)
+							 FROM <%PORTAL%> pv
+							 WHERE category_id = ?
+							 AND series_name REGEXP ?
+							 ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, categoryId, forecast)
 	if err != nil {
 		return
 	}
@@ -471,13 +477,61 @@ func (r *FooRepository) GetFreqByCategory(categoryId int64) (frequencies []model
 		)
 	}
 	return
-
 }
 
-func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
+func (r *FooRepository) GetForecastByCategory(categoryId int64) (forecasts []string, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(series_name, '@', 1), '&', -1)
+							 FROM <%PORTAL%> pv
+							 WHERE category_id = ? ORDER BY 1;`, categoryId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	var fcName string
+	for rows.Next() {
+		err = rows.Scan(&fcName)
+		if err != nil {
+			return
+		}
+		forecasts = append(forecasts, fcName)
+	}
+	return
+}
+
+func (r *FooRepository) GetForecastsById(seriesId int64) (forecasts []models.DataPortalForecast, err error) {
+	//language=MySQL
+	rows, err := r.RunQuery(`SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(series_name, '@', 1), '&', -1) AS fc, pv.frequency
+							 FROM <%PORTAL%> pv
+							 JOIN (SELECT * FROM <%SERIES%> WHERE id = ?) s
+								 ON SUBSTRING_INDEX(s.name, '&', 1) = SUBSTRING_INDEX(pv.series_name, '&', 1)
+								AND s.geography_id = pv.series_geo_id
+							 WHERE pv.series_universe = 'FC' ORDER BY 1;`, seriesId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	var fcName, freqFull string
+	for rows.Next() {
+		err = rows.Scan(&fcName, &freqFull)
+		if err != nil {
+			return
+		}
+		code := freqDbCodes[freqFull]
+		forecasts = append(forecasts, models.DataPortalForecast{Forecast: fcName, Freq: code, Label: freqLabel[code]})
+	}
+	return
+}
+
+func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, forecast string, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
+	foofar := fcFilter
+	if forecast != "@" {
+		foofar += " AND "
+	}
 	rows, err := r.RunQuery(
-		strings.Join([]string{siblingsPrefix, siblingSortStmt}, ""),
+		strings.Join([]string{siblingsPrefix, foofar, siblingSortStmt}, ""),
 		seriesId,
+		forecast,
 	)
 	if err != nil {
 		return
@@ -596,8 +650,8 @@ func (r *FooRepository) GetSeriesSiblingsGeoById(seriesId int64) (geographies []
 		JOIN (SELECT name, universe FROM <%SERIES%> where id = ?) AS original_series
 		JOIN geographies ON geographies.id = series.geography_id
 		WHERE series.universe = original_series.universe
-		AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =  /* name prefixes are equal */
-			TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
+		AND TRIM(TRAILING 'NS' FROM SUBSTRING_INDEX(series.name, '@', 1)) =  /* name prefixes are equal */
+			TRIM(TRAILING 'NS' FROM SUBSTRING_INDEX(original_series.name, '@', 1))
 		ORDER BY COALESCE(geographies.list_order, 999), geographies.handle`, seriesId)
 	if err != nil {
 		return
@@ -637,8 +691,8 @@ func (r *FooRepository) GetSeriesSiblingsFreqById(
 	FROM <%SERIES%> AS series
 	JOIN (SELECT name, universe FROM <%SERIES%> WHERE id = ?) AS original_series
 	WHERE series.universe = original_series.universe
-	AND TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(series.name, '@', 1))) =  /* name prefixes are equal */
-	    TRIM(TRAILING 'NS' FROM TRIM(TRAILING '&' FROM SUBSTRING_INDEX(original_series.name, '@', 1)))
+	AND TRIM(TRAILING 'NS' FROM SUBSTRING_INDEX(series.name, '@', 1)) =  /* name prefixes are equal */
+	    TRIM(TRAILING 'NS' FROM SUBSTRING_INDEX(original_series.name, '@', 1))
 	ORDER BY FIELD(freq, "A", "S", "Q", "M", "W", "D");`, seriesId)
 	if err != nil {
 		return
@@ -865,7 +919,7 @@ func (r *FooRepository) CreateSeriesPackage(
 	id int64,
 	universe string,
 	categoryId int64,
-	startDate string,
+	forecast string,
 	categoryRepository *FooRepository,
 )  (pkg models.DataPortalSeriesPackage, err error) {
 
@@ -881,17 +935,23 @@ func (r *FooRepository) CreateSeriesPackage(
 	}
 	pkg.Categories = categories
 
-	observations, err := r.GetSeriesObservations(id, startDate)
+	observations, err := r.GetSeriesObservations(id, "")
 	if err != nil {
 		return
 	}
 	pkg.Observations = &observations
 
-	siblings, err := r.GetSeriesSiblingsById(id, categoryId)
+	siblings, err := r.GetSeriesSiblingsById(id, forecast, categoryId)
 	if err != nil {
 		return
 	}
 	pkg.Siblings = siblings
+
+	forecasts, err := r.GetForecastsById(id)
+	if err != nil {
+		return
+	}
+	pkg.Forecasts = forecasts
 	return
 }
 

@@ -78,7 +78,11 @@ func GetSeriesByGroupIdGeoHandleAndFreq(
 		if !ok {
 			return
 		}
-		seriesList, err := seriesRepository.GetSeriesByGroupGeoAndFreq(id, geoHandle, freq, groupType)
+		forecast, ok := getStrParam(r, "forecast")
+		if !ok {
+			forecast = "@"  // a regex that will match any series name
+		}
+		seriesList, err := seriesRepository.GetSeriesByGroupGeoAndFreq(id, geoHandle, freq, forecast, groupType)
 		returnSeriesList(seriesList, err, w, r, cacheRepository)
 	}
 }
@@ -93,9 +97,12 @@ func GetInflatedSeriesByGroupIdGeoAndFreq(
 		if !ok {
 			return
 		}
-		startDate, _ := getStrParam(r, "start_from")
+		forecast, ok := getStrParam(r, "forecast")
+		if !ok {
+			forecast = "@"  // a regex that will match any series name
+		}
 
-		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, startDate, groupType)
+		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, forecast, groupType)
 		returnInflatedSeriesList(seriesList, err, w, r, cacheRepository)
 	}
 }
@@ -171,7 +178,7 @@ func GetSeriesSiblingsById(seriesRepository *data.FooRepository, cacheRepository
 		if !ok {
 			catId = 0
 		}
-		seriesList, err := seriesRepository.GetSeriesSiblingsById(id, catId)
+		seriesList, err := seriesRepository.GetSeriesSiblingsById(id, "@", catId)
 		returnSeriesList(seriesList, err, w, r, cacheRepository)
 	}
 }
@@ -246,7 +253,11 @@ func GetFreqByCategoryId(seriesRepository *data.FooRepository, cacheRepository *
 		if !ok {
 			return
 		}
-		frequencyList, err := seriesRepository.GetFreqByCategory(id)
+		forecast, ok := getStrParam(r, "forecast")
+		if !ok {
+			forecast = "@"  // a regex that will match any series name
+		}
+		frequencyList, err := seriesRepository.GetFreqByCategory(id, forecast)
 		if err != nil {
 			common.DisplayAppError(
 				w,
@@ -264,6 +275,27 @@ func GetFreqByCategoryId(seriesRepository *data.FooRepository, cacheRepository *
 				"An unexpected error processing JSON has occurred",
 				500,
 			)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
+	}
+}
+
+func GetForecastByCategoryId(seriesRepository *data.FooRepository, cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, ok := getId(w, r)
+		if !ok {
+			return
+		}
+		forecastList, err := seriesRepository.GetForecastByCategory(id)
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			return
+		}
+		j, err := json.Marshal(ForecastListResource{Data: forecastList})
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred",  500)
 			return
 		}
 		WriteResponse(w, j)
@@ -321,9 +353,12 @@ func GetSeriesPackage(
 		if !ok {
 			return
 		}
-		startDate, _ := getStrParam(r, "start_from")
+		forecast, ok := getStrParam(r, "forecast")
+		if !ok {
+			forecast = "@"  // a regex that will match any series name
+		}
 
-		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, catId, startDate, categoryRepository)
+		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, catId, forecast, categoryRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
