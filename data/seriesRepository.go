@@ -898,7 +898,7 @@ func (r *FooRepository) GetTransformation(
 			observationEnd = observation.Date
 		}
 		obsDates = append(obsDates, observation.Date.Format("2006-01-02"))
-		obsValues = append(obsValues, strconv.FormatFloat(observation.Value.Float64, 'f', observation.Decimals, 64))
+		obsValues = append(obsValues, floatRoundStringify(observation.Value.Float64, observation.Decimals))
 		obsPseudoHist = append(obsPseudoHist, observation.PseudoHistory.Bool)
 	}
 	rows.Close()
@@ -913,6 +913,15 @@ func (r *FooRepository) GetTransformation(
 	transformationResult.ObservationValues = obsValues
 	transformationResult.ObservationPHist = obsPseudoHist
 	return
+}
+
+func floatRoundStringify(value float64, precision int) string {
+	if value < 0.0 {
+		value -= 0.00000001
+	} else {
+		value += 0.00000001
+	}
+	return strconv.FormatFloat(value, 'f', precision, 64)
 }
 
 func (r *FooRepository) CreateSeriesPackage(
