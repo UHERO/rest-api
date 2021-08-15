@@ -334,6 +334,7 @@ func rangesOverlap(start1 time.Time, end1 time.Time, start2 time.Time, end2 time
 	return !(end1.Before(start2) || end2.Before(start1))
 }
 
+// Take a float value, round it according to precision, and return as a string.
 // strconv.FormatFloat cannot be used directly, because when rounding an exact half like 12.5, or rounding
 // something like 12.485 to two places (which reduces to an exact half), it displays "bizarre" behavior which
 // may or may not be the round-half-to-even method. Not worth the effort to figure out exactly what the heck
