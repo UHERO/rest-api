@@ -3,7 +3,6 @@ package data
 import (
 	"database/sql"
 	"github.com/UHERO/rest-api/models"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -913,20 +912,6 @@ func (r *FooRepository) GetTransformation(
 	transformationResult.ObservationValues = obsValues
 	transformationResult.ObservationPHist = obsPseudoHist
 	return
-}
-
-// strconv.FormatFloat cannot be used directly, because when rounding an exact half like 12.5, or rounding
-// something like 12.485 to two places (which reduces to an exact half), it displays "bizarre" behavior which
-// may or may not be the round-half-to-even method. Not worth the effort to figure out exactly what the heck
-// it is doing. But by adding a very tiny amount to each value, we can ensure that it implements the standard,
-// well-known rounding method in which halves are rounded up (or in the case of negatives, down)
-func floatRoundStringify(value float64, precision int) string {
-	if value < 0.0 {
-		value -= 0.00000001
-	} else {
-		value += 0.00000001
-	}
-	return strconv.FormatFloat(value, 'f', precision, 64)
 }
 
 func (r *FooRepository) CreateSeriesPackage(
