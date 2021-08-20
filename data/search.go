@@ -60,8 +60,8 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	var observationStart, observationEnd models.NullTime
 	//language=MySQL
 	err = r.Series.RunQueryRow(`
-	    SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
-	    FROM <%DATAPOINTS%>
+	    SELECT MIN(dp.date) AS start_date, MAX(dp.date) AS end_date
+	    FROM <%DATAPOINTS%> dp
 	    WHERE series_id IN (SELECT series_id FROM <%PORTAL%>
 							WHERE category_universe = ? AND ext_search_text REGEXP ?) `,
 		universeText, searchText).Scan(
