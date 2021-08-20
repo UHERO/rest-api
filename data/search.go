@@ -61,22 +61,9 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	//language=MySQL
 	err = r.Series.RunQueryRow(`
 	    SELECT MIN(public_data_points.date) AS start_date, MAX(public_data_points.date) AS end_date
-	    FROM <%DATAPOINTS%> as public_data_points
-	    JOIN <%SERIES%> AS series ON series.id = public_data_points.series_id
-	    JOIN (
-			SELECT series_id FROM measurement_series WHERE measurement_id IN (
-				SELECT measurement_id FROM data_list_measurements WHERE data_list_id IN (
-					SELECT data_list_id FROM categories c
-					WHERE universe = ?
-					AND c.name REGEXP ?
-				)
-			)
-			UNION
-			SELECT id AS series_id FROM <%SERIES%>
-			WHERE universe = ?
-			AND series_search_text REGEXP ?
-	    ) AS s ON s.series_id = series.id `,
-		universeText, searchText,
+	    FROM <%DATAPOINTS%>
+	    WHERE series_id IN (SELECT series_id FROM <%PORTAL%>
+							WHERE category_universe = ? AND ext_search_text REGEXP ?) `,
 		universeText, searchText).Scan(
 		&observationStart,
 		&observationEnd,
@@ -235,17 +222,17 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 ) (seriesList []models.InflatedSeries, err error) {
 	//language=MySQL
 	rows, err := r.RunQuery(`
-	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
-	       units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
-		   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), NULL,
-	       base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
-	FROM <%PORTAL%> pv
-	WHERE series_universe = ?
-	AND geo_handle = ?
-	AND frequency = ?
-	AND ext_search_text REGEXP ?
-	GROUP BY series_id
-	LIMIT 50;`,
+		SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
+			   units_long, units_short, data_portal_name, percent, pv.real, source_description, source_link, source_detail_description,
+			   MAX(table_prefix), MAX(table_postfix), MAX(measurement_id), MAX(measurement_portal_name), NULL,
+			   base_year, decimals, geo_fips, geo_handle, geo_display_name, geo_display_name_short
+		FROM <%PORTAL%> pv
+		WHERE series_universe = ?
+		AND geo_handle = ?
+		AND frequency = ?
+		AND ext_search_text REGEXP ?
+		GROUP BY series_id
+		LIMIT 50;`,
 		universeText,
 		geo,
 		freqDbNames[strings.ToUpper(freq)],
