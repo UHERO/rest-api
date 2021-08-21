@@ -93,7 +93,7 @@ func (r *SearchRepository) GetSearchSummaryByUniverse(searchText string, univers
 	rows, err := r.Series.RunQuery(`
 	SELECT DISTINCT geo_fips, geo_display_name, geo_display_name_short, geo_handle AS geo, RIGHT(series_name, 1) as freq
 	FROM <%PORTAL%> pv
-	WHERE series_universe = ?
+	WHERE category_universe = ?
 	AND ext_search_text REGEXP ?
 	ORDER BY 1,2,3,4;`, universeText, searchText)
 	if err != nil {
