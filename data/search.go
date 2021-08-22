@@ -288,3 +288,11 @@ func (r *SearchRepository) CreateSearchPackage(
 	pkg.Series = seriesList
 	return
 }
+
+func (r *SearchRepository) CreateSearch2Package(
+	searchText string,
+	universe string,
+	catId int,
+) (pkg models.DataPortalSearchPackage, err error) {
+	return
+}

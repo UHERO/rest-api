@@ -11,6 +11,41 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func GetSearch2Package(
+	searchRepository *data.SearchRepository,
+	cacheRepository *data.CacheRepository,
+) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		searchText, ok := mux.Vars(r)["search_text"]
+		if !ok {
+			common.DisplayAppError(w, errors.New("Couldn't get searchText from request"), "Bad request.", 400)
+			return
+		}
+		universeText, ok := mux.Vars(r)["universe_text"]
+		if !ok {
+			common.DisplayAppError(w, errors.New("Couldn't get universeText from request"), "Bad request.", 400)
+			return
+		}
+		catId, ok := getIntParam(r, "cat")
+		if !ok {
+			catId = 0
+		}
+		pkg, err := searchRepository.CreateSearch2Package(searchText, universeText, int(catId))
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
+			return
+		}
+
+		j, err := json.Marshal(SearchPackage{Data: pkg})
+		if err != nil {
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
+			return
+		}
+		WriteResponse(w, j)
+		WriteCache(r, cacheRepository, j)
+	}
+}
+
 func GetSearchPackage(
 	searchRepository *data.SearchRepository,
 	cacheRepository *data.CacheRepository,

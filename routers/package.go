@@ -63,6 +63,21 @@ func SetPackageRoutes(
 		"u", "{universe_text:.+}",
 	)
 	router.HandleFunc(
+		"/v1/package/search2",
+		controllers.GetSearch2Package(searchRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"q", "{search_text:.+}",
+		"u", "{universe_text:.+}",
+		"cat", "{cat:[0-9]+}",
+	)
+	router.HandleFunc(
+		"/v1/package/search2",
+		controllers.GetSearch2Package(searchRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"q", "{search_text:.+}",
+		"u", "{universe_text:.+}",
+	)
+	router.HandleFunc(
 		"/v1/package/category",
 		controllers.GetCategoryPackage(categoryRepository, seriesRepository, cacheRepository),
 	).Methods("GET").Queries(
