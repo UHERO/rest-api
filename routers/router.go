@@ -14,6 +14,7 @@ func InitRoutes(
 	searchRepository *data.SearchRepository,
 	measurementRepository *data.FooRepository,
 	geographyRepository *data.FooRepository,
+	forecastRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
 	router := mux.NewRouter().StrictSlash(false)
@@ -26,6 +27,7 @@ func InitRoutes(
 	apiRouter = SetSearchRoutes(apiRouter, searchRepository, seriesRepository, cacheRepository)
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
 	apiRouter = SetPackageRoutes(apiRouter, seriesRepository, searchRepository, categoryRepository, cacheRepository)
+	apiRouter = SetForecastRoutes(apiRouter, forecastRepository, cacheRepository)
 	censusRouter := SetCensusProxyRoute(mux.NewRouter().StrictSlash(false), cacheRepository)
 
 	router.PathPrefix("/v1/census").Handler(negroni.New(

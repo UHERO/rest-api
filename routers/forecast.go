@@ -8,21 +8,22 @@ import (
 
 func SetForecastRoutes(
 	router *mux.Router,
-	geoRepository *data.FooRepository,
+	forecastRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
-	router.HandleFunc("/v1/forecasts", controllers.GetForecasts(cacheRepository)).Methods("GET").Queries()
+	router.HandleFunc("/v1/forecasts", controllers.GetForecasts(forecastRepository, cacheRepository)).Methods("GET").Queries()
 	router.HandleFunc(
 		"/v1/forecast/series",
-		controllers.GetForecastSeries(cacheRepository),
+		controllers.GetForecastSeries(forecastRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"fc", "{forecast:[0-9Qq]+[FfHh](?:[0-9]+|[Ff])}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
 	)
 	router.HandleFunc(
 		"/v1/forecast/series",
-		controllers.GetForecastSeries(cacheRepository),
+		controllers.GetForecastSeries(forecastRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"fc", "{forecast:[0-9Qq]+[FfHh](?:[0-9]+|[Ff])}",
 	)
+	return router
 }

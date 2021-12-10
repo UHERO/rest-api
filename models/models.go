@@ -127,6 +127,7 @@ type DataPortalForecast struct {
 	Label		string `json:"label,omitempty"`
 }
 
+type ForecastList []string
 
 // ByGeography/ByFrequency implement sort.Interface
 type ByGeography []DataPortalGeography

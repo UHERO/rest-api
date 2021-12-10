@@ -82,9 +82,8 @@ type (
 		Data models.SearchSummary `json:"data"`
 	}
 
-	// POST - /feedback
-	FeedbackResource struct {
-		Data models.Feedback `json:"data"`
+	ForecastsResource struct {
+		Data models.ForecastList `json:"data"`
 	}
 
 	// GET - /package/series

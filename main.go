@@ -133,6 +133,7 @@ func main() {
 	seriesRepository := uhRepo
 	measurementRepository := uhRepo
 	geographyRepository := uhRepo
+	forecastRepository := uhRepo
 	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
 	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes} // TTL stored in seconds
 
@@ -144,6 +145,7 @@ func main() {
 		searchRepository,
 		measurementRepository,
 		geographyRepository,
+		forecastRepository,
 		cacheRepository,
 	)
 	// Create a negroni instance
