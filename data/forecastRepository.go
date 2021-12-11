@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/UHERO/rest-api/models"
+	"strings"
 )
 
 func (r *FooRepository) GetAllForecasts() (forecastList models.ForecastList, err error) {
@@ -25,4 +26,28 @@ func (r *FooRepository) GetAllForecasts() (forecastList models.ForecastList, err
 }
 
 func (r *FooRepository) GetForecastSeries(forecast string) (seriesList []models.InflatedSeries, err error) {
+	rows, err := r.RunQuery(forecast)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
+		if err != nil {
+			return seriesList, err
+		}
+		dataPortalSeries.Geographies = &geos
+		dataPortalSeries.Frequencies = &freqs
+		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, "")
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		inflatedSeries := models.InflatedSeries{dataPortalSeries, Observations: seriesObservations}
+		seriesList = append(seriesList, inflatedSeries)
+	}
+	return
 }
