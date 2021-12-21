@@ -25,8 +25,10 @@ func (r *FooRepository) GetAllForecasts() (forecastList models.ForecastList, err
 	return
 }
 
-func (r *FooRepository) GetForecastSeries(forecast string) (seriesList []models.InflatedSeries, err error) {
-	rows, err := r.RunQuery(forecast)
+func (r *FooRepository) GetForecastSeries(forecast, freq string) (seriesList []models.InflatedSeries, err error) {
+	rows, err := r.RunQuery(`
+		SELECT 
+`)
 	if err != nil {
 		return
 	}

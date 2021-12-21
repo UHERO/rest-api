@@ -523,14 +523,9 @@ func (r *FooRepository) GetForecastsById(seriesId int64) (forecasts []models.Dat
 }
 
 func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, forecast string, categoryId int64) (seriesList []models.DataPortalSeries, err error) {
-	foofar := fcFilter
-	if forecast != "@" {
-		foofar += " AND "
-	}
 	rows, err := r.RunQuery(
-		strings.Join([]string{siblingsPrefix, foofar, siblingSortStmt}, ""),
+		strings.Join([]string{siblingsPrefix, siblingSortStmt}, ""),
 		seriesId,
-		forecast,
 	)
 	if err != nil {
 		return

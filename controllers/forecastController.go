@@ -33,11 +33,15 @@ func GetForecastSeries(
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		freq, ok := getStrParam(r, "freq")
+		if !ok {
+			freq = ""
+		}
 		forecast, ok := getStrParam(r, "forecast")
 		if !ok {
 			forecast = "@"  // a regex that will match any series name
 		}
-		seriesList, err := forecastRepository.GetForecastSeries(forecast)
+		seriesList, err := forecastRepository.GetForecastSeries(forecast, freq)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
