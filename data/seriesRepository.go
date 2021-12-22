@@ -83,6 +83,7 @@ var transformations = map[string]transformation{
 			FROM <%DATAPOINTS%>
 			JOIN (SELECT @sum1 := null, @yr1 := null, @count1 := null) AS init
 			WHERE series_id = ?
+			ORDER BY date
 		), t2 AS (
 			SELECT date,
 			    @sum2 := IF(@yr2 = year(date), @sum2, 0) + value AS ytd_sum,
@@ -92,6 +93,7 @@ var transformations = map[string]transformation{
 			FROM <%DATAPOINTS%>
 			JOIN (SELECT @sum2 := null, @yr2 := null, @count2 := null) AS init
 			WHERE series_id = ?
+			ORDER BY date
 		)
 		SELECT t1.date, (t1.ytd_sum / t1.count - t2.ytd_sum / t2.count) / series.units AS ytd_change,
 				(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph,
@@ -115,6 +117,7 @@ var transformations = map[string]transformation{
 			FROM <%DATAPOINTS%>
 			JOIN (SELECT @sum1 := null, @yr1 := null) AS init
 			WHERE series_id = ?
+			ORDER BY date
 		), t2 AS (
 			SELECT date,
 				   @sum2 := if(@yr2 = year(date), @sum2, 0) + value AS ytd_sum,
@@ -123,6 +126,7 @@ var transformations = map[string]transformation{
 			FROM <%DATAPOINTS%>
 			JOIN (SELECT @sum2 := null, @yr2 := null) AS init
 			WHERE series_id = ?
+			ORDER BY date
 		)
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph,
