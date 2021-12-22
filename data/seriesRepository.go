@@ -108,20 +108,20 @@ var transformations = map[string]transformation{
 		Statement: `
 		WITH t1 AS (
 			SELECT date,
-				   @sum := if(@yr = year(date), @sum, 0) + value AS ytd_sum,
-				   @yr := year(date),
+				   @sum1 := if(@yr1 = year(date), @sum1, 0) + value AS ytd_sum,
+				   @yr1 := year(date),
 				   series_id,
 				   pseudo_history
 			FROM <%DATAPOINTS%>
-			JOIN (SELECT @sum := null, @yr := null) AS init
+			JOIN (SELECT @sum1 := null, @yr1 := null) AS init
 			WHERE series_id = ?
 		), t2 AS (
 			SELECT date,
-				   @sum := if(@yr = year(date), @sum, 0) + value AS ytd_sum,
-				   @yr := year(date),
+				   @sum2 := if(@yr2 = year(date), @sum2, 0) + value AS ytd_sum,
+				   @yr2 := year(date),
 				   pseudo_history
 			FROM <%DATAPOINTS%>
-			JOIN (SELECT @sum := null, @yr := null) AS init
+			JOIN (SELECT @sum2 := null, @yr2 := null) AS init
 			WHERE series_id = ?
 		)
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
