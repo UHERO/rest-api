@@ -75,22 +75,25 @@ var transformations = map[string]transformation{
 		Statement: `
 	    WITH t1 AS (
 			SELECT date,
-				@sum := IF(@yr = year(date), @sum, 0) + value AS ytd_sum,
-				@count := IF(@yr = year(date), @count, 0) + 1 AS count,
-				@yr := year(date),
+				@sum1 := IF(@yr1 = year(date), @sum1, 0) + value AS ytd_sum,
+				@count1 := IF(@yr1 = year(date), @count1, 0) + 1 AS count,
+				@yr1 := year(date),
 			    series_id,
 			    pseudo_history
 			FROM <%DATAPOINTS%>
-			JOIN (SELECT @sum := null, @yr := null) AS init
+			JOIN (SELECT @sum1 := null, @yr1 := null, @count1 := null) AS init
 			WHERE series_id = ?
+			ORDER BY date
 		), t2 AS (
-			SELECT date, @sum := IF(@yr = year(date), @sum, 0) + value AS ytd_sum,
-				@count := IF(@yr = year(date), @count, 0) + 1 AS count,
-				@yr := year(date),
+			SELECT date,
+			    @sum2 := IF(@yr2 = year(date), @sum2, 0) + value AS ytd_sum,
+				@count2 := IF(@yr2 = year(date), @count2, 0) + 1 AS count,
+				@yr2 := year(date),
 			    pseudo_history
 			FROM <%DATAPOINTS%>
-			JOIN (SELECT @sum := null, @yr := null) AS init
+			JOIN (SELECT @sum2 := null, @yr2 := null, @count2 := null) AS init
 			WHERE series_id = ?
+			ORDER BY date
 		)
 		SELECT t1.date, (t1.ytd_sum / t1.count - t2.ytd_sum / t2.count) / series.units AS ytd_change,
 				(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph,
@@ -107,21 +110,23 @@ var transformations = map[string]transformation{
 		Statement: `
 		WITH t1 AS (
 			SELECT date,
-				   @sum := if(@yr = year(date), @sum, 0) + value AS ytd_sum,
-				   @yr := year(date),
+				   @sum1 := if(@yr1 = year(date), @sum1, 0) + value AS ytd_sum,
+				   @yr1 := year(date),
 				   series_id,
 				   pseudo_history
 			FROM <%DATAPOINTS%>
-			JOIN (SELECT @sum := null, @yr := null) AS init
+			JOIN (SELECT @sum1 := null, @yr1 := null) AS init
 			WHERE series_id = ?
+			ORDER BY date
 		), t2 AS (
 			SELECT date,
-				   @sum := if(@yr = year(date), @sum, 0) + value AS ytd_sum,
-				   @yr := year(date),
+				   @sum2 := if(@yr2 = year(date), @sum2, 0) + value AS ytd_sum,
+				   @yr2 := year(date),
 				   pseudo_history
 			FROM <%DATAPOINTS%>
-			JOIN (SELECT @sum := null, @yr := null) AS init
+			JOIN (SELECT @sum2 := null, @yr2 := null) AS init
 			WHERE series_id = ?
+			ORDER BY date
 		)
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph,
