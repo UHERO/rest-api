@@ -12,6 +12,6 @@ func main() {
 		log.Fatalf("Failure: %s\n", err)
 		return
 	}
-	fmt.Printf("Key: |%s|\n", key)
+	fmt.Printf("Key: %s\n", key)
 }
 
