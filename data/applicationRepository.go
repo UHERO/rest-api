@@ -19,7 +19,7 @@ type ApplicationRepository struct {
 }
 
 func (r *FooRepository) CreateApplication(username string, application *models.Application) (numRows int64, err error) {
-	application.APIKey, err = createNewApiKey(32)
+	application.APIKey, err = CreateNewApiKey(32)
 	if err != nil {
 		return
 	}

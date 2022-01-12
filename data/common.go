@@ -351,11 +351,12 @@ func floatRoundStringify(value float64, precision int) string {
 	return strconv.FormatFloat(value, 'f', precision, 64)
 }
 
-func createNewApiKey(size int) (key string, err error) {
+func CreateNewApiKey(size int) (key string, err error) {
 	buf := make([]byte, size)
 	_, err = rand.Read(buf)
 	if err != nil {
 		return
 	}
 	key = base64.URLEncoding.EncodeToString(buf)
+	return
 }

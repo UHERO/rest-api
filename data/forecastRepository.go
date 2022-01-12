@@ -2,7 +2,6 @@ package data
 
 import (
 	"github.com/UHERO/rest-api/models"
-	"strings"
 )
 
 func (r *FooRepository) GetAllForecasts() (forecastList models.ForecastList, err error) {
@@ -48,7 +47,7 @@ func (r *FooRepository) GetForecastSeries(forecast, freq string) (seriesList []m
 		if scanErr != nil {
 			return seriesList, scanErr
 		}
-		inflatedSeries := models.InflatedSeries{dataPortalSeries, Observations: seriesObservations}
+		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
 		seriesList = append(seriesList, inflatedSeries)
 	}
 	return
