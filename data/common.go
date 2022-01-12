@@ -1,7 +1,9 @@
 package data
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"github.com/UHERO/rest-api/models"
 	"log"
 	"regexp"
@@ -347,4 +349,13 @@ func floatRoundStringify(value float64, precision int) string {
 		value += 0.00000001
 	}
 	return strconv.FormatFloat(value, 'f', precision, 64)
+}
+
+func createNewApiKey(size int) (key string, err error) {
+	buf := make([]byte, size)
+	_, err = rand.Read(buf)
+	if err != nil {
+		return
+	}
+	key = base64.URLEncoding.EncodeToString(buf)
 }

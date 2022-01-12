@@ -1,9 +1,7 @@
 package data
 
 import (
-	"crypto/rand"
 	"database/sql"
-	"encoding/base64"
 	"github.com/UHERO/rest-api/models"
 	"log"
 	"time"
@@ -21,12 +19,10 @@ type ApplicationRepository struct {
 }
 
 func (r *FooRepository) CreateApplication(username string, application *models.Application) (numRows int64, err error) {
-	rb := make([]byte, 32)
-	_, err = rand.Read(rb)
+	application.APIKey, err = createNewApiKey(32)
 	if err != nil {
 		return
 	}
-	application.APIKey = base64.URLEncoding.EncodeToString(rb)
 	stmt, err := r.DB.Prepare(`INSERT INTO api_applications(name, hostname, api_key, github_nickname, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?);`)
 	if err != nil {
