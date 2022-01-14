@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/UHERO/rest-api/common"
 	"github.com/UHERO/rest-api/data"
+	"github.com/UHERO/rest-api/models"
 	"net/http"
 )
 
@@ -12,7 +13,17 @@ func GetForecasts(
 	cacheRepository *data.CacheRepository,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		pkg, err := forecastRepository.GetAllForecasts()
+		which, ok := getStrParam(r, "which")
+		if !ok {
+			which = "all"
+		}
+		var pkg models.ForecastList
+		var err error
+		if which == "portal" {
+			pkg, err = forecastRepository.GetAllPortalForecasts()
+		} else {
+			pkg, err = forecastRepository.GetAllForecasts()
+		}
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
