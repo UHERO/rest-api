@@ -15,6 +15,7 @@ func SetForecastRoutes(
 	).Methods("GET").Queries(
 		"which", "{which:(all|portal)}",
 	)
+
 	router.HandleFunc(
 		"/v1/forecast/series",
 		controllers.GetForecastSeries(forecastRepository, cacheRepository),
@@ -22,6 +23,7 @@ func SetForecastRoutes(
 		"fc", "{forecast:[0-9Qq]+[FfHh](?:[0-9]+|[Ff])}",
 		"freq", "{freq:[ASQMWDasqmwd]}",
 	)
+
 	router.HandleFunc(
 		"/v1/forecast/series",
 		controllers.GetForecastSeries(forecastRepository, cacheRepository),
