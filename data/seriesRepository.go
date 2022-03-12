@@ -186,8 +186,8 @@ var transformations = map[string]transformation{
 			 	WHERE series_id = ?
 				GROUP BY YEAR(date), MONTH(date)
 			)
-			SELECT date, month_sum, (month_sum / LAG(month_sum, 1) OVER(ORDER BY date) - 1) * 100 AS mom_pct_change,
-			       series.decimals, t1.pseudo_history = true AS ph
+			SELECT date, (month_sum / LAG(month_sum, 1) OVER(ORDER BY date) - 1) * 100 AS mom_pct_change,
+			       t1.pseudo_history = true AS ph, series.decimals
 			FROM t1
 			JOIN <%SERIES%> AS series ON series.id = t1.series_id`,
 		PlaceholderCount: 1,
@@ -203,8 +203,8 @@ var transformations = map[string]transformation{
 			    WHERE series_id = ?
 				GROUP BY YEAR(date), MONTH(date)
 			)
-			SELECT date, month_sum, (month_sum - LAG(month_sum, 1) OVER(ORDER BY date) - 1) / series.units AS mom_change,
-			       series.decimals, t1.pseudo_history = true AS ph
+			SELECT date, (month_sum - LAG(month_sum, 1) OVER(ORDER BY date) - 1) / series.units AS mom_change,
+			       t1.pseudo_history = true AS ph, series.decimals
 			FROM t1
 			JOIN <%SERIES%> AS series ON series.id = t1.series_id`,
 		PlaceholderCount: 1,
