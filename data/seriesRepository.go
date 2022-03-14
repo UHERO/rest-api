@@ -2,9 +2,10 @@ package data
 
 import (
 	"database/sql"
-	"github.com/UHERO/rest-api/models"
 	"strings"
 	"time"
+
+	"github.com/UHERO/rest-api/models"
 )
 
 type SeriesRepository struct {
@@ -29,9 +30,11 @@ const (
 	YOYPercentChange  = "pc1"
 	YTDPercentChange  = "ytdpc1"
 	C5MAPercentChange = "c5mapc1"
+	MOMPercentChange  = "mompc1"
 	YOYChange         = "ch1"
 	YTDChange         = "ytdch1"
 	C5MAChange        = "c5mach1"
+	MOMChange         = "momch1"
 )
 
 var transformations = map[string]transformation{
@@ -130,7 +133,7 @@ var transformations = map[string]transformation{
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = t1.series_id `,
 		PlaceholderCount: 2,
-		Label: "ytd",
+		Label:            "ytd",
 	},
 
 	C5MAPercentChange: { // c5ma percent change from 1 year ago
@@ -173,6 +176,40 @@ var transformations = map[string]transformation{
 		PlaceholderCount: 1,
 		Label:            "c5ma",
 	},
+
+	MOMPercentChange: { // mom percent change from 1 month ago
+		//language=MySQL
+		Statement: `
+			WITH t1 AS (
+			    SELECT date, sum(value) AS month_sum, series_id, pseudo_history
+				FROM <%DATAPOINTS%>
+			 	WHERE series_id = ?
+				GROUP BY YEAR(date), MONTH(date)
+			)
+			SELECT date, (month_sum / LAG(month_sum, 1) OVER(ORDER BY date) - 1) * 100 AS mom_pct_change,
+			       t1.pseudo_history = true AS ph, series.decimals
+			FROM t1
+			JOIN <%SERIES%> AS series ON series.id = t1.series_id`,
+		PlaceholderCount: 1,
+		Label:            "mom",
+	},
+
+	MOMChange: { // mom change from 1 month ago
+		//language=MySQL
+		Statement: `
+			WITH t1 AS (
+			    SELECT date, sum(value) AS month_sum, series_id, pseudo_history
+				FROM <%DATAPOINTS%>
+			    WHERE series_id = ?
+				GROUP BY YEAR(date), MONTH(date)
+			)
+			SELECT date, (month_sum - LAG(month_sum, 1) OVER(ORDER BY date) - 1) / series.units AS mom_change,
+			       t1.pseudo_history = true AS ph, series.decimals
+			FROM t1
+			JOIN <%SERIES%> AS series ON series.id = t1.series_id`,
+		PlaceholderCount: 1,
+		Label:            "mom",
+	},
 }
 
 //language=MySQL
@@ -195,9 +232,10 @@ var measurementSeriesPrefix = `
 var fcFilter = ` AND series_name REGEXP ? `
 var geoFilter = ` AND geo_handle = ? `
 var freqFilter = ` AND frequency = ? `
-var measurementPostfix = " ;"  // this part of query no longer needed, but too troublesome to change all the code
+var measurementPostfix = " ;" // this part of query no longer needed, but too troublesome to change all the code
 var sortStmt = ` GROUP BY series_id ORDER BY MAX(dlm_list_order);`
 var siblingSortStmt = ` GROUP BY series_id;`
+
 //language=MySQL
 var siblingsPrefix = `
 	SELECT series_id, series_name, series_universe, series_description, frequency, seasonally_adjusted, seasonal_adjustment,
@@ -722,7 +760,7 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 		   table_prefix, table_postfix, measurement_id, measurement_portal_name, NULL, base_year, decimals,
 		   geo_fips, geo_handle, geo_display_name, geo_display_name_short
 		FROM <%PORTAL%> pv
-		WHERE series_id = ? ;`, seriesId)  // No MAX() aggregations here because the loop below breaks after first iteration
+		WHERE series_id = ? ;`, seriesId) // No MAX() aggregations here because the loop below breaks after first iteration
 	if err != nil {
 		return
 	}
@@ -796,7 +834,7 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string
-	YOY, YTD, C5MA := YOYPercentChange, YTDPercentChange, C5MAPercentChange
+	YOY, YTD, C5MA, MOM := YOYPercentChange, YTDPercentChange, C5MAPercentChange, MOMPercentChange
 
 	//language=MySQL
 	err = r.RunQueryRow(`SELECT universe, percent FROM <%SERIES%> WHERE id = ? ;`, seriesId).Scan(&universe, &percent)
@@ -804,7 +842,7 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 		return
 	}
 	if percent.Valid && percent.Bool {
-		YOY, YTD, C5MA = YOYChange, YTDChange, C5MAChange
+		YOY, YTD, C5MA, MOM = YOYChange, YTDChange, C5MAChange, MOMChange
 	}
 
 	var transform models.TransformationResult
@@ -838,6 +876,13 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
+	if include[MOM] {
+		transform, err = r.GetTransformation(MOM, seriesId, startDate, &start, &end)
+		if err != nil {
+			return
+		}
+		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
+	}
 	seriesObservations.ObservationStart = start
 	seriesObservations.ObservationEnd = end
 	return
@@ -863,9 +908,9 @@ func (r *FooRepository) GetTransformation(
 ) {
 	var observationStart, observationEnd time.Time
 	if startDate == "" {
-		startDate = "1806-01-02"  // impossibly long ago
+		startDate = "1806-01-02" // impossibly long ago
 	}
-	rows, err := r.RunQuery(transformations[transformation].Statement + " ORDER BY 1;",
+	rows, err := r.RunQuery(transformations[transformation].Statement+" ORDER BY 1;",
 		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
 	)
 	if err != nil {
@@ -920,7 +965,7 @@ func (r *FooRepository) CreateSeriesPackage(
 	categoryId int64,
 	forecast string,
 	categoryRepository *FooRepository,
-)  (pkg models.DataPortalSeriesPackage, err error) {
+) (pkg models.DataPortalSeriesPackage, err error) {
 
 	series, err := r.GetSeriesById(id, categoryId)
 	if err != nil {
@@ -957,6 +1002,7 @@ func (r *FooRepository) CreateSeriesPackage(
 func (r *FooRepository) CreateAnalyzerPackage(
 	ids []int64,
 	universe string,
+	momTransformationOnly bool,
 	categoryRepository *FooRepository,
 ) (pkg models.DataPortalAnalyzerPackage, err error) {
 
@@ -969,6 +1015,9 @@ func (r *FooRepository) CreateAnalyzerPackage(
 			return
 		}
 		observations, anErr := r.GetSeriesObservations(id, "")
+		if momTransformationOnly {
+			observations, anErr = r.GetSeriesTransformations(id, makeBoolSet(MOMChange, MOMPercentChange), "")
+		}
 		if anErr != nil {
 			err = anErr
 			return
