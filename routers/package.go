@@ -78,7 +78,14 @@ func SetPackageRoutes(
 	)
 	router.HandleFunc(
 		"/v1/package/analyzer",
-		controllers.GetAnalyzerPackage(categoryRepository, seriesRepository, cacheRepository),
+		controllers.GetAnalyzerPackage(categoryRepository, seriesRepository, cacheRepository, false),
+	).Methods("GET").Queries(
+		"ids", "{ids_list:[0-9,]+}",
+		"u", "{universe_text:.+}",
+	)
+	router.HandleFunc(
+		"/v1/package/analyzermom",
+		controllers.GetAnalyzerPackage(categoryRepository, seriesRepository, cacheRepository, true),
 	).Methods("GET").Queries(
 		"ids", "{ids_list:[0-9,]+}",
 		"u", "{universe_text:.+}",
