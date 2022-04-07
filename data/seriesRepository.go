@@ -781,7 +781,7 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 	return
 }
 
-func (r *FooRepository) GetSeriesByName(name, universe, startDate string, expand bool) (SeriesPkg models.DataPortalSeriesPackage, err error) {
+func (r *FooRepository) GetSeriesByName(name, universe, expand string) (SeriesPkg models.DataPortalSeriesPackage, err error) {
 	//language=MySQL
 	row, err := r.RunQuery(`
 		SELECT
@@ -813,8 +813,8 @@ func (r *FooRepository) GetSeriesByName(name, universe, startDate string, expand
 	}
 	SeriesPkg.Series = series
 
-	if expand {
-		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id, startDate)
+	if expand != "" {
+		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id, expand)
 		if err != nil {
 			return
 		}
@@ -826,11 +826,11 @@ func (r *FooRepository) GetSeriesByName(name, universe, startDate string, expand
 // GetSeriesObservations returns an observations struct containing the default transformations.
 // It checks the value of percent for the selected series and chooses the appropriate transformations.
 //    It has now been turned into a decorator for a more flexible method that allows selection of transformations
-func (r *FooRepository) GetSeriesObservations(seriesId int64, startDate string) (seriesObservations models.SeriesObservations, err error) {
-	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"), startDate)
+func (r *FooRepository) GetSeriesObservations(seriesId int64, expand string) (seriesObservations models.SeriesObservations, err error) {
+	return r.GetSeriesTransformations(seriesId, makeBoolSet("all"), expand)
 }
 
-func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet, startDate string) (seriesObservations models.SeriesObservations, err error) {
+func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet, expand string) (seriesObservations models.SeriesObservations, err error) {
 	var start, end time.Time
 	var percent sql.NullBool
 	var universe string
@@ -849,35 +849,35 @@ func (r *FooRepository) GetSeriesTransformations(seriesId int64, include boolSet
 	seriesObservations.TransformationResults = make([]models.TransformationResult, 0, 4)
 
 	if include[Levels] || include["all"] {
-		transform, err = r.GetTransformation(Levels, seriesId, startDate, &start, &end)
+		transform, err = r.GetTransformation(Levels, seriesId, expand, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[YOY] || include["all"] && universe != "NTA" {
-		transform, err = r.GetTransformation(YOY, seriesId, startDate, &start, &end)
+		transform, err = r.GetTransformation(YOY, seriesId, expand, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[YTD] || include["all"] && universe != "NTA" {
-		transform, err = r.GetTransformation(YTD, seriesId, startDate, &start, &end)
+		transform, err = r.GetTransformation(YTD, seriesId, expand, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[C5MA] || include["all"] && universe == "NTA" {
-		transform, err = r.GetTransformation(C5MA, seriesId, startDate, &start, &end)
+		transform, err = r.GetTransformation(C5MA, seriesId, expand, &start, &end)
 		if err != nil {
 			return
 		}
 		seriesObservations.TransformationResults = append(seriesObservations.TransformationResults, transform)
 	}
 	if include[MOM] {
-		transform, err = r.GetTransformation(MOM, seriesId, startDate, &start, &end)
+		transform, err = r.GetTransformation(MOM, seriesId, expand, &start, &end)
 		if err != nil {
 			return
 		}
@@ -899,7 +899,7 @@ func variadicSeriesId(seriesId int64, count int) []interface{} {
 func (r *FooRepository) GetTransformation(
 	transformation string,
 	seriesId int64,
-	startDate string,
+	expand string,
 	currentStart *time.Time,
 	currentEnd *time.Time,
 ) (
@@ -907,9 +907,6 @@ func (r *FooRepository) GetTransformation(
 	err error,
 ) {
 	var observationStart, observationEnd time.Time
-	if startDate == "" {
-		startDate = "1806-01-02" // impossibly long ago
-	}
 	rows, err := r.RunQuery(transformations[transformation].Statement+" ORDER BY 1;",
 		variadicSeriesId(seriesId, transformations[transformation].PlaceholderCount)...,
 	)
@@ -945,7 +942,7 @@ func (r *FooRepository) GetTransformation(
 		}
 		obsDates = append(obsDates, observation.Date.Format("2006-01-02"))
 		value := observation.Value.Float64
-		if NoDivUnits {
+		if observation.DivUnits && expand == "raw" {
 			value *= float64(observation.Units)
 		}
 		obsValues = append(obsValues, floatRoundStringify(value, observation.Decimals))
