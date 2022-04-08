@@ -926,7 +926,7 @@ func (r *FooRepository) GetTransformation(
 			&observation.PseudoHistory,
 			&observation.Decimals,
 			&observation.Units,
-			&observation.DivUnits,
+			&observation.DivByUnits,
 		)
 		if err != nil {
 			return
@@ -942,7 +942,7 @@ func (r *FooRepository) GetTransformation(
 		}
 		obsDates = append(obsDates, observation.Date.Format("2006-01-02"))
 		value := observation.Value.Float64
-		if observation.DivUnits && expand == "raw" {
+		if observation.DivByUnits && expand == "raw" {
 			value *= float64(observation.Units)
 		}
 		obsValues = append(obsValues, floatRoundStringify(value, observation.Decimals))

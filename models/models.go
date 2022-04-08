@@ -240,7 +240,7 @@ type Observation struct {
 	PseudoHistory sql.NullBool
 	Decimals      int
 	Units	      int
-	DivUnits	  bool
+	DivByUnits	  bool
 }
 
 type DataPortalObservation struct {
