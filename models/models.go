@@ -239,6 +239,8 @@ type Observation struct {
 	Value         sql.NullFloat64
 	PseudoHistory sql.NullBool
 	Decimals      int
+	Units	      int
+	DivByUnits	  bool
 }
 
 type DataPortalObservation struct {
