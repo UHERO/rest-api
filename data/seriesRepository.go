@@ -944,8 +944,10 @@ func (r *FooRepository) GetTransformation(
 		value := observation.Value.Float64
 		if observation.DivByUnits && expand == "raw" {
 			value *= float64(observation.Units)
+			obsValues = append(obsValues, floatRoundStringify(value, 40))
+		} else {
+			obsValues = append(obsValues, floatRoundStringify(value, observation.Decimals))
 		}
-		obsValues = append(obsValues, floatRoundStringify(value, observation.Decimals))
 		obsPseudoHist = append(obsPseudoHist, observation.PseudoHistory.Bool)
 	}
 	rows.Close()
