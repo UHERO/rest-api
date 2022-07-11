@@ -942,9 +942,11 @@ func (r *FooRepository) GetTransformation(
 		}
 		obsDates = append(obsDates, observation.Date.Format("2006-01-02"))
 		value := observation.Value.Float64
-		if observation.DivByUnits && expand == "raw" {
-			value *= float64(observation.Units)
-			obsValues = append(obsValues, floatRoundStringify(value, 40))
+		if expand == "raw" {
+			if observation.DivByUnits {
+				value *= float64(observation.Units)
+			}
+			obsValues = append(obsValues, floatOnlyStringify(value, 16))
 		} else {
 			obsValues = append(obsValues, floatRoundStringify(value, observation.Decimals))
 		}
