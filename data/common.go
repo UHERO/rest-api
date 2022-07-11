@@ -342,7 +342,7 @@ func rangesOverlap(start1 time.Time, end1 time.Time, start2 time.Time, end2 time
 // well-known rounding method in which halves are rounded up (or in the case of negatives, down)
 func floatRoundStringify(value float64, precision int) string {
 	if value < 0.0 {
-		value -= 1e-40 //0.00000001
+		value -= 0.00000001
 	} else {
 		value += 0.00000001
 	}
