@@ -340,15 +340,15 @@ func rangesOverlap(start1 time.Time, end1 time.Time, start2 time.Time, end2 time
 // may or may not be the round-half-to-even method. Not worth the effort to figure out exactly what the heck
 // it is doing. But by adding a very tiny amount to each value, we can ensure that it implements the standard,
 // well-known rounding method in which halves are rounded up (or in the case of negatives, down)
-func floatRoundStringify(value float64, precision int) string {
+func float64RoundStringify(value float64, precision int) string {
 	if value < 0.0 {
-		value -= 0.00000001
+		value -= 0.0000000001
 	} else {
-		value += 0.00000001
+		value += 0.0000000001
 	}
 	return strconv.FormatFloat(value, 'f', precision, 64)
 }
 
-func floatOnlyStringify(value float64, precision int) string {
-	return strconv.FormatFloat(value, 'f', precision, 64)
+func float64OnlyStringify(value float64) string {
+	return strconv.FormatFloat(value, 'f', -1, 64)
 }
