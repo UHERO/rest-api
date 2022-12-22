@@ -1040,7 +1040,7 @@ func (r *FooRepository) CreateAnalyzerPackage(
 	return
 }
 
-func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
+func (r *FooRepository) CreateExportPackage(id int64, expand string) (pkg []models.InflatedSeries, err error) {
 	//language=MySQL
 	rows, err := r.RunQuery(
 		`select s.id, s.universe, s.name, s.dataPortalName from <%SERIES%> s
@@ -1062,7 +1062,7 @@ func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeri
 		if dpn.Valid {
 			series.Title = dpn.String
 		}
-		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels), "")
+		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels), expand)
 		if err != nil {
 			return
 		}
