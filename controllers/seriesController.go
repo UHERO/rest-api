@@ -413,7 +413,12 @@ func GetExportPackage(seriesRepo *data.FooRepository, c *data.CacheRepository) f
 		if !ok {
 			return
 		}
-		pkg, err := seriesRepo.CreateExportPackage(id)
+		expand, ok := getStrParam(r, "exp")
+		if !ok {
+			expand = ""
+		}
+
+		pkg, err := seriesRepo.CreateExportPackage(id, expand)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return

@@ -942,10 +942,14 @@ func (r *FooRepository) GetTransformation(
 		}
 		obsDates = append(obsDates, observation.Date.Format("2006-01-02"))
 		value := observation.Value.Float64
-		if observation.DivByUnits && expand == "raw" {
-			value *= float64(observation.Units)
+		if expand == "raw" {
+			if observation.DivByUnits {
+				value *= float64(observation.Units)
+			}
+			obsValues = append(obsValues, float64OnlyStringify(value))
+		} else {
+			obsValues = append(obsValues, float64RoundStringify(value, observation.Decimals))
 		}
-		obsValues = append(obsValues, floatRoundStringify(value, observation.Decimals))
 		obsPseudoHist = append(obsPseudoHist, observation.PseudoHistory.Bool)
 	}
 	rows.Close()
@@ -1036,7 +1040,7 @@ func (r *FooRepository) CreateAnalyzerPackage(
 	return
 }
 
-func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeries, err error) {
+func (r *FooRepository) CreateExportPackage(id int64, expand string) (pkg []models.InflatedSeries, err error) {
 	//language=MySQL
 	rows, err := r.RunQuery(
 		`select s.id, s.universe, s.name, s.dataPortalName from <%SERIES%> s
@@ -1058,7 +1062,7 @@ func (r *FooRepository) CreateExportPackage(id int64) (pkg []models.InflatedSeri
 		if dpn.Valid {
 			series.Title = dpn.String
 		}
-		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels), "")
+		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels), expand)
 		if err != nil {
 			return
 		}
