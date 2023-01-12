@@ -29,6 +29,7 @@ func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories 
 			categories.name,
 			categories.universe,
 			categories.ancestry,
+			categories.description,
 			categories.header,
 			categories.default_freq AS catfreq,
 			geographies.handle AS catgeo,
@@ -54,6 +55,7 @@ func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories 
 			&category.Name,
 			&category.Universe,
 			&category.Ancestry,
+			&category.Description,
 			&category.IsHeader,
 			&category.DefaultFrequency,
 			&category.DefaultGeoHandle,
@@ -71,6 +73,9 @@ func (r *FooRepository) GetNavCategoriesByUniverse(universe string) (categories 
 			Universe: category.Universe,
 			IsHeader: category.IsHeader,
 			ParentId: parentId,
+		}
+		if category.Description.Valid {
+			dataPortalCategory.Description = category.Description.String
 		}
 		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid {
 			// Only initialize Defaults struct if any defaults values are available
@@ -130,6 +135,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 			categories.name AS catname,
 			categories.universe AS universe,
 			categories.ancestry AS ancest,
+			categories.description AS descrip,
 			categories.default_freq AS catfreq,
 			geographies.handle AS catgeo,
 			geographies.fips AS catgeofips,
@@ -165,6 +171,7 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 			&category.Name,
 			&category.Universe,
 			&category.Ancestry,
+			&category.Description,
 			&category.DefaultFrequency,
 			&category.DefaultGeoHandle,
 			&category.DefaultGeoFIPS,
@@ -183,6 +190,9 @@ func (r *FooRepository) GetAllCategoriesByUniverse(universe string) (categories 
 			Name:     category.Name,
 			Universe: category.Universe,
 			ParentId: parentId,
+		}
+		if category.Description.Valid {
+			dataPortalCategory.Description = category.Description.String
 		}
 		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid || category.ObservationStart.Valid || category.ObservationEnd.Valid {
 			// Only initialize Defaults struct if any defaults values are available
@@ -255,7 +265,7 @@ func (r *FooRepository) GetCategoryRoots() (categories []models.Category, err er
 
 func (r *FooRepository) GetCategoryRootByUniverse(universe string) (category models.Category, err error) {
 	//language=MySQL
-	rows, err := r.RunQuery(`SELECT categories.id, categories.name, categories.universe, categories.default_freq,
+	rows, err := r.RunQuery(`SELECT categories.id, categories.name, categories.universe, categories.description, categories.default_freq,
 					geographies.handle, geographies.display_name, geographies.display_name_short
 				FROM categories
 				LEFT JOIN geographies on geographies.id = categories.default_geo_id
@@ -271,6 +281,7 @@ func (r *FooRepository) GetCategoryRootByUniverse(universe string) (category mod
 			&category.Id,
 			&category.Name,
 			&category.Universe,
+			&scanCat.Description,
 			&scanCat.DefaultFrequency,
 			&scanCat.DefaultGeoHandle,
 			&scanCat.DefaultGeoName,
@@ -278,6 +289,9 @@ func (r *FooRepository) GetCategoryRootByUniverse(universe string) (category mod
 		)
 		if err != nil {
 			return
+		}
+		if scanCat.Description.Valid {
+			category.Description = scanCat.Description.String
 		}
 		if scanCat.DefaultFrequency.Valid || scanCat.DefaultGeoHandle.Valid {
 			category.Defaults = &models.CategoryDefaults{}
@@ -462,7 +476,7 @@ func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err
 		hidden = `AND NOT (categories.hidden OR categories.masked)`
 	}
 	//language=MySQL
-	query := `SELECT categories.id, categories.universe, categories.name, header, ancestry,
+	query := `SELECT categories.id, categories.universe, categories.name, header, ancestry, categories.description,
 						geographies.handle, geographies.fips, geographies.display_name, geographies.display_name_short, default_freq
 			  FROM categories LEFT JOIN geographies ON geographies.id = categories.default_geo_id
 			  WHERE SUBSTRING_INDEX(categories.ancestry, '/', -1) = ?
@@ -483,6 +497,7 @@ func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err
 			&dataPortalCategory.Name,
 			&dataPortalCategory.IsHeader,
 			&category.Ancestry,
+			&category.Description,
 			&category.DefaultGeoHandle,
 			&category.DefaultGeoFIPS,
 			&category.DefaultGeoName,
@@ -494,6 +509,9 @@ func (r *FooRepository) GetChildrenOf(id int64) (children []models.Category, err
 		}
 		if category.Ancestry.Valid {
 			dataPortalCategory.ParentId = getParentId(category.Ancestry)
+		}
+		if category.Description.Valid {
+			dataPortalCategory.Description = category.Description.String
 		}
 		if category.DefaultFrequency.Valid || category.DefaultGeoHandle.Valid || category.ObservationStart.Valid || category.ObservationEnd.Valid {
 			// Only initialize Defaults struct if any defaults values are available
