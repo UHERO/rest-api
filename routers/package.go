@@ -29,15 +29,6 @@ func SetPackageRoutes(
 		"id", "{id:[0-9]+}",
 		"cat", "{cat:[0-9]+}",
 		"u", "{universe_text:.+}",
-		"start", "{start_from:[12][0-9]{3}-[01][0-9]-[0-3][0-9]}",
-	)
-	router.HandleFunc(
-		"/v1/package/series",
-		controllers.GetSeriesPackage(seriesRepository, categoryRepository, cacheRepository),
-	).Methods("GET").Queries(
-		"id", "{id:[0-9]+}",
-		"cat", "{cat:[0-9]+}",
-		"u", "{universe_text:.+}",
 	)
 	router.HandleFunc(
 		"/v1/package/series",
@@ -93,7 +84,14 @@ func SetPackageRoutes(
 	)
 	router.HandleFunc(
 		"/v1/package/analyzer",
-		controllers.GetAnalyzerPackage(categoryRepository, seriesRepository, cacheRepository),
+		controllers.GetAnalyzerPackage(categoryRepository, seriesRepository, cacheRepository, false),
+	).Methods("GET").Queries(
+		"ids", "{ids_list:[0-9,]+}",
+		"u", "{universe_text:.+}",
+	)
+	router.HandleFunc(
+		"/v1/package/analyzermom",
+		controllers.GetAnalyzerPackage(categoryRepository, seriesRepository, cacheRepository, true),
 	).Methods("GET").Queries(
 		"ids", "{ids_list:[0-9,]+}",
 		"u", "{universe_text:.+}",
@@ -103,9 +101,23 @@ func SetPackageRoutes(
 		controllers.GetExportPackage(seriesRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"id", "{id:[0-9]+}",
+		"expand", "{exp:[a-z]+}",
+	)
+	router.HandleFunc(
+		"/v1/package/export",
+		controllers.GetExportPackage(seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
 	)
 
 	/* Following route exclusively for in-house staff use, returns unrestricted data. Only available to special in-house API instance */
+	router.HandleFunc(
+		"/v1.u/package/export",
+		controllers.GetExportPackage(seriesRepository, cacheRepository),
+	).Methods("GET").Queries(
+		"id", "{id:[0-9]+}",
+		"expand", "{exp:[a-z]+}",
+	)
 	router.HandleFunc(
 		"/v1.u/package/export",
 		controllers.GetExportPackage(seriesRepository, cacheRepository),

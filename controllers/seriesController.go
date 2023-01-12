@@ -2,10 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/UHERO/rest-api/common"
-	"github.com/UHERO/rest-api/data"
 	"net/http"
 	"strings"
+
+	"github.com/UHERO/rest-api/common"
+	"github.com/UHERO/rest-api/data"
 )
 
 func GetSeriesByGroupId(
@@ -80,7 +81,7 @@ func GetSeriesByGroupIdGeoHandleAndFreq(
 		}
 		forecast, ok := getStrParam(r, "forecast")
 		if !ok {
-			forecast = "@"  // a regex that will match any series name
+			forecast = "@" // a regex that will match any series name
 		}
 		seriesList, err := seriesRepository.GetSeriesByGroupGeoAndFreq(id, geoHandle, freq, forecast, groupType)
 		returnSeriesList(seriesList, err, w, r, cacheRepository)
@@ -99,7 +100,7 @@ func GetInflatedSeriesByGroupIdGeoAndFreq(
 		}
 		forecast, ok := getStrParam(r, "forecast")
 		if !ok {
-			forecast = "@"  // a regex that will match any series name
+			forecast = "@" // a regex that will match any series name
 		}
 
 		seriesList, err := seriesRepository.GetInflatedSeriesByGroupGeoAndFreq(id, geoHandle, freq, forecast, groupType)
@@ -138,22 +139,23 @@ func GetSeriesById(seriesRepository *data.FooRepository, cacheRepository *data.C
 	}
 }
 
-
 func GetSeriesByName(seriesRepository *data.FooRepository, cacheRepository *data.CacheRepository) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name, ok := getStrParam(r, "name")
 		if !ok {
 			return
 		}
-		name = strings.Replace(name, "-", "&", -1)  // replace all "-" placeholders with "&"
+		name = strings.Replace(name, "-", "&", -1) // replace all "-" placeholders with "&"
 		universe, ok := getStrParam(r, "universe")
 		if !ok {
 			universe = "UHERO"
 		}
-		startDate, _ := getStrParam(r, "start_from")
-		expand, _ := getStrParam(r, "exp")
+		expand, ok := getStrParam(r, "exp")
+		if !ok {
+			expand = ""
+		}
 
-		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, startDate, expand == "true")
+		seriesPkg, err := seriesRepository.GetSeriesByName(name, universe, expand)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
@@ -255,7 +257,7 @@ func GetFreqByCategoryId(seriesRepository *data.FooRepository, cacheRepository *
 		}
 		forecast, ok := getStrParam(r, "forecast")
 		if !ok {
-			forecast = "@"  // a regex that will match any series name
+			forecast = "@" // a regex that will match any series name
 		}
 		frequencyList, err := seriesRepository.GetFreqByCategory(id, forecast)
 		if err != nil {
@@ -295,7 +297,7 @@ func GetForecastByCategoryId(seriesRepository *data.FooRepository, cacheReposito
 		}
 		j, err := json.Marshal(ForecastListResource{Data: forecastList})
 		if err != nil {
-			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred",  500)
+			common.DisplayAppError(w, err, "An unexpected error processing JSON has occurred", 500)
 			return
 		}
 		WriteResponse(w, j)
@@ -355,7 +357,7 @@ func GetSeriesPackage(
 		}
 		forecast, ok := getStrParam(r, "forecast")
 		if !ok {
-			forecast = "@"  // a regex that will match any series name
+			forecast = "@" // a regex that will match any series name
 		}
 
 		pkg, err := seriesRepository.CreateSeriesPackage(id, universe, catId, forecast, categoryRepository)
@@ -377,6 +379,7 @@ func GetAnalyzerPackage(
 	categoryRepository *data.FooRepository,
 	seriesRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
+	momTransformationOnly bool,
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -388,7 +391,7 @@ func GetAnalyzerPackage(
 		if !ok {
 			return
 		}
-		pkg, err := seriesRepository.CreateAnalyzerPackage(ids, universe, categoryRepository)
+		pkg, err := seriesRepository.CreateAnalyzerPackage(ids, universe, momTransformationOnly, categoryRepository)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
@@ -410,7 +413,12 @@ func GetExportPackage(seriesRepo *data.FooRepository, c *data.CacheRepository) f
 		if !ok {
 			return
 		}
-		pkg, err := seriesRepo.CreateExportPackage(id)
+		expand, ok := getStrParam(r, "exp")
+		if !ok {
+			expand = ""
+		}
+
+		pkg, err := seriesRepo.CreateExportPackage(id, expand)
 		if err != nil {
 			common.DisplayAppError(w, err, "An unexpected error has occurred", 500)
 			return
