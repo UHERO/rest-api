@@ -11,7 +11,7 @@ func SetForecastRoutes(
 	forecastRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
 ) *mux.Router {
-	router.HandleFunc("/v1/forecasts", controllers.GetForecasts(forecastRepository, cacheRepository)
+	router.HandleFunc("/v1/forecasts", controllers.GetForecasts(forecastRepository, cacheRepository),
 	).Methods("GET").Queries(
 		"which", "{which:(all|portal)}",
 	)
