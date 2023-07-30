@@ -40,7 +40,7 @@ const (
 var transformations = map[string]transformation{
 	Levels: { // untransformed value
 		//language=MySQL
-		Statement: `SELECT date, value/units, (pseudo_history = b'1'), series.decimals, series.units, true AS div_units
+		Statement: `SELECT date, value, (pseudo_history = b'1'), series.decimals
 					FROM <%DATAPOINTS%> dp
 					LEFT JOIN <%SERIES%> AS series ON series.id = dp.series_id
 					WHERE dp.series_id = ? `,
@@ -50,7 +50,7 @@ var transformations = map[string]transformation{
 	YOYPercentChange: { // percent change from 1 year ago
 		//language=MySQL
 		Statement: `SELECT t1.date, (t1.value/t2.value - 1) * 100 AS yoy,
-							(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals, series.units, false AS div_units
+							(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 					FROM <%DATAPOINTS%> AS t1
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										  		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
@@ -62,8 +62,8 @@ var transformations = map[string]transformation{
 
 	YOYChange: { // change from 1 year ago
 		//language=MySQL
-		Statement: `SELECT t1.date, (t1.value - t2.value) / series.units AS yoy,
-			 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals, series.units, true AS div_units
+		Statement: `SELECT t1.date, (t1.value - t2.value) AS yoy,
+			 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph, series.decimals
 					FROM <%DATAPOINTS%> AS t1
 					LEFT JOIN <%DATAPOINTS%> AS t2 ON t2.series_id = t1.series_id
 										 		  AND t2.date = DATE_SUB(t1.date, INTERVAL 1 YEAR)
@@ -95,9 +95,9 @@ var transformations = map[string]transformation{
 			JOIN (SELECT @sum := null, @yr := null) AS init
 			WHERE series_id = ?
 		)
-		SELECT t1.date, (t1.ytd_sum / t1.count - t2.ytd_sum / t2.count) / series.units AS ytd_change,
+		SELECT t1.date, (t1.ytd_sum / t1.count - t2.ytd_sum / t2.count) AS ytd_change,
 				(t1.pseudo_history = true) AND (t2.pseudo_history = true) AS ph,
-				series.decimals, series.units, true AS div_units
+				series.decimals
 		FROM t1
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON t1.series_id = series.id `,
@@ -128,7 +128,7 @@ var transformations = map[string]transformation{
 		)
 		SELECT t1.date, (t1.ytd_sum / t2.ytd_sum - 1) * 100 AS ytd_pct_change,
 			(t1.pseudo_history = true AND t2.pseudo_history = true) AS ph,
-		    series.decimals, series.units, false AS div_units
+		    series.decimals
 		FROM t1
 		LEFT JOIN t2 ON t2.date = date_sub(t1.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = t1.series_id `,
@@ -149,7 +149,7 @@ var transformations = map[string]transformation{
 			GROUP BY 1, 2, 3
 		)
 		SELECT cur.date, (cur.c5ma / lastyear.c5ma - 1) * 100 AS c5ma_pct_change,
-			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals, series.units, false AS div_units
+			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
@@ -168,8 +168,8 @@ var transformations = map[string]transformation{
 			WHERE p1.series_id = ?
 			GROUP BY 1, 2, 3
 		)
-		SELECT cur.date, (cur.c5ma - lastyear.c5ma) / series.units AS c5ma_change,
-			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals, series.units, true AS div_units
+		SELECT cur.date, (cur.c5ma - lastyear.c5ma) AS c5ma_change,
+			  (cur.pseudo_history = true AND lastyear.pseudo_history = true) AS ph, series.decimals
 		FROM c5ma_agg AS cur
 		JOIN c5ma_agg AS lastyear ON lastyear.date = DATE_SUB(cur.date, INTERVAL 1 YEAR)
 		JOIN <%SERIES%> AS series ON series.id = cur.series_id `,
@@ -187,7 +187,7 @@ var transformations = map[string]transformation{
 				GROUP BY YEAR(date), MONTH(date)
 			)
 			SELECT date, (month_sum / LAG(month_sum, 1) OVER(ORDER BY date) - 1) * 100 AS mom_pct_change,
-			       t1.pseudo_history = true AS ph, series.decimals, series.units, false AS div_units
+			       t1.pseudo_history = true AS ph, series.decimals
 			FROM t1
 			JOIN <%SERIES%> AS series ON series.id = t1.series_id`,
 		PlaceholderCount: 1,
@@ -203,8 +203,8 @@ var transformations = map[string]transformation{
 			    WHERE series_id = ?
 				GROUP BY YEAR(date), MONTH(date)
 			)
-			SELECT date, (month_sum - LAG(month_sum, 1) OVER(ORDER BY date) - 1) / series.units AS mom_change,
-			       t1.pseudo_history = true AS ph, series.decimals, series.units, true AS div_units
+			SELECT date, (month_sum - LAG(month_sum, 1) OVER(ORDER BY date) - 1) AS mom_change,
+			       t1.pseudo_history = true AS ph, series.decimals
 			FROM t1
 			JOIN <%SERIES%> AS series ON series.id = t1.series_id`,
 		PlaceholderCount: 1,
@@ -925,8 +925,6 @@ func (r *FooRepository) GetTransformation(
 			&observation.Value,
 			&observation.PseudoHistory,
 			&observation.Decimals,
-			&observation.Units,
-			&observation.DivByUnits,
 		)
 		if err != nil {
 			return
@@ -943,9 +941,6 @@ func (r *FooRepository) GetTransformation(
 		obsDates = append(obsDates, observation.Date.Format("2006-01-02"))
 		value := observation.Value.Float64
 		if expand == "raw" {
-			if observation.DivByUnits {
-				value *= float64(observation.Units)
-			}
 			obsValues = append(obsValues, float64OnlyStringify(value))
 		} else {
 			obsValues = append(obsValues, float64RoundStringify(value, observation.Decimals))
