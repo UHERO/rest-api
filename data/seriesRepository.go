@@ -943,7 +943,11 @@ func (r *FooRepository) GetTransformation(
 		if expand == "raw" {
 			obsValues = append(obsValues, float64OnlyStringify(value))
 		} else {
-			obsValues = append(obsValues, float64RoundStringify(value, observation.Decimals))
+			precision := observation.Decimals
+			if value < 10 {
+				precision += 1
+			}
+			obsValues = append(obsValues, float64RoundStringify(value, precision))
 		}
 		obsPseudoHist = append(obsPseudoHist, observation.PseudoHistory.Bool)
 	}
