@@ -944,7 +944,7 @@ func (r *FooRepository) GetTransformation(
 			obsValues = append(obsValues, float64OnlyStringify(value))
 		} else {
 			precision := observation.Decimals
-			if value < 10 {
+			if value < 10 && expand == "TBD" {
 				precision += 1
 			}
 			obsValues = append(obsValues, float64RoundStringify(value, precision))
