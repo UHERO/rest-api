@@ -8,6 +8,9 @@
   ],
   "license": "Apache-2.0",
   "private": true,
+  "scripts": {
+    "dev": "NODE_ENV=development node index.js"
+  },
   "dependencies": {
     "connect": "^3.2.0",
     "js-yaml": "^3.3.0",

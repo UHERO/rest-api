@@ -7,7 +7,7 @@ REST API for UHERO Time Series
 In the `mock-api` folder, run `npm install`. Then start the mock-api server with
 
 ```
-$ NODE_ENV=development node index.js
+npm run dev
 ```
 
 This will start up the mock-api with stubs at http://localhost:8080
