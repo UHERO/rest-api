@@ -86,3 +86,9 @@ of the application.  Each new demand-loaded fragment should be added to the
 list of `fragments` in the included `polymer.json` file.  This will ensure
 those components and their dependencies are added to the list of pre-cached
 components (and will have bundles created in the fallback `bundled` build).
+
+### Overview
+
+This API uses data uploaded to the DB by Udaman to serve a DBEDT dashboard. Below is a high-level diagram of the system to better assist anyone new to the system in quickly understanding the current architecture.
+
+<img src="./images/dbedt-flow.png" width="600"/>
