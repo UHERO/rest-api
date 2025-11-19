@@ -30,3 +30,6 @@ mock-api/node_modules
 keys
 
 rest-api
+
+app.rsa
+app.rsa.pub

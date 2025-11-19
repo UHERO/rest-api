@@ -72,3 +72,58 @@ You can then run the following command from the root of the project to build the
 ```
 cd public && polymer build && cd .. && go run main.go
 ```
+
+## API Usage Metrics
+
+The API includes built-in metrics tracking to monitor usage patterns and popular data series without requiring external dependencies.
+
+### Viewing Metrics
+
+**Current Day Metrics:**
+```
+GET /v1/metrics
+```
+
+**Historical Metrics (up to 30 days):**
+```
+GET /v1/metrics/historical?days=7
+```
+
+*Note: Metrics endpoints require valid API authentication.*
+
+### Metrics Collected
+
+- **Endpoint Usage**: Request counts, response times, and error rates by endpoint
+- **Series Popularity**: Most requested series by ID and name
+- **API Key Activity**: Usage patterns per API key (anonymized for privacy)
+- **Temporal Patterns**: Hourly request distribution
+- **Performance**: Average response times and error rates
+
+### Metrics Storage
+
+- Metrics are stored in JSON files in the `./metrics/` directory (configurable via `METRICS_DIR` environment variable)
+- Daily files are automatically created and rotated at midnight
+- In-memory counters provide real-time tracking with minimal performance impact
+
+### Sample Output
+
+```json
+{
+  "period": "2025-01-24",
+  "summary": {
+    "total_requests": 1340,
+    "unique_api_keys": 12,
+    "avg_response_time_ms": 145.32,
+    "error_rate": 0.0149
+  },
+  "top_endpoints": [
+    {"path": "/v1/series", "requests": 780},
+    {"path": "/v1/series/siblings", "requests": 420}
+  ],
+  "top_series": [
+    {"identifier": "name:GDP@HI", "requests": 67},
+    {"identifier": "id:12345", "requests": 45}
+  ],
+  "hourly_distribution": [12, 8, 15, 42, ...]
+}
+```

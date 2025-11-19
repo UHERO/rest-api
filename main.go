@@ -135,6 +135,13 @@ func main() {
 	geographyRepository := uhRepo
 	searchRepository := &data.SearchRepository{Categories: categoryRepository, Series: seriesRepository}
 	cacheRepository := &data.CacheRepository{Pool: pool, TTL: 60 * ttlMinutes} // TTL stored in seconds
+	
+	// Set up metrics repository
+	metricsDir := os.Getenv("METRICS_DIR")
+	if metricsDir == "" {
+		metricsDir = "./metrics"
+	}
+	metricsRepository := data.NewMetricsRepository(metricsDir)
 
 	// Get the mux router object
 	router := routers.InitRoutes(
@@ -145,6 +152,7 @@ func main() {
 		measurementRepository,
 		geographyRepository,
 		cacheRepository,
+		metricsRepository,
 	)
 	// Create a negroni instance
 	n := negroni.Classic()

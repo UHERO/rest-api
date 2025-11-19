@@ -31,7 +31,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -78,7 +78,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -133,7 +133,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -188,7 +188,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -243,7 +243,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -296,7 +296,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -347,7 +347,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -400,7 +400,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -454,7 +454,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -508,7 +508,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -562,7 +562,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -616,7 +616,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -674,7 +674,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -732,7 +732,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {
@@ -790,7 +790,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer -VI_yuv0UzZNy4av1SM5vQlkfPK_JKnpGfMzuJR7d0M="
+						"value": "<api_key>"
 					}
 				],
 				"body": {

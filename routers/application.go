@@ -9,6 +9,7 @@ import (
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
+	"net/http"
 	"os"
 )
 
@@ -21,6 +22,9 @@ func SetApplicationRoutes(router *mux.Router, applicationRepository *data.FooRep
 	router.HandleFunc("/auth/callback", controllers.AuthCallback).Methods("GET")
 	router.HandleFunc("/auth", gothic.BeginAuthHandler).Methods("GET")
 	router.HandleFunc("/", controllers.IndexHandler).Methods("GET")
+
+	// Serve Swagger documentation
+	router.PathPrefix("/docs").Handler(http.StripPrefix("/docs", http.FileServer(http.Dir("./public/docs"))))
 
 	applicationRouter := mux.NewRouter()
 	applicationRouter.HandleFunc("/applications", controllers.CreateApplication(applicationRepository)).Methods("POST")

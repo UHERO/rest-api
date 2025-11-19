@@ -15,6 +15,7 @@ func InitRoutes(
 	measurementRepository *data.FooRepository,
 	geographyRepository *data.FooRepository,
 	cacheRepository *data.CacheRepository,
+	metricsRepository *data.MetricsRepository,
 ) *mux.Router {
 	router := mux.NewRouter().StrictSlash(false)
 	router = SetApplicationRoutes(router, applicationRepository)
@@ -26,17 +27,20 @@ func InitRoutes(
 	apiRouter = SetSearchRoutes(apiRouter, searchRepository, seriesRepository, cacheRepository)
 	apiRouter = SetGeographyRoutes(apiRouter, geographyRepository, cacheRepository)
 	apiRouter = SetPackageRoutes(apiRouter, seriesRepository, searchRepository, categoryRepository, cacheRepository)
+	apiRouter = SetMetricsRoutes(apiRouter, metricsRepository, applicationRepository)
 	censusRouter := SetCensusProxyRoute(mux.NewRouter().StrictSlash(false), cacheRepository)
 
 	router.PathPrefix("/v1/census").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
+		negroni.HandlerFunc(controllers.MetricsMiddleware(metricsRepository)),
 		negroni.HandlerFunc(controllers.CheckCacheFresh(cacheRepository)),
 		negroni.Wrap(censusRouter),
 	))
 	router.PathPrefix("/v1").Handler(negroni.New(
 		negroni.HandlerFunc(controllers.CORSOptionsHandler),
 		negroni.HandlerFunc(controllers.ValidApiKey(applicationRepository)),
+		negroni.HandlerFunc(controllers.MetricsMiddleware(metricsRepository)),
 		negroni.HandlerFunc(controllers.CheckCache(cacheRepository)),
 		negroni.Wrap(apiRouter),
 	))
