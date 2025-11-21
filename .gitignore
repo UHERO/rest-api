@@ -28,6 +28,8 @@ mock-api/node_modules
 *.DS_Store
 
 keys
+metrics
+
 # built executables 
 rest-api
 rest-api*
