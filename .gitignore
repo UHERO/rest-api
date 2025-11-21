@@ -28,8 +28,16 @@ mock-api/node_modules
 *.DS_Store
 
 keys
-
+# built executables 
 rest-api
-
+rest-api*
+# logs & zipped logs
+*.log
+*.gz
+# ssh keys?
 app.rsa
 app.rsa.pub
+# misc
+rest-api-test
+uhero15
+
