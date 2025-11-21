@@ -49,10 +49,18 @@ func main() {
 	}
 	defer db.Close()
 
+	// Configure connection pool to prevent timeout issues
+	db.SetMaxOpenConns(25)                  // Maximum number of open connections to the database
+	db.SetMaxIdleConns(5)                   // Maximum number of idle connections in the pool
+	db.SetConnMaxLifetime(5 * time.Minute)  // Maximum lifetime of a connection before refresh
+	db.SetConnMaxIdleTime(10 * time.Minute) // Maximum time a connection can be idle before closure
+
 	err = db.Ping()
 	if err != nil {
 		log.Fatal("Cannot login to MySQL server - check all DB_* environment variables")
 	}
+	log.Printf("MySQL connection pool configured: MaxOpen=%d, MaxIdle=%d, ConnMaxLifetime=%v, ConnMaxIdleTime=%v",
+		25, 5, 5*time.Minute, 10*time.Minute)
 
 	// Set up the FooRepository
 	uhRepo := &data.FooRepository{
