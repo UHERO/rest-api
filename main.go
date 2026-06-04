@@ -50,8 +50,8 @@ func main() {
 	defer db.Close()
 
 	// Configure connection pool to prevent timeout issues
-	db.SetMaxOpenConns(25)                  // Maximum number of open connections to the database
-	db.SetMaxIdleConns(5)                   // Maximum number of idle connections in the pool
+	db.SetMaxOpenConns(100)                 // Maximum number of open connections to the database
+	db.SetMaxIdleConns(20)                  // Maximum number of idle connections in the pool
 	db.SetConnMaxLifetime(5 * time.Minute)  // Maximum lifetime of a connection before refresh
 	db.SetConnMaxIdleTime(10 * time.Minute) // Maximum time a connection can be idle before closure
 
