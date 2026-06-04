@@ -60,7 +60,7 @@ func main() {
 		log.Fatal("Cannot login to MySQL server - check all DB_* environment variables")
 	}
 	log.Printf("MySQL connection pool configured: MaxOpen=%d, MaxIdle=%d, ConnMaxLifetime=%v, ConnMaxIdleTime=%v",
-		25, 5, 5*time.Minute, 10*time.Minute)
+		100, 20, 5*time.Minute, 10*time.Minute)
 
 	// Set up the FooRepository
 	uhRepo := &data.FooRepository{
