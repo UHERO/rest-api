@@ -226,7 +226,8 @@ func getAllFreqsGeos(r *FooRepository, seriesId int64, categoryId int64) (
 	[]models.DataPortalFrequency,
 	error,
 ) {
-	rows, err := r.DB.Query(
+	//language=MySQL
+	rows, err := r.RunQuery(
 		`SELECT DISTINCT 'geo' AS gftype,
 			geo.handle AS handle,
 			geo.fips AS fips,
@@ -236,23 +237,21 @@ func getAllFreqsGeos(r *FooRepository, seriesId int64, categoryId int64) (
             MIN(pdp.date), MAX(pdp.date)
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
-		LEFT JOIN series_v AS series ON series.id = ms.series_id
+		LEFT JOIN <%SERIES%> AS series ON series.id = ms.series_id
 		LEFT JOIN geographies geo ON geo.id = series.geography_id
-		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
+		LEFT JOIN <%DATAPOINTS%> pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		AND NOT (series.restricted OR series.quarantined)
 		GROUP BY geo.id, geo.handle, geo.fips, geo.display_name, geo.display_name_short, geo.list_order
 		   UNION
 		SELECT DISTINCT 'freq' AS gftype,
 			RIGHT(series.name, 1) AS handle, null, null, null, null AS lorder, MIN(pdp.date), MAX(pdp.date)
 		FROM measurement_series
 		LEFT JOIN measurement_series AS ms ON ms.measurement_id = measurement_series.measurement_id
-		LEFT JOIN series_v AS series ON series.id = ms.series_id
-		LEFT JOIN public_data_points pdp on pdp.series_id = series.id
+		LEFT JOIN <%SERIES%> AS series ON series.id = ms.series_id
+		LEFT JOIN <%DATAPOINTS%> pdp on pdp.series_id = series.id
 		WHERE pdp.value IS NOT NULL
 		AND measurement_series.series_id = ?
-		AND NOT (series.restricted OR series.quarantined)
 		GROUP BY RIGHT(series.name, 1)
 		ORDER BY gftype, COALESCE(lorder, 999), handle`, seriesId, seriesId)
 	if err != nil {
