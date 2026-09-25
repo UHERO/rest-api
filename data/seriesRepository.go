@@ -267,20 +267,11 @@ func (r *FooRepository) GetSeriesByGroupAndFreq(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, catId)
 	return
 }
 
@@ -309,20 +300,11 @@ func (r *FooRepository) GetSeriesByGroupGeoAndFreq(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, catId)
 	return
 }
 
@@ -351,26 +333,15 @@ func (r *FooRepository) GetInflatedSeriesByGroupGeoAndFreq(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-
 	seriesList = make([]models.InflatedSeries, 0, 30)
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, "")
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		seriesList = append(seriesList, models.InflatedSeries{dataPortalSeries, seriesObservations})
+	dataPortalSeriesList, err := scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	if err = r.addFreqsGeos(dataPortalSeriesList, catId); err != nil {
+		return
+	}
+	seriesList, err = r.appendInflatedSeries(seriesList, dataPortalSeriesList)
 	return
 }
 
@@ -395,20 +366,11 @@ func (r *FooRepository) GetSeriesByGroupAndGeo(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, catId)
 	return
 }
 
@@ -431,25 +393,14 @@ func (r *FooRepository) GetInflatedSeriesByGroup(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, "")
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
-		seriesList = append(seriesList, inflatedSeries)
+	dataPortalSeriesList, err := scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	if err = r.addFreqsGeos(dataPortalSeriesList, catId); err != nil {
+		return
+	}
+	seriesList, err = r.appendInflatedSeries(seriesList, dataPortalSeriesList)
 	return
 }
 
@@ -472,20 +423,11 @@ func (r *FooRepository) GetSeriesByGroup(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, catId)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, catId)
 	return
 }
 
@@ -573,20 +515,11 @@ func (r *FooRepository) GetSeriesSiblingsById(seriesId int64, forecast string, c
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, categoryId)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, categoryId)
 	return
 }
 
@@ -602,20 +535,11 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndFreq(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, 0)
 	return
 }
 
@@ -631,20 +555,11 @@ func (r *FooRepository) GetSeriesSiblingsByIdAndGeo(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, 0)
 	return
 }
 
@@ -662,20 +577,11 @@ func (r *FooRepository) GetSeriesSiblingsByIdGeoAndFreq(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, 0)
 	return
 }
 
@@ -764,20 +670,17 @@ func (r *FooRepository) GetSeriesById(seriesId int64, categoryId int64) (dataPor
 	if err != nil {
 		return
 	}
-	defer row.Close()
-	for row.Next() {
-		dataPortalSeries, err = getNextSeriesFromRows(row)
-		if err != nil {
-			return
-		}
-		geos, freqs, err := getAllFreqsGeos(r, seriesId, categoryId)
-		if err != nil {
-			return dataPortalSeries, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		break
+	seriesList, err := scanSeriesRows(row)
+	if err != nil || len(seriesList) == 0 {
+		return
 	}
+	dataPortalSeries = seriesList[0]
+	geos, freqs, err := getAllFreqsGeos(r, seriesId, categoryId)
+	if err != nil {
+		return
+	}
+	dataPortalSeries.Geographies = &geos
+	dataPortalSeries.Frequencies = &freqs
 	return
 }
 
@@ -799,19 +702,13 @@ func (r *FooRepository) GetSeriesByName(name, universe, expand string) (SeriesPk
 	if err != nil {
 		return
 	}
-	var series models.DataPortalSeries
 	var observations models.SeriesObservations
 
-	defer row.Close()
-	if !row.Next() {
-		err = row.Err()
+	seriesList, err := scanSeriesRows(row)
+	if err != nil || len(seriesList) == 0 {
 		return
 	}
-	series, err = getNextSeriesFromRows(row)
-	if err != nil {
-		return
-	}
-	SeriesPkg.Series = series
+	SeriesPkg.Series = seriesList[0]
 
 	if expand != "" {
 		observations, err = r.GetSeriesObservations(SeriesPkg.Series.Id, expand)
@@ -1046,8 +943,8 @@ func (r *FooRepository) CreateExportPackage(id int64, expand string) (pkg []mode
 	}
 	var series models.InflatedSeries
 	var dpn sql.NullString
-	var observations models.SeriesObservations
 
+	// Read and close all rows before querying observations, so we never hold two pool connections at once
 	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&series.Id, &series.Universe, &series.Name, &dpn)
@@ -1057,12 +954,17 @@ func (r *FooRepository) CreateExportPackage(id int64, expand string) (pkg []mode
 		if dpn.Valid {
 			series.Title = dpn.String
 		}
-		observations, err = r.GetSeriesTransformations(series.Id, makeBoolSet(Levels), expand)
+		pkg = append(pkg, series)
+	}
+	if err = rows.Err(); err != nil {
+		return
+	}
+	rows.Close()
+	for i := range pkg {
+		pkg[i].Observations, err = r.GetSeriesTransformations(pkg[i].Id, makeBoolSet(Levels), expand)
 		if err != nil {
 			return
 		}
-		series.Observations = observations
-		pkg = append(pkg, series)
 	}
 	return
 }

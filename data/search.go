@@ -32,20 +32,11 @@ func (r *FooRepository) GetSeriesBySearchTextAndUniverse(searchText string, univ
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, 0)
 	return
 }
 
@@ -205,20 +196,11 @@ func (r *FooRepository) GetSearchResultsByGeoAndFreqAndUniverse(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesList = append(seriesList, dataPortalSeries)
+	seriesList, err = scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	err = r.addFreqsGeos(seriesList, 0)
 	return
 }
 
@@ -254,25 +236,14 @@ func (r *FooRepository) GetInflatedSearchResultsByGeoAndFreqAndUniverse(
 	if err != nil {
 		return
 	}
-	defer rows.Close()
-	for rows.Next() {
-		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		geos, freqs, err := getAllFreqsGeos(r, dataPortalSeries.Id, 0)
-		if err != nil {
-			return seriesList, err
-		}
-		dataPortalSeries.Geographies = &geos
-		dataPortalSeries.Frequencies = &freqs
-		seriesObservations, scanErr := r.GetSeriesObservations(dataPortalSeries.Id, "")
-		if scanErr != nil {
-			return seriesList, scanErr
-		}
-		inflatedSeries := models.InflatedSeries{dataPortalSeries, seriesObservations}
-		seriesList = append(seriesList, inflatedSeries)
+	dataPortalSeriesList, err := scanSeriesRows(rows)
+	if err != nil {
+		return
 	}
+	if err = r.addFreqsGeos(dataPortalSeriesList, 0); err != nil {
+		return
+	}
+	seriesList, err = r.appendInflatedSeries(seriesList, dataPortalSeriesList)
 	return
 }
 

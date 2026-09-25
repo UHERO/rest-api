@@ -41,6 +41,10 @@ func main() {
 		ParseTime: true,
 		AllowNativePasswords: true,
 		DBName:    dbName,
+		// Fail instead of hanging forever if the DB server or network stops responding
+		Timeout:      10 * time.Second,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
 	connectionString := mysqlConfig.FormatDSN()
 	db, err := sql.Open("mysql", connectionString)
@@ -101,7 +105,11 @@ func main() {
 		MaxActive:   50,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", redisServer)
+			c, err := redis.Dial("tcp", redisServer,
+				redis.DialConnectTimeout(5*time.Second),
+				redis.DialReadTimeout(5*time.Second),
+				redis.DialWriteTimeout(5*time.Second),
+			)
 			if err != nil {
 				log.Printf("*** Cannot contact redis server at %s. No caching!", redisServer)
 				return nil, err
@@ -172,8 +180,12 @@ func main() {
 	}
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%s", port),
-		Handler: n,
+		Addr:              fmt.Sprintf(":%s", port),
+		Handler:           n,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      2 * time.Minute,
+		IdleTimeout:       2 * time.Minute,
 	}
 	log.Printf("Listening on %s...", server.Addr)
 	err = server.ListenAndServe()

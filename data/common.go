@@ -221,6 +221,52 @@ func getNextSeriesFromRows(rows *sql.Rows) (dataPortalSeries models.DataPortalSe
 	return
 }
 
+// scanSeriesRows reads all rows into a slice and closes them before returning. Callers must not run
+// further queries while a *sql.Rows is still open: each open Rows holds a pool connection, and under
+// load every request can end up holding one connection while waiting for another, deadlocking the pool.
+func scanSeriesRows(rows *sql.Rows) (seriesList []models.DataPortalSeries, err error) {
+	defer rows.Close()
+	for rows.Next() {
+		dataPortalSeries, scanErr := getNextSeriesFromRows(rows)
+		if scanErr != nil {
+			return seriesList, scanErr
+		}
+		seriesList = append(seriesList, dataPortalSeries)
+	}
+	err = rows.Err()
+	return
+}
+
+// addFreqsGeos fills in Geographies and Frequencies for each series. Call only after the rows
+// that produced seriesList have been closed.
+func (r *FooRepository) addFreqsGeos(seriesList []models.DataPortalSeries, categoryId int64) error {
+	for i := range seriesList {
+		geos, freqs, err := getAllFreqsGeos(r, seriesList[i].Id, categoryId)
+		if err != nil {
+			return err
+		}
+		seriesList[i].Geographies = &geos
+		seriesList[i].Frequencies = &freqs
+	}
+	return nil
+}
+
+// appendInflatedSeries adds each series with its observations to inflated. Call only after the rows
+// that produced seriesList have been closed.
+func (r *FooRepository) appendInflatedSeries(
+	inflated []models.InflatedSeries,
+	seriesList []models.DataPortalSeries,
+) ([]models.InflatedSeries, error) {
+	for _, dataPortalSeries := range seriesList {
+		seriesObservations, err := r.GetSeriesObservations(dataPortalSeries.Id, "")
+		if err != nil {
+			return inflated, err
+		}
+		inflated = append(inflated, models.InflatedSeries{dataPortalSeries, seriesObservations})
+	}
+	return inflated, nil
+}
+
 func getAllFreqsGeos(r *FooRepository, seriesId int64, categoryId int64) (
 	[]models.DataPortalGeography,
 	[]models.DataPortalFrequency,
